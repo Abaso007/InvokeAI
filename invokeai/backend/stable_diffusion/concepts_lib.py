@@ -27,11 +27,11 @@ class HuggingFaceConceptsLibrary(object):
         """
         self.root = root or Globals.root
         self.hf_api = HfApi()
-        self.local_concepts = dict()
+        self.local_concepts = {}
         self.concept_list = None
-        self.concepts_loaded = dict()
-        self.triggers = dict()  # concept name to trigger phrase
-        self.concept_names = dict()  # trigger phrase to concept name
+        self.concepts_loaded = {}
+        self.triggers = {}
+        self.concept_names = {}
         self.match_trigger = re.compile(
             "(<[\w\- >]+>)"
         )  # trigger is slightly less restrictive than HF concept name
@@ -56,7 +56,6 @@ class HuggingFaceConceptsLibrary(object):
             if local_concepts_to_add:
                 self.concept_list.extend(list(local_concepts_to_add))
                 return self.concept_list
-            return self.concept_list
         elif Globals.internet_available is True:
             try:
                 models = self.hf_api.list_models(
@@ -72,9 +71,7 @@ class HuggingFaceConceptsLibrary(object):
                 print(
                     " ** You may load .bin and .pt file(s) manually using the --embedding_directory argument."
                 )
-            return self.concept_list
-        else: 
-            return self.concept_list
+        return self.concept_list
 
     def get_concept_model_path(self, concept_name: str) -> str:
         """
@@ -82,7 +79,7 @@ class HuggingFaceConceptsLibrary(object):
         the named concept. Returns None if invalid or cannot
         be downloaded.
         """
-        if not concept_name in self.list_concepts():
+        if concept_name not in self.list_concepts():
             print(
                 f"{concept_name} is not a local embedding trigger, nor is it a HuggingFace concept. Generation will continue without the concept."
             )
@@ -264,10 +261,10 @@ class HuggingFaceConceptsLibrary(object):
         return os.path.join(self.root, "embeddings", filename)
 
     def get_local_concepts(self, loc_dir: str):
-        locs_dic = dict()
+        locs_dic = {}
         if os.path.isdir(loc_dir):
             for file in os.listdir(loc_dir):
                 f = os.path.splitext(file)
-                if f[1] == ".bin" or f[1] == ".pt":
+                if f[1] in [".bin", ".pt"]:
                     locs_dic[f[0]] = file
         return locs_dic

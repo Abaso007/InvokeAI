@@ -150,15 +150,16 @@ class Searcher(object):
         out_img_ids = self.database['img_id'][nns]
         out_pc = self.database['patch_coords'][nns]
 
-        out = {'nn_embeddings': out_embeddings / np.linalg.norm(out_embeddings, axis=-1)[..., np.newaxis],
-               'img_ids': out_img_ids,
-               'patch_coords': out_pc,
-               'queries': x,
-               'exec_time': end - start,
-               'nns': nns,
-               'q_embeddings': query_embeddings}
-
-        return out
+        return {
+            'nn_embeddings': out_embeddings
+            / np.linalg.norm(out_embeddings, axis=-1)[..., np.newaxis],
+            'img_ids': out_img_ids,
+            'patch_coords': out_pc,
+            'queries': x,
+            'exec_time': end - start,
+            'nns': nns,
+            'q_embeddings': query_embeddings,
+        }
 
     def __call__(self, x, n):
         return self.search(x, n)
@@ -314,11 +315,7 @@ if __name__ == "__main__":
 
     clip_text_encoder = FrozenCLIPTextEmbedder(opt.clip_type).to(device)
 
-    if opt.plms:
-        sampler = PLMSSampler(model)
-    else:
-        sampler = DDIMSampler(model)
-
+    sampler = PLMSSampler(model) if opt.plms else DDIMSampler(model)
     os.makedirs(opt.outdir, exist_ok=True)
     outpath = opt.outdir
 
@@ -342,14 +339,11 @@ if __name__ == "__main__":
 
     print(f"sampling scale for cfg is {opt.scale:.2f}")
 
-    searcher = None
-    if opt.use_neighbors:
-        searcher = Searcher(opt.database)
-
+    searcher = Searcher(opt.database) if opt.use_neighbors else None
     with torch.no_grad():
         with model.ema_scope():
-            for n in trange(opt.n_iter, desc="Sampling"):
-                all_samples = list()
+            for _ in trange(opt.n_iter, desc="Sampling"):
+                all_samples = []
                 for prompts in tqdm(data, desc="data"):
                     print("sampling prompts:", prompts)
                     if isinstance(prompts, tuple):

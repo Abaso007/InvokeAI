@@ -41,12 +41,12 @@ class Completer(object):
             except IndexError:
                 pass
             options = options or list(self.parse_commands().keys())
-            
-            if not text:  # first time
-                self.matches = options
-            else:
-                self.matches = [s for s in options if s and s.startswith(text)]
 
+            self.matches = (
+                [s for s in options if s and s.startswith(text)]
+                if text
+                else options
+            )
         try:
             match = self.matches[state]
         except IndexError:
@@ -54,17 +54,17 @@ class Completer(object):
         return match
 
     @classmethod
-    def get_commands(self)->List[object]:
+    def get_commands(cls) -> List[object]:
         """
         Return a list of all the client commands and invocations.
         """
         return BaseCommand.get_commands() + BaseInvocation.get_invocations()
 
-    def get_current_command(self, buffer: str)->tuple[str, str]:
+    def get_current_command(self, buffer: str) -> tuple[str, str]:
         """
         Parse the readline buffer to find the most recent command and its switch.
         """
-        if len(buffer)==0:
+        if not buffer:
             return None, None
         tokens = shlex.split(buffer)
         command = None
@@ -80,16 +80,16 @@ class Completer(object):
             switch=None
         return command or '', switch or ''
 
-    def parse_commands(self)->Dict[str, List[str]]:
+    def parse_commands(self) -> Dict[str, List[str]]:
         """
         Return a dict in which the keys are the command name
         and the values are the parameters the command takes.
         """
-        result = dict()
+        result = {}
         for command in self.commands:
             hints = get_type_hints(command)
             name = get_args(hints['type'])[0]
-            result.update({name:hints})
+            result[name] = hints
         return result
 
     def get_command_options(self, command: str, switch: str)->List[str]:

@@ -34,19 +34,17 @@ class FastAPIEventService(EventServiceBase):
         """Get events on from the queue and dispatch them, from the correct thread"""
         while not stop_event.is_set():
             try:
-                event = self.__queue.get(block=False)
-                if not event:  # Probably stopping
-                    continue
+                if event := self.__queue.get(block=False):
+                    dispatch(
+                        event.get("event_name"),
+                        payload=event.get("payload"),
+                        middleware_id=self.event_handler_id,
+                    )
 
-                dispatch(
-                    event.get("event_name"),
-                    payload=event.get("payload"),
-                    middleware_id=self.event_handler_id,
-                )
+                else:
+                    continue
 
             except Empty:
                 await asyncio.sleep(0.001)
-                pass
-
             except asyncio.CancelledError as e:
                 raise e  # Raise a proper error

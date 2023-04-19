@@ -34,10 +34,10 @@ class Outpaint(object):
         )
 
     def _create_outpaint_image(self, image, direction_args):
-        assert len(direction_args) in [
+        assert len(direction_args) in {
             1,
             2,
-        ], "Direction (-D) must have exactly one or two arguments."
+        }, "Direction (-D) must have exactly one or two arguments."
 
         if len(direction_args) == 1:
             direction = direction_args[0]
@@ -55,10 +55,10 @@ class Outpaint(object):
 
         image = image.convert("RGBA")
         # we always extend top, but rotate to extend along the requested side
-        if direction == "left":
-            image = image.transpose(Image.Transpose.ROTATE_270)
-        elif direction == "bottom":
+        if direction == "bottom":
             image = image.transpose(Image.Transpose.ROTATE_180)
+        elif direction == "left":
+            image = image.transpose(Image.Transpose.ROTATE_270)
         elif direction == "right":
             image = image.transpose(Image.Transpose.ROTATE_90)
 
@@ -92,10 +92,10 @@ class Outpaint(object):
                 new_img.putpixel((x, y), (r, g, b, 0))
 
         # let's rotate back again
-        if direction == "left":
-            new_img = new_img.transpose(Image.Transpose.ROTATE_90)
-        elif direction == "bottom":
+        if direction == "bottom":
             new_img = new_img.transpose(Image.Transpose.ROTATE_180)
+        elif direction == "left":
+            new_img = new_img.transpose(Image.Transpose.ROTATE_90)
         elif direction == "right":
             new_img = new_img.transpose(Image.Transpose.ROTATE_270)
 

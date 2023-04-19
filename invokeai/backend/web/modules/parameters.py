@@ -23,7 +23,7 @@ def parameters_to_command(params):
     Converts dict of parameters into a `invoke.py` REPL command.
     """
 
-    switches = list()
+    switches = []
 
     if "prompt" in params:
         switches.append(f'"{params["prompt"]}"')
@@ -40,9 +40,9 @@ def parameters_to_command(params):
     if "sampler_name" in params:
         switches.append(f'-A {params["sampler_name"]}')
     if "seamless" in params and params["seamless"] == True:
-        switches.append(f"--seamless")
+        switches.append("--seamless")
     if "hires_fix" in params and params["hires_fix"] == True:
-        switches.append(f"--hires")
+        switches.append("--hires")
     if "init_img" in params and len(params["init_img"]) > 0:
         switches.append(f'-I {params["init_img"]}')
     if "init_mask" in params and len(params["init_mask"]) > 0:
@@ -52,7 +52,7 @@ def parameters_to_command(params):
     if "strength" in params and "init_img" in params:
         switches.append(f'-f {params["strength"]}')
         if "fit" in params and params["fit"] == True:
-            switches.append(f"--fit")
+            switches.append("--fit")
     if "facetool" in params:
         switches.append(f'-ft {params["facetool"]}')
     if "facetool_strength" in params and params["facetool_strength"]:

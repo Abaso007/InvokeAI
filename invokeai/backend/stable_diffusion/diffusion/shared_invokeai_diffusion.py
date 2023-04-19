@@ -82,15 +82,15 @@ class InvokeAIDiffuserComponent:
     def custom_attention_context(
         self, extra_conditioning_info: Optional[ExtraConditioningInfo], step_count: int
     ):
-        do_swap = (
+        if do_swap := (
             extra_conditioning_info is not None
             and extra_conditioning_info.wants_cross_attention_control
-        )
-        old_attn_processor = None
-        if do_swap:
+        ):
             old_attn_processor = self.override_cross_attention(
                 extra_conditioning_info, step_count=step_count
             )
+        else:
+            old_attn_processor = None
         try:
             yield None
         finally:
@@ -225,11 +225,9 @@ class InvokeAIDiffuserComponent:
                 x, sigma, unconditioning, conditioning
             )
 
-        combined_next_x = self._combine(
+        return self._combine(
             unconditioned_next_x, conditioned_next_x, unconditional_guidance_scale
         )
-
-        return combined_next_x
 
     def do_latent_postprocessing(
         self,
@@ -252,20 +250,15 @@ class InvokeAIDiffuserComponent:
         return latents
 
     def calculate_percent_through(self, sigma, step_index, total_step_count):
-        if step_index is not None and total_step_count is not None:
-            # 🧨diffusers codepath
-            percent_through = (
-                step_index / total_step_count
-            )  # will never reach 1.0 - this is deliberate
+        if step_index is None and sigma is None:
+            raise ValueError(
+                "Either step_index or sigma is required when doing cross attention control, but both are None."
+            )
+        elif step_index is None or total_step_count is None:
+            return self.estimate_percent_through(step_index, sigma)
         else:
-            # legacy compvis codepath
-            # TODO remove when compvis codepath support is dropped
-            if step_index is None and sigma is None:
-                raise ValueError(
-                    f"Either step_index or sigma is required when doing cross attention control, but both are None."
-                )
-            percent_through = self.estimate_percent_through(step_index, sigma)
-        return percent_through
+            # 🧨diffusers codepath
+            return step_index / total_step_count
 
     # methods below are called from do_diffusion_step and should be considered private to this class.
 
@@ -303,15 +296,15 @@ class InvokeAIDiffuserComponent:
         assert isinstance(unconditioning, dict)
         x_twice = torch.cat([x] * 2)
         sigma_twice = torch.cat([sigma] * 2)
-        both_conditionings = dict()
-        for k in conditioning:
-            if isinstance(conditioning[k], list):
-                both_conditionings[k] = [
-                    torch.cat([unconditioning[k][i], conditioning[k][i]])
-                    for i in range(len(conditioning[k]))
-                ]
-            else:
-                both_conditionings[k] = torch.cat([unconditioning[k], conditioning[k]])
+        both_conditionings = {
+            k: [
+                torch.cat([unconditioning[k][i], conditioning[k][i]])
+                for i in range(len(conditioning[k]))
+            ]
+            if isinstance(conditioning[k], list)
+            else torch.cat([unconditioning[k], conditioning[k]])
+            for k in conditioning
+        }
         unconditioned_next_x, conditioned_next_x = self.model_forward_callback(
             x_twice, sigma_twice, both_conditionings
         ).chunk(2)
@@ -428,8 +421,7 @@ class InvokeAIDiffuserComponent:
     def _combine(self, unconditioned_next_x, conditioned_next_x, guidance_scale):
         # to scale how much effect conditioning has, calculate the changes it does and then scale that
         scaled_delta = (conditioned_next_x - unconditioned_next_x) * guidance_scale
-        combined_next_x = unconditioned_next_x + scaled_delta
-        return combined_next_x
+        return unconditioned_next_x + scaled_delta
 
     def apply_threshold(
         self,

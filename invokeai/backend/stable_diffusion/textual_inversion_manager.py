@@ -45,7 +45,7 @@ class TextualInversionManager(BaseTextualInversionManager):
         self.text_encoder = text_encoder
         self.full_precision = full_precision
         self.hf_concepts_library = HuggingFaceConceptsLibrary()
-        self.trigger_to_sourcefile = dict()
+        self.trigger_to_sourcefile = {}
         default_textual_inversions: list[TextualInversion] = []
         self.textual_inversions = default_textual_inversions
 
@@ -176,7 +176,7 @@ class TextualInversionManager(BaseTextualInversionManager):
         if ti.embedding_vector_length > 1:
             # for embeddings with vector length > 1
             pad_token_strings = [
-                ti.trigger_string + "-!pad-" + str(pad_index)
+                f"{ti.trigger_string}-!pad-{str(pad_index)}"
                 for pad_index in range(1, ti.embedding_vector_length)
             ]
             # todo: batched UI for faster loading when vector length >2
@@ -244,7 +244,7 @@ class TextualInversionManager(BaseTextualInversionManager):
         :return: The prompt token ids with any necessary padding to account for textual inversions inserted. May be too
                 long - caller is responsible for prepending/appending eos and bos token ids, and truncating if necessary.
         """
-        if len(prompt_token_ids) == 0:
+        if not prompt_token_ids:
             return prompt_token_ids
 
         if prompt_token_ids[0] == self.tokenizer.bos_token_id:
@@ -262,7 +262,7 @@ class TextualInversionManager(BaseTextualInversionManager):
                     for ti in self.textual_inversions
                     if ti.trigger_token_id == token_id
                 )
-                for pad_idx in range(0, textual_inversion.embedding_vector_length - 1):
+                for pad_idx in range(textual_inversion.embedding_vector_length - 1):
                     prompt_token_ids.insert(
                         i + pad_idx + 1, textual_inversion.pad_token_ids[pad_idx]
                     )
@@ -300,7 +300,7 @@ class TextualInversionManager(BaseTextualInversionManager):
         return token_id
 
 
-    def _parse_embedding(self, embedding_file: str)->List[EmbeddingInfo]:
+    def _parse_embedding(self, embedding_file: str) -> List[EmbeddingInfo]:
         suffix = Path(embedding_file).suffix
         try:
             if suffix in [".pt",".ckpt",".bin"]:
@@ -310,39 +310,39 @@ class TextualInversionManager(BaseTextualInversionManager):
                         f"   ** Security Issues Found in Model: {scan_result.issues_count}"
                     )
                     print("   ** For your safety, InvokeAI will not load this embed.")
-                    return list()
+                    return []
                 ckpt = torch.load(embedding_file,map_location="cpu")
             else:
                 ckpt = safetensors.torch.load_file(embedding_file)
         except Exception as e:
             print(f"   ** Notice: unrecognized embedding file format: {embedding_file}: {e}")
-            return list()
-        
+            return []
+
         # try to figure out what kind of embedding file it is and parse accordingly
         keys = list(ckpt.keys())
         if all(x in keys for x in ['string_to_token','string_to_param','name','step']):
             return self._parse_embedding_v1(ckpt, embedding_file)     # example rem_rezero.pt
-        
+
         elif all(x in keys for x in ['string_to_token','string_to_param']):
             return self._parse_embedding_v2(ckpt, embedding_file)     # example midj-strong.pt
-        
+
         elif 'emb_params' in keys:
             return self._parse_embedding_v3(ckpt, embedding_file)     # example easynegative.safetensors
-        
+
         else:
             return self._parse_embedding_v4(ckpt, embedding_file)     # usually a '.bin' file
 
-    def _parse_embedding_v1(self, embedding_ckpt: dict, file_path: str)->List[EmbeddingInfo]:
+    def _parse_embedding_v1(self, embedding_ckpt: dict, file_path: str) -> List[EmbeddingInfo]:
         basename = Path(file_path).stem
         print(f'   | Loading v1 embedding file: {basename}')
 
-        embeddings = list()
+        embeddings = []
         token_counter = -1
         for token,embedding in embedding_ckpt["string_to_param"].items():
             if token_counter < 0:
                 trigger = embedding_ckpt["name"]
             elif token_counter == 0:
-                trigger = f'<basename>'
+                trigger = '<basename>'
             else:
                 trigger = f'<{basename}-{int(token_counter:=token_counter)}>'
             token_counter += 1
@@ -358,7 +358,7 @@ class TextualInversionManager(BaseTextualInversionManager):
             embeddings.append(embedding_info)
         return embeddings
 
-    def _parse_embedding_v2 (
+    def _parse_embedding_v2(
         self, embedding_ckpt: dict, file_path: str
     ) -> List[EmbeddingInfo]:
         """
@@ -366,16 +366,16 @@ class TextualInversionManager(BaseTextualInversionManager):
         """
         basename = Path(file_path).stem
         print(f'   | Loading v2 embedding file: {basename}')
-        embeddings = list()
-        
+        embeddings = []
+
         if isinstance(
             list(embedding_ckpt["string_to_token"].values())[0], torch.Tensor
         ):
             token_counter = 0
             for token,embedding in embedding_ckpt["string_to_param"].items():
                 trigger = token if token != '*' \
-                    else f'<{basename}>' if token_counter == 0 \
-                         else f'<{basename}-{int(token_counter:=token_counter+1)}>'
+                        else f'<{basename}>' if token_counter == 0 \
+                             else f'<{basename}-{int(token_counter:=token_counter+1)}>'
                 embedding_info = EmbeddingInfo(
                     name = trigger,
                     embedding = embedding,
@@ -403,17 +403,17 @@ class TextualInversionManager(BaseTextualInversionManager):
         )
         return [embedding_info]
     
-    def _parse_embedding_v4(self, embedding_ckpt: dict, filepath: str)->List[EmbeddingInfo]:
+    def _parse_embedding_v4(self, embedding_ckpt: dict, filepath: str) -> List[EmbeddingInfo]:
         """
         Parse 'version 4' of the textual inversion embedding files. This one
         is usually associated with .bin files trained by HuggingFace diffusers.
         """
         basename = Path(filepath).stem
-        short_path = Path(filepath).parents[0].name+'/'+Path(filepath).name
-        
+        short_path = f'{Path(filepath).parents[0].name}/{Path(filepath).name}'
+
         print(f'   | Loading v4 embedding file: {short_path}')
-        
-        embeddings = list()
+
+        embeddings = []
         if list(embedding_ckpt.keys()) == 0:
             print(f"   ** Invalid embeddings file: {short_path}")
         else:

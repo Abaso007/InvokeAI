@@ -96,7 +96,7 @@ def train_searcher(opt,
     if pool_size < 2e4:
         print('Using brute force search.')
         searcher = search_bruteforce(searcher)
-    elif 2e4 <= pool_size and pool_size < 1e5:
+    elif pool_size < 1e5:
         print('Using asymmetric hashing search and reordering.')
         searcher = search_ah(searcher, dims_per_block, aiq_thld, reorder_k)
     else:

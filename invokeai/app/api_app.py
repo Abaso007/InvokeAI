@@ -94,7 +94,7 @@ def custom_openapi():
     # Add all outputs
     all_invocations = BaseInvocation.get_invocations()
     output_types = set()
-    output_type_titles = dict()
+    output_type_titles = {}
     for invoker in all_invocations:
         output_type = signature(invoker.invoke).return_annotation
         output_types.add(output_type)

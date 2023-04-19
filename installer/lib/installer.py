@@ -175,7 +175,9 @@ class Installer:
         self.instance = InvokeAiInstance(runtime=self.dest, venv=self.venv, version=version)
 
         # install dependencies and the InvokeAI application
-        (extra_index_url,optional_modules) = get_torch_source() if not yes_to_all else (None,None)
+        (extra_index_url, optional_modules) = (
+            (None, None) if yes_to_all else get_torch_source()
+        )
         self.instance.install(
             extra_index_url,
             optional_modules,
@@ -331,12 +333,11 @@ class InvokeAiInstance:
         for i in range(1,len(sys.argv)):
             el = sys.argv[i]
             if el in ['-r','--root']:
-                new_argv.append(el)
-                new_argv.append(sys.argv[i+1])
+                new_argv.extend((el, sys.argv[i+1]))
             elif el in ['-y','--yes','--yes-to-all']:
                 new_argv.append(el)
         sys.argv = new_argv
-        
+
         import requests  # to catch download exceptions
         from messages import introduction
 

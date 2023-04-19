@@ -67,11 +67,7 @@ class SegmentedGrayscale(object):
 
     # unscales and uncrops the 352x352 heatmap so that it matches the image again
     def _rescale(self, heatmap: Image) -> Image:
-        size = (
-            self.image.width
-            if (self.image.width > self.image.height)
-            else self.image.height
-        )
+        size = max(self.image.width, self.image.height)
         resized_image = heatmap.resize((size, size), resample=Image.Resampling.LANCZOS)
         return resized_image.crop((0, 0, self.image.width, self.image.height))
 

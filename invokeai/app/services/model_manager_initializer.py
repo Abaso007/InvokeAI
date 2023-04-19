@@ -37,12 +37,13 @@ def get_model_manager(config: Args) -> ModelManager:
         config.conf = os.path.normpath(os.path.join(Globals.root, config.conf))
 
     if config.embeddings:
-        if not os.path.isabs(config.embedding_path):
-            embedding_path = os.path.normpath(
+        embedding_path = (
+            config.embedding_path
+            if os.path.isabs(config.embedding_path)
+            else os.path.normpath(
                 os.path.join(Globals.root, config.embedding_path)
             )
-        else:
-            embedding_path = config.embedding_path
+        )
     else:
         embedding_path = None
 
@@ -55,7 +56,7 @@ def get_model_manager(config: Args) -> ModelManager:
         precision = 'float16' if config.precision=='float16' \
         else 'float32' if config.precision=='float32' \
         else choose_precision(device)
-        
+
         model_manager = ModelManager(
             OmegaConf.load(config.conf),
             precision=precision,
@@ -103,13 +104,10 @@ def report_model_error(opt: Namespace, e: Exception):
     root_dir = ["--root", opt.root_dir] if opt.root_dir is not None else []
     config = ["--config", opt.conf] if opt.conf is not None else []
     previous_config = sys.argv
-    sys.argv = ["invokeai-configure"]
-    sys.argv.extend(root_dir)
+    sys.argv = ["invokeai-configure", *root_dir]
     sys.argv.extend(config.to_dict())
     if yes_to_all is not None:
-        for arg in yes_to_all.split():
-            sys.argv.append(arg)
-
+        sys.argv.extend(iter(yes_to_all.split()))
     from invokeai.frontend.install import invokeai_configure
 
     invokeai_configure()

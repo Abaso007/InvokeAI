@@ -151,7 +151,7 @@ class Txt2Img2Img(Generator):
             )
         else:
             x = torch.randn_like(like, device=device, dtype=self.torch_dtype())
-        if self.perlin > 0.0 and override_perlin == False:
+        if self.perlin > 0.0 and not override_perlin:
             shape = like.shape
             x = (1 - self.perlin) * x + self.perlin * self.get_perlin_noise(
                 shape[3], shape[2]

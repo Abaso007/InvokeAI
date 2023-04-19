@@ -28,7 +28,7 @@ class BaseInvocationOutput(BaseModel):
     def get_all_subclasses_tuple(cls):
         subclasses = []
         toprocess = [cls]
-        while len(toprocess) > 0:
+        while toprocess:
             next = toprocess.pop(0)
             next_subclasses = next.__subclasses__()
             subclasses.extend(next_subclasses)
@@ -48,7 +48,7 @@ class BaseInvocation(ABC, BaseModel):
     def get_all_subclasses(cls):
         subclasses = []
         toprocess = [cls]
-        while len(toprocess) > 0:
+        while toprocess:
             next = toprocess.pop(0)
             next_subclasses = next.__subclasses__()
             subclasses.extend(next_subclasses)

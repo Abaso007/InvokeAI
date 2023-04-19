@@ -56,9 +56,7 @@ def sd_configs():
 
 def initial_models():
     global Datasets
-    if Datasets:
-        return Datasets
-    return (Datasets := OmegaConf.load(Dataset_path))
+    return Datasets if Datasets else (Datasets := OmegaConf.load(Dataset_path))
 
 
 def install_requested_models(
@@ -80,14 +78,14 @@ def install_requested_models(
 
     model_manager = ModelManager(OmegaConf.load(config_file_path), precision=precision)
 
-    if remove_models and len(remove_models) > 0:
+    if remove_models:
         print("== DELETING UNCHECKED STARTER MODELS ==")
         for model in remove_models:
             print(f"{model}...")
             model_manager.del_model(model, delete_files=purge_deleted)
         model_manager.commit(config_file_path)
 
-    if install_initial_models and len(install_initial_models) > 0:
+    if install_initial_models:
         print("== INSTALLING SELECTED STARTER MODELS ==")
         successfully_downloaded = download_weight_datasets(
             models=install_initial_models,
@@ -102,7 +100,7 @@ def install_requested_models(
     # was changed behind its back
     model_manager = ModelManager(OmegaConf.load(config_file_path), precision=precision)
 
-    external_models = external_models or list()
+    external_models = external_models or []
     if scan_directory:
         external_models.append(str(scan_directory))
 
@@ -155,28 +153,25 @@ def get_root(root: str = None) -> str:
 
 # ---------------------------------------------
 def recommended_datasets() -> dict:
-    datasets = dict()
-    for ds in initial_models().keys():
-        if initial_models()[ds].get("recommended", False):
-            datasets[ds] = True
-    return datasets
+    return {
+        ds: True
+        for ds in initial_models().keys()
+        if initial_models()[ds].get("recommended", False)
+    }
 
 
 # ---------------------------------------------
 def default_dataset() -> dict:
-    datasets = dict()
-    for ds in initial_models().keys():
-        if initial_models()[ds].get("default", False):
-            datasets[ds] = True
-    return datasets
+    return {
+        ds: True
+        for ds in initial_models().keys()
+        if initial_models()[ds].get("default", False)
+    }
 
 
 # ---------------------------------------------
 def all_datasets() -> dict:
-    datasets = dict()
-    for ds in initial_models().keys():
-        datasets[ds] = True
-    return datasets
+    return {ds: True for ds in initial_models().keys()}
 
 
 # ---------------------------------------------
@@ -201,7 +196,7 @@ def download_weight_datasets(
     models: List[str], access_token: str, precision: str = "float32"
 ):
     migrate_models_ckpt()
-    successful = dict()
+    successful = {}
     for mod in models:
         print(f"Downloading {mod}:")
         successful[mod] = _download_repo_or_file(
@@ -272,9 +267,7 @@ def _download_diffusion_weights(
                 **extra_args,
             )
         except OSError as e:
-            if str(e).startswith("fp16 is not a valid"):
-                pass
-            else:
+            if not str(e).startswith("fp16 is not a valid"):
                 print(f"An unexpected error occurred while downloading the model: {e})")
         if path:
             break
@@ -397,18 +390,19 @@ def new_config_file_contents(
         conf = OmegaConf.create()
 
     default_selected = None
-    for model in successfully_downloaded:
+    for model, value in successfully_downloaded.items():
         # a bit hacky - what we are doing here is seeing whether a checkpoint
         # version of the model was previously defined, and whether the current
         # model is a diffusers (indicated with a path)
-        if conf.get(model) and Path(successfully_downloaded[model]).is_dir():
+        if conf.get(model) and Path(value).is_dir():
             delete_weights(model, conf[model])
 
-        stanza = {}
         mod = initial_models()[model]
-        stanza["description"] = mod["description"]
-        stanza["repo_id"] = mod["repo_id"]
-        stanza["format"] = mod["format"]
+        stanza = {
+            "description": mod["description"],
+            "repo_id": mod["repo_id"],
+            "format": mod["format"],
+        }
         # diffusers don't need width and height (probably .ckpt doesn't either)
         # so we no longer require these in INITIAL_MODELS.yaml
         if "width" in mod:
@@ -423,12 +417,13 @@ def new_config_file_contents(
                 os.path.join(sd_configs(), mod["config"])
             )
         if "vae" in mod:
-            if "file" in mod["vae"]:
-                stanza["vae"] = os.path.normpath(
+            stanza["vae"] = (
+                os.path.normpath(
                     os.path.join(Model_dir, Weights_dir, mod["vae"]["file"])
                 )
-            else:
-                stanza["vae"] = mod["vae"]
+                if "file" in mod["vae"]
+                else mod["vae"]
+            )
         if mod.get("default", False):
             stanza["default"] = True
             default_selected = True
@@ -460,4 +455,4 @@ def delete_weights(model_name: str, conf_stanza: dict):
         try:
             weights.unlink()
         except OSError as e:
-            print(str(e))
+            print(e)

@@ -67,7 +67,9 @@ def confirm_install(dest: Path) -> bool:
         )
     else:
         print(f"InvokeAI will be installed in {dest}")
-        dest_confirmed = not Confirm.ask(f"Would you like to pick a different location?", default=False)
+        dest_confirmed = not Confirm.ask(
+            "Would you like to pick a different location?", default=False
+        )
     console.line()
 
     return dest_confirmed
@@ -109,14 +111,12 @@ def dest_path(dest=None) -> Path:
         console.line()
         print(f"[orange3]Please select the destination directory for the installation:[/] \[{browse_start}]: ")
         selected = prompt(
-            f">>> ",
+            ">>> ",
             complete_in_thread=True,
             completer=path_completer,
             default=str(browse_start) + os.sep,
             vi_mode=True,
-            complete_while_typing=True
-            # Test that this is not needed on Windows
-            # complete_style=CompleteStyle.READLINE_LIKE,
+            complete_while_typing=True,
         )
         prev_dest = dest
         dest = Path(selected)
@@ -178,14 +178,12 @@ def graphical_accelerator():
         "idk",
     )
 
-    if OS == "Windows":
-        options = [nvidia, cpu]
-    if OS == "Linux":
-        options = [nvidia, amd, cpu]
-    elif OS == "Darwin":
+    if OS == "Darwin":
         options = [cpu]
-        # future CoreML?
-
+    elif OS == "Linux":
+        options = [nvidia, amd, cpu]
+    elif OS == "Windows":
+        options = [nvidia, cpu]
     if len(options) == 1:
         print(f'Your platform [gold1]{OS}-{ARCH}[/] only supports the "{options[0][1]}" driver. Proceeding with that.')
         return options[0][1]
@@ -222,7 +220,8 @@ def graphical_accelerator():
     choice = prompt(
         "Please make your selection: ",
         validator=Validator.from_callable(
-            lambda n: n in options.keys(), error_message="Please select one the above options"
+            lambda n: n in options,
+            error_message="Please select one the above options",
         ),
     )
 
@@ -298,15 +297,18 @@ def introduction() -> None:
     )
     console.line(2)
 
-def _platform_specific_help()->str:
+def _platform_specific_help() -> str:
     if OS == "Darwin":
-        text = Text.from_markup("""[b wheat1]macOS Users![/]\n\nPlease be sure you have the [b wheat1]Xcode command-line tools[/] installed before continuing.\nIf not, cancel with [i]Control-C[/] and follow the Xcode install instructions at [deep_sky_blue1]https://www.freecodecamp.org/news/install-xcode-command-line-tools/[/].""")
+        return Text.from_markup(
+            """[b wheat1]macOS Users![/]\n\nPlease be sure you have the [b wheat1]Xcode command-line tools[/] installed before continuing.\nIf not, cancel with [i]Control-C[/] and follow the Xcode install instructions at [deep_sky_blue1]https://www.freecodecamp.org/news/install-xcode-command-line-tools/[/]."""
+        )
     elif OS == "Windows":
-        text = Text.from_markup("""[b wheat1]Windows Users![/]\n\nBefore you start, please do the following:
+        return Text.from_markup(
+            """[b wheat1]Windows Users![/]\n\nBefore you start, please do the following:
   1. Double-click on the file [b wheat1]WinLongPathsEnabled.reg[/] in order to
      enable long path support on your system.
   2. Make sure you have the [b wheat1]Visual C++ core libraries[/] installed. If not, install from
-     [deep_sky_blue1]https://learn.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170[/]""")
+     [deep_sky_blue1]https://learn.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170[/]"""
+        )
     else:
-        text = ""
-    return text
+        return ""

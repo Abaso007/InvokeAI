@@ -77,8 +77,8 @@ class InvokeAIWebServer:
         mimetypes.add_type("application/javascript", ".js")
         mimetypes.add_type("text/css", ".css")
         # Socket IO
-        logger = True if args.web_verbose else False
-        engineio_logger = True if args.web_verbose else False
+        logger = bool(args.web_verbose)
+        engineio_logger = bool(args.web_verbose)
         max_http_buffer_size = 10000000
 
         socketio_args = {
@@ -521,15 +521,13 @@ class InvokeAIWebServer:
                         os.remove(f)
                         thumbnail_path = os.path.join(
                             self.thumbnail_image_path,
-                            os.path.splitext(os.path.basename(f))[0] + ".webp",
+                            f"{os.path.splitext(os.path.basename(f))[0]}.webp",
                         )
                         os.remove(thumbnail_path)
                     except Exception as e:
                         socketio.emit(
                             "error", {"message": f"Unable to delete {f}: {str(e)}"}
                         )
-                        pass
-
                 socketio.emit("tempFolderEmptied")
             except Exception as e:
                 self.handle_exceptions(e)
@@ -631,8 +629,6 @@ class InvokeAIWebServer:
                         socketio.emit(
                             "error", {"message": f"Unable to load {path}: {str(e)}"}
                         )
-                        pass
-
                 socketio.emit(
                     "galleryImages",
                     {"images": image_array, "category": category},
@@ -702,8 +698,6 @@ class InvokeAIWebServer:
                         socketio.emit(
                             "error", {"message": f"Unable to load {path}: {str(e)}"}
                         )
-                        pass
-
                 socketio.emit(
                     "galleryImages",
                     {
@@ -769,8 +763,6 @@ class InvokeAIWebServer:
                     seed = original_image["metadata"]["image"]["seed"]
                 except KeyError:
                     seed = "unknown_seed"
-                    pass
-
                 if postprocessing_parameters["type"] == "esrgan":
                     progress.set_current_status("common.statusUpscalingESRGAN")
                 elif postprocessing_parameters["type"] == "gfpgan":
@@ -1325,7 +1317,6 @@ class InvokeAIWebServer:
             # Clear the CUDA cache on an exception
             self.empty_cuda_cache()
             self.socketio.emit("processingCanceled")
-            pass
         except Exception as e:
             # Clear the CUDA cache on an exception
             self.empty_cuda_cache()
@@ -1397,9 +1388,7 @@ class InvokeAIWebServer:
                     }
                 )
 
-            rfc_dict["postprocessing"] = (
-                postprocessing if len(postprocessing) > 0 else None
-            )
+            rfc_dict["postprocessing"] = postprocessing if postprocessing else None
 
             # semantic drift
             rfc_dict["sampler"] = parameters["sampler_name"]
@@ -1502,9 +1491,8 @@ class InvokeAIWebServer:
 
             seed = "unknown_seed"
 
-            if "image" in metadata:
-                if "seed" in metadata["image"]:
-                    seed = metadata["image"]["seed"]
+            if "image" in metadata and "seed" in metadata["image"]:
+                seed = metadata["image"]["seed"]
 
             filename = f"{number_prefix}.{truncated_uuid}.{seed}"
 
@@ -1710,8 +1698,7 @@ def copy_image_from_bounding_box(
     """
     with image as im:
         bounds = (x, y, x + width, y + height)
-        im_cropped = im.crop(bounds)
-        return im_cropped
+        return im.crop(bounds)
 
 
 def dataURL_to_image(dataURL: str) -> ImageType:
@@ -1719,7 +1706,7 @@ def dataURL_to_image(dataURL: str) -> ImageType:
     Converts a base64 image dataURL into an image.
     The dataURL is split on the first comma.
     """
-    image = Image.open(
+    return Image.open(
         io.BytesIO(
             base64.decodebytes(
                 bytes(
@@ -1729,7 +1716,6 @@ def dataURL_to_image(dataURL: str) -> ImageType:
             )
         )
     )
-    return image
 
 
 def image_to_dataURL(image: ImageType, image_format: str = "PNG") -> str:
@@ -1738,11 +1724,12 @@ def image_to_dataURL(image: ImageType, image_format: str = "PNG") -> str:
     """
     buffered = io.BytesIO()
     image.save(buffered, format=image_format)
-    mime_type = Image.MIME.get(image_format.upper(), "image/" + image_format.lower())
-    image_base64 = f"data:{mime_type};base64," + base64.b64encode(
+    mime_type = Image.MIME.get(
+        image_format.upper(), f"image/{image_format.lower()}"
+    )
+    return f"data:{mime_type};base64," + base64.b64encode(
         buffered.getvalue()
     ).decode("UTF-8")
-    return image_base64
 
 
 def dataURL_to_bytes(dataURL: str) -> bytes:
@@ -1785,17 +1772,16 @@ def save_thumbnail(
     Saves a thumbnail of an image, returning its path.
     """
     base_filename = os.path.splitext(filename)[0]
-    thumbnail_path = os.path.join(path, base_filename + ".webp")
+    thumbnail_path = os.path.join(path, f"{base_filename}.webp")
 
     if os.path.exists(thumbnail_path):
         return thumbnail_path
 
-    thumbnail_width = size
     thumbnail_height = round(size * (image.height / image.width))
 
     image_copy = image.copy()
-    image_copy.thumbnail(size=(thumbnail_width, thumbnail_height))
-
+    thumbnail_width = size
+    image_copy.thumbnail(thumbnail_width=(thumbnail_width, thumbnail_height))
     image_copy.save(thumbnail_path, "WEBP")
 
     return thumbnail_path

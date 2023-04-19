@@ -80,9 +80,7 @@ def anisotropic_Gaussian(ksize=15, theta=np.pi, l1=6, l2=6):
     V = np.array([[v[0], v[1]], [v[1], -v[0]]])
     D = np.array([[l1, 0], [0, l2]])
     Sigma = np.dot(np.dot(V, D), np.linalg.inv(V))
-    k = gm_blur_kernel(mean=[0, 0], cov=Sigma, size=ksize)
-
-    return k
+    return gm_blur_kernel(mean=[0, 0], cov=Sigma, size=ksize)
 
 
 def gm_blur_kernel(mean, cov, size=15):
@@ -182,13 +180,7 @@ def gen_kernel(
     ZZ_t = ZZ.transpose(0, 1, 3, 2)
     raw_kernel = np.exp(-0.5 * np.squeeze(ZZ_t @ INV_SIGMA @ ZZ)) * (1 + noise)
 
-    # shift the kernel so it will be centered
-    # raw_kernel_centered = kernel_shift(raw_kernel, scale_factor)
-
-    # Normalize the kernel and return
-    # kernel = raw_kernel_centered / np.sum(raw_kernel_centered)
-    kernel = raw_kernel / np.sum(raw_kernel)
-    return kernel
+    return raw_kernel / np.sum(raw_kernel)
 
 
 def fspecial_gaussian(hsize, sigma):
@@ -210,8 +202,7 @@ def fspecial_laplacian(alpha):
     h1 = alpha / (alpha + 1)
     h2 = (1 - alpha) / (alpha + 1)
     h = [[h1, h2, h1], [h2, -4 / (alpha + 1), h2], [h1, h2, h1]]
-    h = np.array(h)
-    return h
+    return np.array(h)
 
 
 def fspecial(filter_type, *args, **kwargs):
@@ -524,10 +515,7 @@ def degradation_bsrgan(img, sf=4, lq_patchsize=72, isp_model=None):
         )
 
     for i in shuffle_order:
-        if i == 0:
-            img = add_blur(img, sf=sf)
-
-        elif i == 1:
+        if i in [0, 1]:
             img = add_blur(img, sf=sf)
 
         elif i == 2:
@@ -687,8 +675,7 @@ def degradation_bsrgan_variant(image, sf=4, isp_model=None):
     # add final JPEG compression noise
     image = add_JPEG_noise(image)
     image = util.single2uint(image)
-    example = {"image": image}
-    return example
+    return {"image": image}
 
 
 if __name__ == "__main__":
@@ -724,4 +711,4 @@ if __name__ == "__main__":
         img_concat = np.concatenate(
             [lq_bicubic_nearest, lq_nearest, util.single2uint(img_hq)], axis=1
         )
-        util.imsave(img_concat, str(i) + ".png")
+        util.imsave(img_concat, f"{str(i)}.png")

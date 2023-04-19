@@ -439,8 +439,10 @@ class Generate:
             0.0 <= variation_amount <= 1.0
         ), "-v --variation_amount must be in [0.0, 1.0]"
         assert 0.0 <= perlin <= 1.0, "--perlin must be in [0.0, 1.0]"
-        assert (embiggen == None and embiggen_tiles == None) or (
-            (embiggen != None or embiggen_tiles != None) and init_img != None
+        assert (
+            embiggen is None
+            and embiggen_tiles is None
+            or ((embiggen != None or embiggen_tiles != None) and init_img != None)
         ), "Embiggen requires an init/input image to be specified"
 
         if len(with_variations) > 0 or variation_amount > 1.0:
@@ -473,7 +475,7 @@ class Generate:
         if self._has_cuda():
             torch.cuda.reset_peak_memory_stats()
 
-        results = list()
+        results = []
 
         try:
             uc, c, extra_conditioning_info = get_uc_and_c_and_ec(
@@ -652,8 +654,7 @@ class Generate:
         # try to reuse the same filename prefix as the original file.
         # we take everything up to the first period
         prefix = None
-        m = re.match(r"^([^.]+)\.", os.path.basename(image_path))
-        if m:
+        if m := re.match(r"^([^.]+)\.", os.path.basename(image_path)):
             prefix = m.groups()[0]
 
         # face fixers and esrgan take an Image, but embiggen takes a path
@@ -703,7 +704,7 @@ class Generate:
             opt.seed = seed
             opt.prompt = prompt
 
-            if len(extend_instructions) > 0:
+            if extend_instructions:
                 restorer = Outcrop(
                     image,
                     self,
@@ -773,10 +774,7 @@ class Generate:
         if ((init_image is not None) and (mask_image is not None)) or force_outpaint:
             return self._make_inpaint()
 
-        if init_image is not None:
-            return self._make_img2img()
-
-        return self._make_txt2img()
+        return self._make_img2img() if init_image is not None else self._make_txt2img()
 
     def _make_images(
         self,
@@ -1177,7 +1175,7 @@ class Generate:
             for x in range(width):
                 if pixdata[x, y][3] == 0:
                     r, g, b, _ = pixdata[x, y]
-                    if (r, g, b) != (0, 0, 0) and (r, g, b) != (255, 255, 255):
+                    if (r, g, b) not in [(0, 0, 0), (255, 255, 255)]:
                         colored += 1
         return colored == 0
 
@@ -1195,9 +1193,7 @@ class Generate:
 
     def _squeeze_image(self, image):
         x, y, resize_needed = self._resolution_check(image.width, image.height)
-        if resize_needed:
-            return InitImageResizer(image).resize(x, y)
-        return image
+        return InitImageResizer(image).resize(x, y) if resize_needed else image
 
     def _fit_image(self, image, max_dimensions):
         w, h = max_dimensions

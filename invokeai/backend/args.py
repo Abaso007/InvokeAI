@@ -138,15 +138,13 @@ class ArgFormatter(argparse.RawTextHelpFormatter):
         if usage is not None:
             usage = usage % dict(prog=self._prog)
 
-        # if no optionals or positionals are available, usage is just prog
-        elif usage is None and not actions:
+        elif not actions:
             usage = "invoke>"
-        elif usage is None:
+        else:
             prog = "invoke>"
             # build full usage string
             action_usage = self._format_actions_usage(actions, groups)  # NEW
             usage = " ".join([s for s in [prog, action_usage] if s])
-            # omit the long line wrapping code
         # prefix with 'usage:'
         return "%s%s\n\n" % (prefix, usage)
 
@@ -223,24 +221,18 @@ class Args(object):
         if cmd_string.startswith("-"):
             prompt = ""
             switches = cmd_string
-        # handle the case in which the prompt is enclosed by quotes
         elif cmd_string.startswith('"'):
             a = shlex.split(cmd_string, comments=True)
             prompt = a[0]
             switches = shlex.join(a[1:])
+        elif cmd_string.startswith("-"):
+            prompt = ""
+            switches = cmd_string
+        elif match := re.match("^(.+?)\s(--?[a-zA-Z].+)", cmd_string):
+            prompt, switches = match.groups()
         else:
-            # no initial quote, so get everything up to the first thing
-            # that looks like a switch
-            if cmd_string.startswith("-"):
-                prompt = ""
-                switches = cmd_string
-            else:
-                match = re.match("^(.+?)\s(--?[a-zA-Z].+)", cmd_string)
-                if match:
-                    prompt, switches = match.groups()
-                else:
-                    prompt = cmd_string
-                    switches = ""
+            prompt = cmd_string
+            switches = ""
         try:
             self._cmd_switches = self._cmd_parser.parse_args(
                 shlex.split(switches, comments=True)
@@ -255,26 +247,24 @@ class Args(object):
         return json.dumps(self.to_dict(**kwargs))
 
     def to_dict(self, **kwargs):
-        a = vars(self)
-        a.update(kwargs)
-        return a
+        return vars(self) | kwargs
 
     # Isn't there a more automated way of doing this?
     # Ideally we get the switch strings out of the argparse objects,
     # but I don't see a documented API for this.
     def dream_prompt_str(self, **kwargs):
         """Normalized dream_prompt."""
-        a = vars(self)
-        a.update(kwargs)
-        switches = list()
+        a = vars(self) | kwargs
         prompt = a["prompt"]
         prompt.replace('"', '\\"')
-        switches.append(prompt)
-        switches.append(f'-s {a["steps"]}')
-        switches.append(f'-S {a["seed"]}')
-        switches.append(f'-W {a["width"]}')
-        switches.append(f'-H {a["height"]}')
-        switches.append(f'-C {a["cfg_scale"]}')
+        switches = [
+            prompt,
+            f'-s {a["steps"]}',
+            f'-S {a["seed"]}',
+            f'-W {a["width"]}',
+            f'-H {a["height"]}',
+            f'-C {a["cfg_scale"]}',
+        ]
         if a["karras_max"] is not None:
             switches.append(f'--karras_max {a["karras_max"]}')
         if a["perlin"] > 0:
@@ -294,8 +284,7 @@ class Args(object):
 
         # img2img generations have parameters relevant only to them and have special handling
         if a["init_img"] and len(a["init_img"]) > 0:
-            switches.append(f'-I {a["init_img"]}')
-            switches.append(f'-A {a["sampler_name"]}')
+            switches.extend((f'-I {a["init_img"]}', f'-A {a["sampler_name"]}'))
             if a["fit"]:
                 switches.append("--fit")
             if a["init_mask"] and len(a["init_mask"]) > 0:
@@ -313,8 +302,7 @@ class Args(object):
 
         # facetool-specific parameters, only print if running facetool
         if a["facetool_strength"]:
-            switches.append(f'-G {a["facetool_strength"]}')
-            switches.append(f'-ft {a["facetool"]}')
+            switches.extend((f'-G {a["facetool_strength"]}', f'-ft {a["facetool"]}'))
             if a["facetool"] == "codeformer":
                 switches.append(f'-cf {a["codeformer_fidelity"]}')
 
@@ -393,10 +381,7 @@ class Args(object):
         # the arg value. For example, the --grid and --individual options are a little
         # funny because of their push/pull relationship. This is how to handle it.
         if name == "grid":
-            if cmd_switches.individual:
-                return False
-            else:
-                return value_cmd or value_arg
+            return False if cmd_switches.individual else value_cmd or value_arg
         return value_cmd if value_cmd is not None else value_arg
 
     def __setattr__(self, name, value):
@@ -490,7 +475,7 @@ class Args(object):
             "-z",
             type=int,
             default=6,
-            choices=range(0, 10),
+            choices=range(10),
             dest="png_compression",
             help="level of PNG compression, from 0 (none) to 9 (maximum). Default is 6.",
         )
@@ -943,7 +928,7 @@ class Args(object):
             "--png_compression",
             "-z",
             type=int,
-            choices=range(0, 10),
+            choices=range(10),
             dest="png_compression",
             help="level of PNG compression, from 0 (none) to 9 (maximum). [6]",
         )
@@ -1346,17 +1331,15 @@ def repack_prompt(prompt_list: list) -> str:
 def calculate_init_img_hash(image_string):
     prefix = "data:image/png;base64,"
     hash = None
-    if image_string.startswith(prefix):
-        imagebase64 = image_string[len(prefix) :]
-        imagedata = base64.b64decode(imagebase64)
-        with open("outputs/test.png", "wb") as file:
-            file.write(imagedata)
-        sha = hashlib.sha256()
-        sha.update(imagedata)
-        hash = sha.hexdigest()
-    else:
-        hash = sha256(image_string)
-    return hash
+    if not image_string.startswith(prefix):
+        return sha256(image_string)
+    imagebase64 = image_string[len(prefix) :]
+    imagedata = base64.b64decode(imagebase64)
+    with open("outputs/test.png", "wb") as file:
+        file.write(imagedata)
+    sha = hashlib.sha256()
+    sha.update(imagedata)
+    return sha.hexdigest()
 
 
 # Bah. This should be moved somewhere else...
@@ -1364,10 +1347,10 @@ def sha256(path):
     sha = hashlib.sha256()
     with open(path, "rb") as f:
         while True:
-            data = f.read(65536)
-            if not data:
+            if data := f.read(65536):
+                sha.update(data)
+            else:
                 break
-            sha.update(data)
     return sha.hexdigest()
 
 
@@ -1376,12 +1359,10 @@ def legacy_metadata_load(meta, pathname) -> Args:
     if "Dream" in meta and len(meta["Dream"]) > 0:
         dream_prompt = meta["Dream"]
         opt.parse_cmd(dream_prompt)
-    else:  # if nothing else, we can get the seed
-        match = re.search("\d+\.(\d+)", pathname)
-        if match:
-            seed = match.groups()[0]
-            opt.seed = seed
-        else:
-            opt.prompt = ""
-            opt.seed = 0
+    elif match := re.search("\d+\.(\d+)", pathname):
+        seed = match.groups()[0]
+        opt.seed = seed
+    else:
+        opt.prompt = ""
+        opt.seed = 0
     return opt

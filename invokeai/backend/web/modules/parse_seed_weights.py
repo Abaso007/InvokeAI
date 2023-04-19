@@ -33,11 +33,11 @@ def parse_seed_weights(seed_weights):
             return False
 
         # Seed must be 0 or above
-        if not seed >= 0:
+        if seed < 0:
             return False
 
         # Weight must be between 0 and 1
-        if not (weight >= 0 and weight <= 1):
+        if weight < 0 or weight > 1:
             return False
 
         # This pair is valid

@@ -17,9 +17,7 @@ def add_field_argument(command_parser, name: str, field, default_override = None
     default = default_override if default_override is not None else field.default if field.default_factory is None else field.default_factory()
     if get_origin(field.type_) == Literal:
         allowed_values = get_args(field.type_)
-        allowed_types = set()
-        for val in allowed_values:
-            allowed_types.add(type(val))
+        allowed_types = {type(val) for val in allowed_values}
         allowed_types_list = list(allowed_types)
         field_type = allowed_types_list[0] if len(allowed_types) == 1 else Union[allowed_types_list]  # type: ignore
 
@@ -99,9 +97,9 @@ class CliContext:
         self.invoker = invoker
         self.session = session
         self.parser = parser
-        self.defaults = dict()
-        self.graph_nodes = dict()
-        self.nodes_added = list()
+        self.defaults = {}
+        self.graph_nodes = {}
+        self.nodes_added = []
 
     def get_session(self):
         self.session = self.invoker.services.graph_execution_manager.get(self.session.id)
@@ -109,8 +107,8 @@ class CliContext:
 
     def reset(self):
         self.session = self.invoker.create_execution_state()
-        self.graph_nodes = dict()
-        self.nodes_added = list()
+        self.graph_nodes = {}
+        self.nodes_added = []
         # Leave defaults unchanged
 
     def add_node(self, node: BaseInvocation):
@@ -140,7 +138,7 @@ class BaseCommand(ABC, BaseModel):
     def get_all_subclasses(cls):
         subclasses = []
         toprocess = [cls]
-        while len(toprocess) > 0:
+        while toprocess:
             next = toprocess.pop(0)
             next_subclasses = next.__subclasses__()
             subclasses.extend(next_subclasses)

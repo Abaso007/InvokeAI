@@ -71,8 +71,7 @@ class ModelsList(BaseModel):
 async def list_models() -> ModelsList:
     """Gets a list of models"""
     models_raw = ApiDependencies.invoker.services.model_manager.list_models()
-    models = parse_obj_as(ModelsList, { "models": models_raw })
-    return models
+    return parse_obj_as(ModelsList, { "models": models_raw })
 
 
 @models_router.post(
@@ -116,15 +115,15 @@ async def delete_model(model_name: str) -> None:
 
     # check if model exists
     print(f">> Checking for model {model_name}...")
-           
+
     if model_exists:
         print(f">> Deleting Model: {model_name}")
         ApiDependencies.invoker.services.model_manager.del_model(model_name, delete_files=True)
         print(f">> Model Deleted: {model_name}")
         raise HTTPException(status_code=204, detail=f"Model '{model_name}' deleted successfully")
-    
+
     else:
-        print(f">> Model not found")
+        print(">> Model not found")
         raise HTTPException(status_code=404, detail=f"Model '{model_name}' not found")
     
 

@@ -90,21 +90,22 @@ class PromptFormatter:
         t2i = self.t2i
         opt = self.opt
 
-        switches = list()
-        switches.append(f'"{opt.prompt}"')
-        switches.append(f"-s{opt.steps        or t2i.steps}")
-        switches.append(f"-W{opt.width        or t2i.width}")
-        switches.append(f"-H{opt.height       or t2i.height}")
-        switches.append(f"-C{opt.cfg_scale    or t2i.cfg_scale}")
-        switches.append(f"-A{opt.sampler_name or t2i.sampler_name}")
+        switches = [
+            f'"{opt.prompt}"',
+            f"-s{opt.steps or t2i.steps}",
+            f"-W{opt.width or t2i.width}",
+            f"-H{opt.height or t2i.height}",
+            f"-C{opt.cfg_scale or t2i.cfg_scale}",
+            f"-A{opt.sampler_name or t2i.sampler_name}",
+        ]
         # to do: put model name into the t2i object
         #        switches.append(f'--model{t2i.model_name}')
         if opt.seamless or t2i.seamless:
-            switches.append(f"--seamless")
+            switches.append("--seamless")
         if opt.init_img:
             switches.append(f"-I{opt.init_img}")
         if opt.fit:
-            switches.append(f"--fit")
+            switches.append("--fit")
         if opt.strength and opt.init_img is not None:
             switches.append(f"-f{opt.strength or t2i.strength}")
         if opt.gfpgan_strength:

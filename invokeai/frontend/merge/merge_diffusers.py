@@ -198,7 +198,7 @@ class mergeModelsForm(npyscreen.FormMultiPageAction):
         window_height, window_width = curses.initscr().getmaxyx()
 
         self.model_names = self.get_model_names()
-        max_width = max([len(x) for x in self.model_names])
+        max_width = max(len(x) for x in self.model_names)
         max_width += 6
         horizontal_layout = max_width * 3 < window_width
 
@@ -346,14 +346,13 @@ class mergeModelsForm(npyscreen.FormMultiPageAction):
         else:
             interp = self.interpolations[self.merge_method.value[0]]
 
-        args = dict(
+        return dict(
             models=models,
             alpha=self.alpha.value,
             interp=interp,
             force=self.force.value,
             merged_model_name=self.merged_model_name.value,
         )
-        return args
 
     def check_for_overwrite(self) -> bool:
         model_out = self.merged_model_name.value
@@ -367,23 +366,23 @@ class mergeModelsForm(npyscreen.FormMultiPageAction):
     def validate_field_values(self) -> bool:
         bad_fields = []
         model_names = self.model_names
-        selected_models = set(
-            (model_names[self.model1.value[0]], model_names[self.model2.value[0]])
-        )
+        selected_models = {
+            model_names[self.model1.value[0]],
+            model_names[self.model2.value[0]],
+        }
         if self.model3.value[0] > 0:
             selected_models.add(model_names[self.model3.value[0] - 1])
         if len(selected_models) < 2:
             bad_fields.append(
                 f"Please select two or three DIFFERENT models to compare. You selected {selected_models}"
             )
-        if len(bad_fields) > 0:
-            message = "The following problems were detected and must be corrected:"
-            for problem in bad_fields:
-                message += f"\n* {problem}"
-            npyscreen.notify_confirm(message)
-            return False
-        else:
+        if not bad_fields:
             return True
+        message = "The following problems were detected and must be corrected:"
+        for problem in bad_fields:
+            message += f"\n* {problem}"
+        npyscreen.notify_confirm(message)
+        return False
 
     def get_model_names(self) -> List[str]:
         model_names = [

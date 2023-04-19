@@ -39,8 +39,7 @@ class IntSlider(npyscreen.Slider):
     def translate_value(self):
         stri = "%2d / %2d" % (self.value, self.out_of)
         l = (len(str(self.out_of))) * 2 + 4
-        stri = stri.rjust(l)
-        return stri
+        return stri.rjust(l)
 
 
 # -------------------------------------
@@ -86,8 +85,7 @@ class FloatSlider(npyscreen.Slider):
     def translate_value(self):
         stri = "%3.2f / %3.2f" % (self.value, self.out_of)
         l = (len(str(self.out_of))) * 2 + 4
-        stri = stri.rjust(l)
-        return stri
+        return stri.rjust(l)
 
 
 class FloatTitleSlider(npyscreen.TitleText):
@@ -104,16 +102,16 @@ class MultiSelectColumns(npyscreen.MultiSelect):
     def make_contained_widgets(self):
         self._my_widgets = []
         column_width = self.width // self.columns
-        for h in range(self.value_cnt):
-            self._my_widgets.append(
-                self._contained_widgets(
-                    self.parent,
-                    rely=self.rely + (h % self.rows) * self._contained_widget_height,
-                    relx=self.relx + (h // self.rows) * column_width,
-                    max_width=column_width,
-                    max_height=self.__class__._contained_widget_height,
-                )
+        self._my_widgets.extend(
+            self._contained_widgets(
+                self.parent,
+                rely=self.rely + (h % self.rows) * self._contained_widget_height,
+                relx=self.relx + (h // self.rows) * column_width,
+                max_width=column_width,
+                max_height=self.__class__._contained_widget_height,
             )
+            for h in range(self.value_cnt)
+        )
 
     def set_up_handlers(self):
         super().set_up_handlers()
@@ -130,19 +128,17 @@ class MultiSelectColumns(npyscreen.MultiSelect):
             if self.scroll_exit:
                 self.cursor_line = len(self.values) - self.rows
                 self.h_exit_down(ch)
-                return True
             else:
                 self.cursor_line -= self.rows
-                return True
+
+            return True
 
     def h_cursor_line_up(self, ch):
         self.cursor_line -= self.rows
         if self.cursor_line < 0:
+            self.cursor_line = 0
             if self.scroll_exit:
-                self.cursor_line = 0
                 self.h_exit_up(ch)
-            else:
-                self.cursor_line = 0
 
     def h_cursor_line_left(self, ch):
         super().h_cursor_line_up(ch)

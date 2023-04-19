@@ -35,17 +35,11 @@ def get_clip_token_for_string(tokenizer, string):
 
     tokens = batch_encoding["input_ids"]
 
-    if torch.count_nonzero(tokens - 49407) == 2:
-        return tokens[0, 1]
-
-    return None
+    return tokens[0, 1] if torch.count_nonzero(tokens - 49407) == 2 else None
 
 def get_bert_token_for_string(tokenizer, string):
     token = tokenizer(string)
-    if torch.count_nonzero(token) == 3:
-        return token[0, 1]
-
-    return None
+    return token[0, 1] if torch.count_nonzero(token) == 3 else None
 
 
 if __name__ == "__main__":
@@ -102,7 +96,7 @@ if __name__ == "__main__":
         manager.load(manager_ckpt)
 
         for placeholder_string in manager.string_to_token_dict:
-            if not placeholder_string in string_to_token_dict:
+            if placeholder_string not in string_to_token_dict:
                 string_to_token_dict[placeholder_string] = manager.string_to_token_dict[placeholder_string]
                 string_to_param_dict[placeholder_string] = manager.string_to_param_dict[placeholder_string]
 

@@ -25,7 +25,7 @@ def log_txt_as_img(wh, xc, size=10):
     # wh a tuple of (width, height)
     # xc a list of captions to plot
     b = len(xc)
-    txts = list()
+    txts = []
     for bi in range(b):
         txt = Image.new("RGB", wh, color="white")
         draw = ImageDraw.Draw(txt)
@@ -48,15 +48,19 @@ def log_txt_as_img(wh, xc, size=10):
 
 
 def ismap(x):
-    if not isinstance(x, torch.Tensor):
-        return False
-    return (len(x.shape) == 4) and (x.shape[1] > 3)
+    return (
+        (len(x.shape) == 4) and (x.shape[1] > 3)
+        if isinstance(x, torch.Tensor)
+        else False
+    )
 
 
 def isimage(x):
-    if not isinstance(x, torch.Tensor):
-        return False
-    return (len(x.shape) == 4) and (x.shape[1] == 3 or x.shape[1] == 1)
+    return (
+        len(x.shape) == 4 and x.shape[1] in [3, 1]
+        if isinstance(x, torch.Tensor)
+        else False
+    )
 
 
 def exists(x):
@@ -108,10 +112,7 @@ def _do_parallel_data_prefetch(func, Q, data, idx, idx_to_fn=False):
     # create dummy dataset instance
 
     # run prefetching
-    if idx_to_fn:
-        res = func(data, worker_id=idx)
-    else:
-        res = func(data)
+    res = func(data, worker_id=idx) if idx_to_fn else func(data)
     Q.put([idx, res])
     Q.put("Done")
 
@@ -136,10 +137,7 @@ def parallel_data_prefetch(
                 'WARNING:"data" argument passed to parallel_data_prefetch is a dict: Using only its values and disregarding keys.'
             )
             data = list(data.values())
-        if target_data_type == "ndarray":
-            data = np.asarray(data)
-        else:
-            data = list(data)
+        data = np.asarray(data) if target_data_type == "ndarray" else list(data)
     else:
         raise TypeError(
             f"The data, that shall be processed parallel has to be either an np.ndarray or an Iterable, but is actually {type(data)}."
@@ -166,7 +164,7 @@ def parallel_data_prefetch(
         arguments = [
             [func, Q, part, i, use_worker_id]
             for i, part in enumerate(
-                [data[i : i + step] for i in range(0, len(data), step)]
+                data[i : i + step] for i in range(0, len(data), step)
             )
         ]
     processes = []
@@ -205,11 +203,11 @@ def parallel_data_prefetch(
         print(f"Prefetching complete. [{time.time() - start} sec.]")
 
     if target_data_type == "ndarray":
-        if not isinstance(gather_res[0], np.ndarray):
-            return np.concatenate([np.asarray(r) for r in gather_res], axis=0)
-
-        # order outputs
-        return np.concatenate(gather_res, axis=0)
+        return (
+            np.concatenate(gather_res, axis=0)
+            if isinstance(gather_res[0], np.ndarray)
+            else np.concatenate([np.asarray(r) for r in gather_res], axis=0)
+        )
     elif target_data_type == "list":
         out = []
         for r in gather_res:
@@ -279,8 +277,7 @@ def ask_user(question: str, answers: list):
         [user_prompt], repeat("\n".join([invalid_answer_msg, user_prompt]))
     )
     user_answers = map(input, pose_question)
-    valid_response = next(filter(answers.__contains__, user_answers))
-    return valid_response
+    return next(filter(answers.__contains__, user_answers))
 
 
 # -------------------------------------
@@ -304,7 +301,7 @@ def download_with_resume(url: str, dest: Path, access_token: str = None) -> Path
         try:
             file_name = re.search(
                 'filename="(.+)"', resp.headers.get("Content-Disposition")
-            ).group(1)
+            )[1]
         except:
             file_name = os.path.basename(url)
         dest = dest / file_name
@@ -359,7 +356,7 @@ def url_attachment_name(url: str) -> dict:
     try:
         resp = requests.get(url, stream=True)
         match = re.search('filename="(.+)"', resp.headers.get("Content-Disposition"))
-        return match.group(1)
+        return match[1]
     except:
         return None
 
@@ -375,8 +372,9 @@ def image_to_dataURL(image: Image.Image, image_format: str = "PNG") -> str:
     """
     buffered = io.BytesIO()
     image.save(buffered, format=image_format)
-    mime_type = Image.MIME.get(image_format.upper(), "image/" + image_format.lower())
-    image_base64 = f"data:{mime_type};base64," + base64.b64encode(
+    mime_type = Image.MIME.get(
+        image_format.upper(), f"image/{image_format.lower()}"
+    )
+    return f"data:{mime_type};base64," + base64.b64encode(
         buffered.getvalue()
     ).decode("UTF-8")
-    return image_base64

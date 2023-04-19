@@ -101,18 +101,15 @@ def get_prompt_structure(
 def get_max_token_count(
     tokenizer, prompt: Union[FlattenedPrompt, Blend], truncate_if_too_long=False
 ) -> int:
-    if type(prompt) is Blend:
-        blend: Blend = prompt
-        return max(
-            [
-                get_max_token_count(tokenizer, c, truncate_if_too_long)
-                for c in blend.prompts
-            ]
-        )
-    else:
+    if type(prompt) is not Blend:
         return len(
             get_tokens_for_prompt_object(tokenizer, prompt, truncate_if_too_long)
         )
+    blend: Blend = prompt
+    return max(
+        get_max_token_count(tokenizer, c, truncate_if_too_long)
+        for c in blend.prompts
+    )
 
 
 def get_tokens_for_prompt_object(
@@ -137,7 +134,7 @@ def get_tokens_for_prompt_object(
     tokens = tokenizer.tokenize(text)
     if truncate_if_too_long:
         max_tokens_length = tokenizer.model_max_length - 2  # typically 75
-        tokens = tokens[0:max_tokens_length]
+        tokens = tokens[:max_tokens_length]
     return tokens
 
 
@@ -226,14 +223,14 @@ def log_tokenization_for_text(text, tokenizer, display_label=None, truncate_if_t
     usedTokens = 0
     totalTokens = len(tokens)
 
-    for i in range(0, totalTokens):
+    for i in range(totalTokens):
         token = tokens[i].replace("</w>", " ")
         # alternate color
         s = (usedTokens % 6) + 1
         if truncate_if_too_long and i >= tokenizer.model_max_length:
-            discarded = discarded + f"\x1b[0;3{s};40m{token}"
+            discarded = f"{discarded}\x1b[0;3{s};40m{token}"
         else:
-            tokenized = tokenized + f"\x1b[0;3{s};40m{token}"
+            tokenized = f"{tokenized}\x1b[0;3{s};40m{token}"
             usedTokens += 1
 
     if usedTokens > 0:

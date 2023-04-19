@@ -85,7 +85,7 @@ class TestEventService(EventServiceBase):
 
     def __init__(self):
         super().__init__()
-        self.events = list()
+        self.events = []
 
     def dispatch(self, event_name: str, payload: Any) -> None:
         pass

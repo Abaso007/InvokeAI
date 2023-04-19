@@ -124,9 +124,8 @@ def get_node_inputs(invocation: BaseInvocation, context: CliContext) -> dict[str
     node_type = type(invocation)
     if node_type is not GraphInvocation:
         return fields_from_type_hints(get_type_hints(node_type), invocation.id)
-    else:
-        graph: LibraryGraph = context.invoker.services.graph_library.get(context.graph_nodes[invocation.id])
-        return {e.alias: get_node_input_field(graph, e.alias, invocation.id) for e in graph.exposed_inputs}
+    graph: LibraryGraph = context.invoker.services.graph_library.get(context.graph_nodes[invocation.id])
+    return {e.alias: get_node_input_field(graph, e.alias, invocation.id) for e in graph.exposed_inputs}
 
 
 def get_node_outputs(invocation: BaseInvocation, context: CliContext) -> dict[str, NodeField]:
@@ -134,9 +133,8 @@ def get_node_outputs(invocation: BaseInvocation, context: CliContext) -> dict[st
     node_type = type(invocation)
     if node_type is not GraphInvocation:
         return fields_from_type_hints(get_type_hints(node_type.get_output_type()), invocation.id)
-    else:
-        graph: LibraryGraph = context.invoker.services.graph_library.get(context.graph_nodes[invocation.id])
-        return {e.alias: get_node_output_field(graph, e.alias, invocation.id) for e in graph.exposed_outputs}
+    graph: LibraryGraph = context.invoker.services.graph_library.get(context.graph_nodes[invocation.id])
+    return {e.alias: get_node_output_field(graph, e.alias, invocation.id) for e in graph.exposed_outputs}
 
 
 def generate_matching_edges(
@@ -149,20 +147,23 @@ def generate_matching_edges(
     matching_fields = set(afields.keys()).intersection(bfields.keys())
 
     # Remove invalid fields
-    invalid_fields = set(["type", "id"])
+    invalid_fields = {"type", "id"}
     matching_fields = matching_fields.difference(invalid_fields)
 
     # Validate types
     matching_fields = [f for f in matching_fields if are_connection_types_compatible(afields[f].field_type, bfields[f].field_type)]
 
-    edges = [
+    return [
         Edge(
-            source=EdgeConnection(node_id=afields[alias].node_path, field=afields[alias].field),
-            destination=EdgeConnection(node_id=bfields[alias].node_path, field=bfields[alias].field)
+            source=EdgeConnection(
+                node_id=afields[alias].node_path, field=afields[alias].field
+            ),
+            destination=EdgeConnection(
+                node_id=bfields[alias].node_path, field=bfields[alias].field
+            ),
         )
         for alias in matching_fields
     ]
-    return edges
 
 
 class SessionError(Exception):
@@ -224,7 +225,7 @@ def invoke_cli():
     )
 
     system_graphs = create_system_graphs(services.graph_library)
-    system_graph_names = set([g.name for g in system_graphs])
+    system_graph_names = {g.name for g in system_graphs}
 
     invoker = Invoker(services)
     session: GraphExecutionState = invoker.create_execution_state()
@@ -253,7 +254,7 @@ def invoke_cli():
             cmds = cmd_input.split("|")
             start_id = len(context.nodes_added)
             current_id = start_id
-            new_invocations = list()
+            new_invocations = []
             for cmd in cmds:
                 if cmd is None or cmd.strip() == "":
                     raise InvalidArgs("Empty command")
@@ -297,8 +298,8 @@ def invoke_cli():
 
                 # TODO: handle linking with library graphs
                 # Pipe previous command output (if there was a previous command)
-                edges: list[Edge] = list()
-                if len(history) > 0 or current_id != start_id:
+                edges: list[Edge] = []
+                if history or current_id != start_id:
                     from_id = (
                         history[0] if current_id == start_id else str(current_id - 1)
                     )

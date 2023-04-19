@@ -71,8 +71,7 @@ class Inpaint(Img2Img):
         im_patched_np = PatchMatch.inpaint(
             im.convert("RGB"), ImageOps.invert(im.split()[-1]), patch_size=3
         )
-        im_patched = Image.fromarray(im_patched_np, mode="RGB")
-        return im_patched
+        return Image.fromarray(im_patched_np, mode="RGB")
 
     def tile_fill_missing(
         self, im: Image.Image, tile_size: int = 16, seed: int = None
@@ -94,13 +93,13 @@ class Inpaint(Img2Img):
         # Find any mask tiles with any fully transparent pixels (we will be replacing these later)
         tmask_shape = tiles_mask.shape
         tiles_mask = tiles_mask.reshape(math.prod(tiles_mask.shape))
-        n, ny = (math.prod(tmask_shape[0:2])), math.prod(tmask_shape[2:])
+        n, ny = math.prod(tmask_shape[:2]), math.prod(tmask_shape[2:])
         tiles_mask = tiles_mask > 0
         tiles_mask = tiles_mask.reshape((n, ny)).all(axis=1)
 
         # Get RGB tiles in single array and filter by the mask
         tshape = tiles.shape
-        tiles_all = tiles.reshape((math.prod(tiles.shape[0:2]), *tiles.shape[2:]))
+        tiles_all = tiles.reshape((math.prod(tiles.shape[:2]), *tiles.shape[2:]))
         filtered_tiles = tiles_all[tiles_mask]
 
         if len(filtered_tiles) == 0:
@@ -118,14 +117,12 @@ class Inpaint(Img2Img):
         tiles_all = tiles_all.swapaxes(1, 2)
         st = tiles_all.reshape(
             (
-                math.prod(tiles_all.shape[0:2]),
+                math.prod(tiles_all.shape[:2]),
                 math.prod(tiles_all.shape[2:4]),
                 tiles_all.shape[4],
             )
         )
-        si = Image.fromarray(st, mode="RGBA")
-
-        return si
+        return Image.fromarray(st, mode="RGBA")
 
     def mask_edge(self, mask: Image, edge_size: int, edge_blur: int) -> Image:
         npimg = np.asarray(mask, dtype=np.uint8)
@@ -143,7 +140,7 @@ class Inpaint(Img2Img):
 
         # Expand
         npmask = cv2.dilate(
-            npmask, np.ones((3, 3), np.uint8), iterations=int(edge_size / 2)
+            npmask, np.ones((3, 3), np.uint8), iterations=edge_size // 2
         )
 
         new_mask = Image.fromarray(npmask)
@@ -193,9 +190,7 @@ class Inpaint(Img2Img):
 
         seam_noise = self.get_noise(im.width, im.height)
 
-        result = make_image(seam_noise, seed)
-
-        return result
+        return make_image(seam_noise, seed)
 
     @torch.no_grad()
     def get_make_image(

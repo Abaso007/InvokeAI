@@ -68,7 +68,7 @@ class Embiggen(Generator):
         ), "--embiggen is not supported by inpainting models"
 
         # Construct embiggen arg array, and sanity check arguments
-        if embiggen == None:  # embiggen can also be called with just embiggen_tiles
+        if embiggen is None:  # embiggen can also be called with just embiggen_tiles
             embiggen = [1.0]  # If not specified, assume no scaling
         elif embiggen[0] < 0:
             embiggen[0] = 1.0
@@ -93,9 +93,7 @@ class Embiggen(Generator):
         # Convert tiles from their user-freindly count-from-one to count-from-zero, because we need to do modulo math
         # and then sort them, because... people.
         if embiggen_tiles:
-            embiggen_tiles = list(map(lambda n: n - 1, embiggen_tiles))
-            embiggen_tiles.sort()
-
+            embiggen_tiles = sorted(map(lambda n: n - 1, embiggen_tiles))
         if strength >= 0.5:
             print(
                 f"* WARNING: Embiggen may produce mirror motifs if the strength (-f) is too high (currently {strength}). Try values between 0.35-0.45."
@@ -336,7 +334,7 @@ class Embiggen(Generator):
                         seed = 0
 
                 # Determine if this is a re-run and replace
-                if embiggen_tiles and not tile in embiggen_tiles:
+                if embiggen_tiles and tile not in embiggen_tiles:
                     continue
                 # Get row and column entries
                 emb_row_i = tile // emb_tiles_x

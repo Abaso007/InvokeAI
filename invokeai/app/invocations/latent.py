@@ -81,23 +81,17 @@ def get_noise(width:int, height:int, device:torch.device, seed:int = 0, latent_c
     input_channels = min(latent_channels, 4)
     use_device = "cpu" if (use_mps_noise or device.type == "mps") else device
     generator = torch.Generator(device=use_device).manual_seed(seed)
-    x = torch.randn(
+    return torch.randn(
         [
             1,
             input_channels,
             height // downsampling_factor,
-            width //  downsampling_factor,
+            width // downsampling_factor,
         ],
         dtype=torch_dtype(device),
         device=use_device,
         generator=generator,
     ).to(device)
-    # if self.perlin > 0.0:
-    #     perlin_noise = self.get_perlin_noise(
-    #         width // self.downsampling_factor, height // self.downsampling_factor
-    #     )
-    #     x = (1 - self.perlin) * x + self.perlin * perlin_noise
-    return x
 
 
 def random_seed():
@@ -213,19 +207,18 @@ class TextToLatentsInvocation(BaseInvocation):
 
     def get_conditioning_data(self, model: StableDiffusionGeneratorPipeline) -> ConditioningData:
         uc, c, extra_conditioning_info = get_uc_and_c_and_ec(self.prompt, model=model)
-        conditioning_data = ConditioningData(
+        return ConditioningData(
             uc,
             c,
             self.cfg_scale,
             extra_conditioning_info,
             postprocessing_settings=PostprocessingSettings(
-                threshold=0.0,#threshold,
-                warmup=0.2,#warmup,
-                h_symmetry_time_pct=None,#h_symmetry_time_pct,
-                v_symmetry_time_pct=None#v_symmetry_time_pct,
+                threshold=0.0,  # threshold,
+                warmup=0.2,  # warmup,
+                h_symmetry_time_pct=None,  # h_symmetry_time_pct,
+                v_symmetry_time_pct=None,  # v_symmetry_time_pct,
             ),
-        ).add_scheduler_args_if_applicable(model.scheduler, eta=None)#ddim_eta)
-        return conditioning_data
+        ).add_scheduler_args_if_applicable(model.scheduler, eta=None)
 
 
     def invoke(self, context: InvocationContext) -> LatentsOutput:

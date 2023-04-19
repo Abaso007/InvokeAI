@@ -170,11 +170,11 @@ class InvokeAIGenerator(metaclass=ABCMeta):
             yield output
 
     @classmethod
-    def schedulers(self)->List[str]:
+    def schedulers(cls) -> List[str]:
         '''
         Return list of all the schedulers that we currently handle.
         '''
-        return list(self.scheduler_map.keys())
+        return list(cls.scheduler_map.keys())
 
     def load_generator(self, model: StableDiffusionGeneratorPipeline, generator_class: Type[Generator]):
         return generator_class(model, self.params.precision)
@@ -358,7 +358,7 @@ class Generator:
         # There used to be an additional self.model.ema_scope() here, but it breaks
         # the inpaint-1.5 model. Not sure what it did.... ?
         with scope(self.model.device.type):
-            for n in trange(iterations, desc="Generating"):
+            for _ in trange(iterations, desc="Generating"):
                 x_T = None
                 if self.variation_amount > 0:
                     set_seed(seed)
@@ -385,9 +385,9 @@ class Generator:
 
                 if image_callback is not None:
                     attention_maps_image = (
-                        None
-                        if len(attention_maps_images) == 0
-                        else attention_maps_images[-1]
+                        attention_maps_images[-1]
+                        if attention_maps_images
+                        else None
                     )
                     image_callback(
                         image,
@@ -399,9 +399,7 @@ class Generator:
                 seed = self.new_seed()
 
                 # Free up memory from the last generation.
-                clear_cuda_cache = (
-                    kwargs["clear_cuda_cache"] if "clear_cuda_cache" in kwargs else None
-                )
+                clear_cuda_cache = kwargs.get("clear_cuda_cache", None)
                 if clear_cuda_cache is not None:
                     clear_cuda_cache()
 
@@ -483,7 +481,7 @@ class Generator:
             nmd = cv2.erode(
                 nm,
                 kernel=np.ones((3, 3), dtype=np.uint8),
-                iterations=int(mask_blur_radius / 2),
+                iterations=mask_blur_radius // 2,
             )
             pmd = Image.fromarray(nmd, mode="L")
             blurred_init_mask = pmd.filter(ImageFilter.BoxBlur(mask_blur_radius))
@@ -537,9 +535,9 @@ class Generator:
                 set_seed(seed)
                 next_noise = self.get_noise(width, height)
                 initial_noise = self.slerp(v_weight, initial_noise, next_noise)
-            if self.variation_amount > 0:
-                random.seed()  # reset RNG to an actually random state, so we can get a random seed for variations
-                seed = random.randrange(0, np.iinfo(np.uint32).max)
+        if self.variation_amount > 0:
+            random.seed()  # reset RNG to an actually random state, so we can get a random seed for variations
+            seed = random.randrange(0, np.iinfo(np.uint32).max)
         return (seed, initial_noise)
 
     def get_perlin_noise(self, width, height):

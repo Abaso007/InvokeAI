@@ -271,9 +271,7 @@ class ModelManager(object):
         """
         Given a model name returns the OmegaConf (dict-like) object describing it.
         """
-        if model_name not in self.config:
-            return None
-        return self.config[model_name]
+        return None if model_name not in self.config else self.config[model_name]
 
     def model_names(self) -> list[str]:
         """
@@ -290,9 +288,10 @@ class ModelManager(object):
         if Globals.ckpt_convert:
             return False
         info = self.model_info(model_name)
-        if "weights" in info and info["weights"].endswith((".ckpt", ".safetensors")):
-            return True
-        return False
+        return bool(
+            "weights" in info
+            and info["weights"].endswith((".ckpt", ".safetensors"))
+        )
 
     def list_models(self) -> dict:
         """
@@ -315,7 +314,7 @@ class ModelManager(object):
             if "config" in stanza and "/VAE/" in stanza["config"]:
                 continue
 
-            models[name] = dict()
+            models[name] = {}
             format = stanza.get("format", "ckpt")  # Determine Format
 
             # Common Attribs
@@ -520,9 +519,7 @@ class ModelManager(object):
                     **fp_args,
                 )
             except OSError as e:
-                if str(e).startswith("fp16 is not a valid"):
-                    pass
-                else:
+                if not str(e).startswith("fp16 is not a valid"):
                     print(
                         f"** An unexpected error occurred while downloading the model: {e})"
                     )
@@ -542,9 +539,8 @@ class ModelManager(object):
         # square images???
         width = pipeline.unet.config.sample_size * pipeline.vae_scale_factor
         height = width
-        print(f"   | Default image dimensions = {width} x {height}")
-
-        return pipeline, width, height, model_hash
+        print(f"   | Default image dimensions = {height} x {height}")
+        return pipeline, height, height, model_hash
 
     def _load_ckpt_model(self, model_name, mconfig):
         config = mconfig.config
@@ -563,12 +559,9 @@ class ModelManager(object):
 
         from . import load_pipeline_from_original_stable_diffusion_ckpt
 
-        try:
+        with contextlib.suppress(Exception):
             if self.list_models()[self.current_model]["status"] == "active":
                 self.offload_model(self.current_model)
-        except Exception as e:
-            pass
-
         vae_path = None
         if vae:
             vae_path = (
@@ -597,7 +590,7 @@ class ModelManager(object):
         )
 
     def model_name_or_path(self, model_name: Union[str, DictConfig]) -> str | Path:
-        if isinstance(model_name, DictConfig) or isinstance(model_name, dict):
+        if isinstance(model_name, (DictConfig, dict)):
             mconfig = model_name
         elif model_name in self.config:
             mconfig = self.config[model_name]
@@ -634,7 +627,7 @@ class ModelManager(object):
             torch.cuda.empty_cache()
 
     @classmethod
-    def scan_model(self, model_name, checkpoint):
+    def scan_model(cls, model_name, checkpoint):
         """
         Apply picklescanner to the indicated checkpoint and issue a warning
         and option to exit if an infected file is identified.
@@ -642,28 +635,28 @@ class ModelManager(object):
         # scan model
         print(f"   | Scanning Model: {model_name}")
         scan_result = scan_file_path(checkpoint)
-        if scan_result.infected_files != 0:
-            if scan_result.infected_files == 1:
-                print(f"\n### Issues Found In Model: {scan_result.issues_count}")
-                print(
-                    "### WARNING: The model you are trying to load seems to be infected."
-                )
-                print("### For your safety, InvokeAI will not load this model.")
-                print("### Please use checkpoints from trusted sources.")
+        if scan_result.infected_files == 0:
+            print("   | Model scanned ok")
+
+        elif scan_result.infected_files == 1:
+            print(f"\n### Issues Found In Model: {scan_result.issues_count}")
+            print(
+                "### WARNING: The model you are trying to load seems to be infected."
+            )
+            print("### For your safety, InvokeAI will not load this model.")
+            print("### Please use checkpoints from trusted sources.")
+            print("### Exiting InvokeAI")
+            sys.exit()
+        else:
+            print(
+                "\n### WARNING: InvokeAI was unable to scan the model you are using."
+            )
+            model_safe_check_fail = ask_user(
+                "Do you want to to continue loading the model?", ["y", "n"]
+            )
+            if model_safe_check_fail.lower() != "y":
                 print("### Exiting InvokeAI")
                 sys.exit()
-            else:
-                print(
-                    "\n### WARNING: InvokeAI was unable to scan the model you are using."
-                )
-                model_safe_check_fail = ask_user(
-                    "Do you want to to continue loading the model?", ["y", "n"]
-                )
-                if model_safe_check_fail.lower() != "y":
-                    print("### Exiting InvokeAI")
-                    sys.exit()
-        else:
-            print("   | Model scanned ok")
 
     def import_diffuser_model(
         self,
@@ -702,7 +695,7 @@ class ModelManager(object):
         return model_name
 
     @classmethod
-    def probe_model_type(self, checkpoint: dict) -> SDLegacyType:
+    def probe_model_type(cls, checkpoint: dict) -> SDLegacyType:
         """
         Given a pickle or safetensors model object, probes contents
         of the object and returns an SDLegacyType indicating its
@@ -1157,12 +1150,11 @@ class ModelManager(object):
             if not dest_directory.is_absolute():
                 dest_directory = Globals.root / dest_directory
             dest_directory.mkdir(parents=True, exist_ok=True)
-            resolved_path = download_with_resume(str(source), dest_directory)
+            return download_with_resume(str(source), dest_directory)
         else:
             if not os.path.isabs(source):
                 source = os.path.join(Globals.root, source)
-            resolved_path = Path(source)
-        return resolved_path
+            return Path(source)
 
     def _invalidate_cached_model(self, model_name: str) -> None:
         self.offload_model(model_name)
@@ -1216,9 +1208,7 @@ class ModelManager(object):
             return None
         hashpath = path / "checksum.sha256"
         if hashpath.exists() and path.stat().st_mtime <= hashpath.stat().st_mtime:
-            with open(hashpath) as f:
-                hash = f.read()
-            return hash
+            return Path(hashpath).read_text()
         print("   | Calculating sha256 hash of model files")
         tic = time.time()
         sha = hashlib.sha256()
@@ -1240,15 +1230,12 @@ class ModelManager(object):
         dirname = os.path.dirname(path)
         basename = os.path.basename(path)
         base, _ = os.path.splitext(basename)
-        hashpath = os.path.join(dirname, base + ".sha256")
+        hashpath = os.path.join(dirname, f"{base}.sha256")
 
         if os.path.exists(hashpath) and os.path.getmtime(path) <= os.path.getmtime(
             hashpath
         ):
-            with open(hashpath) as f:
-                hash = f.read()
-            return hash
-
+            return Path(hashpath).read_text()
         print("   | Calculating sha256 hash of weights file")
         tic = time.time()
         sha = hashlib.sha256()
@@ -1297,9 +1284,7 @@ class ModelManager(object):
             try:
                 vae = AutoencoderKL.from_pretrained(name_or_path, **vae_args, **fp_args)
             except OSError as e:
-                if str(e).startswith("fp16 is not a valid"):
-                    pass
-                else:
+                if not str(e).startswith("fp16 is not a valid"):
                     deferred_error = e
             if vae:
                 break

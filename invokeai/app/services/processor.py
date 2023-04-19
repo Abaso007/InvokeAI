@@ -103,8 +103,6 @@ class DefaultInvocationProcessor(InvocationProcessorABC):
                         error=error,
                     )
 
-                    pass
-                
                 # Check queue to see if this is canceled, and skip if so
                 if self.__invoker.services.queue.is_canceled(
                     graph_execution_state.id

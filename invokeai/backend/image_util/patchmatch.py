@@ -21,8 +21,8 @@ class PatchMatch:
         super().__init__()
 
     @classmethod
-    def _load_patch_match(self):
-        if self.tried_load:
+    def _load_patch_match(cls):
+        if cls.tried_load:
             return
         if Globals.try_patchmatch:
             from patchmatch import patch_match as pm
@@ -31,17 +31,17 @@ class PatchMatch:
                 print(">> Patchmatch initialized")
             else:
                 print(">> Patchmatch not loaded (nonfatal)")
-            self.patch_match = pm
+            cls.patch_match = pm
         else:
             print(">> Patchmatch loading disabled")
-        self.tried_load = True
+        cls.tried_load = True
 
     @classmethod
-    def patchmatch_available(self) -> bool:
-        self._load_patch_match()
-        return self.patch_match and self.patch_match.patchmatch_available
+    def patchmatch_available(cls) -> bool:
+        cls._load_patch_match()
+        return cls.patch_match and cls.patch_match.patchmatch_available
 
     @classmethod
-    def inpaint(self, *args, **kwargs) -> np.ndarray:
-        if self.patchmatch_available():
-            return self.patch_match.inpaint(*args, **kwargs)
+    def inpaint(cls, *args, **kwargs) -> np.ndarray:
+        if cls.patchmatch_available():
+            return cls.patch_match.inpaint(*args, **kwargs)

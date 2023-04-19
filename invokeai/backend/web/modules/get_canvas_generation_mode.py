@@ -40,9 +40,7 @@ def get_canvas_generation_mode(
     init_img_has_transparency = check_for_any_transparency(init_img)
 
     if init_img_has_transparency:
-        init_img_is_fully_transparent = (
-            True if init_img_alpha_mask.getbbox() is None else False
-        )
+        init_img_is_fully_transparent = init_img_alpha_mask.getbbox() is None
 
     """
     Mask images are white in areas where no change should be made, black where changes
@@ -58,18 +56,11 @@ def get_canvas_generation_mode(
     getbbox() now tells us if the are any masked areas.
     """
     init_mask_bbox = ImageChops.invert(init_mask).getbbox()
-    init_mask_exists = False if init_mask_bbox is None else True
-
     if init_img_has_transparency:
-        if init_img_is_fully_transparent:
-            return "txt2img"
-        else:
-            return "outpainting"
-    else:
-        if init_mask_exists:
-            return "inpainting"
-        else:
-            return "img2img"
+        return "txt2img" if init_img_is_fully_transparent else "outpainting"
+    init_mask_exists = init_mask_bbox is not None
+
+    return "inpainting" if init_mask_exists else "img2img"
 
 
 def main():

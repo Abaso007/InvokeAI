@@ -27,7 +27,7 @@ class RestorationServices:
                         print(">> Upscaling disabled")
             else:
                 print(">> Face restoration and upscaling disabled")
-        except (ModuleNotFoundError, ImportError):
+        except ImportError:
             print(traceback.format_exc(), file=sys.stderr)
             print(">> You may need to install the ESRGAN and/or GFPGAN modules")
         self.device = torch.device(choose_torch_device())

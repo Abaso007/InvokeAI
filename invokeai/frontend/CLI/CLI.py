@@ -53,10 +53,9 @@ def main():
             "--weights argument has been deprecated. Please edit ./configs/models.yaml, and select the weights using --model instead."
         )
         sys.exit(-1)
-    if args.max_loaded_models is not None:
-        if args.max_loaded_models <= 0:
-            print("--max_loaded_models must be >= 1; using 1")
-            args.max_loaded_models = 1
+    if args.max_loaded_models is not None and args.max_loaded_models <= 0:
+        print("--max_loaded_models must be >= 1; using 1")
+        args.max_loaded_models = 1
 
     # alert - setting a few globals here
     Globals.try_patchmatch = args.patchmatch
@@ -99,12 +98,13 @@ def main():
         opt.conf = os.path.normpath(os.path.join(Globals.root, opt.conf))
 
     if opt.embeddings:
-        if not os.path.isabs(opt.embedding_path):
-            embedding_path = os.path.normpath(
+        embedding_path = (
+            opt.embedding_path
+            if os.path.isabs(opt.embedding_path)
+            else os.path.normpath(
                 os.path.join(Globals.root, opt.embedding_path)
             )
-        else:
-            embedding_path = opt.embedding_path
+        )
     else:
         embedding_path = None
 
@@ -191,7 +191,7 @@ def main_loop(gen, opt):
     done = False
     doneAfterInFile = infile is not None
     path_filter = re.compile(r'[<>:"/\\|?*]')
-    last_results = list()
+    last_results = []
 
     # The readline completer reads history from the .dream_history file located in the
     # output directory specified at the time of script launch. We do not currently support
@@ -309,7 +309,7 @@ def main_loop(gen, opt):
             subdir = subdir[: (path_max - 39 - len(os.path.abspath(opt.outdir)))]
             current_outdir = os.path.join(opt.outdir, subdir)
 
-            print('Writing files to directory: "' + current_outdir + '"')
+            print(f'Writing files to directory: "{current_outdir}"')
 
             # make sure the output directory exists
             if not os.path.exists(current_outdir):
@@ -324,7 +324,7 @@ def main_loop(gen, opt):
         try:
             file_writer = PngWriter(current_outdir)
             results = []  # list of filename, prompt pairs
-            grid_images = dict()  # seed -> Image, only used if `opt.grid`
+            grid_images = {}
             prior_variations = opt.with_variations or []
             prefix = file_writer.unique_prefix()
             step_callback = (
@@ -449,7 +449,7 @@ def main_loop(gen, opt):
                 print(f">> generating masks from {opt.prompt}")
                 do_textmask(gen, opt, image_writer)
 
-            if opt.grid and len(grid_images) > 0:
+            if opt.grid and grid_images:
                 grid_img = make_grid(list(grid_images.values()))
                 grid_seeds = list(grid_images.keys())
                 first_seed = last_results[0][1]
@@ -469,11 +469,7 @@ def main_loop(gen, opt):
                 )
                 results = [[path, formatted_dream_prompt]]
 
-        except AssertionError as e:
-            print(e)
-            continue
-
-        except OSError as e:
+        except (AssertionError, OSError) as e:
             print(e)
             continue
 
@@ -513,7 +509,7 @@ def do_command(command: str, gen, opt: Args, completer) -> tuple:
             gen.set_model(model_name)
             add_embedding_terms(gen, completer)
         except KeyError as e:
-            print(str(e))
+            print(e)
         except Exception as e:
             report_model_error(opt, e)
         completer.add_history(command)
@@ -633,22 +629,19 @@ def import_model(model_path: str, gen, opt, completer):
     model_desc = None
 
     if (
-        Path(model_path).is_dir()
-        and not (Path(model_path) / "model_index.json").exists()
-    ):
-        pass
-    else:
-        if model_path.startswith(("http:", "https:")):
-            try:
-                default_name = url_attachment_name(model_path)
-                default_name = Path(default_name).stem
-            except Exception as e:
-                print(f"** URL: {str(e)}")
-            model_name, model_desc = _get_model_name_and_desc(
-                gen.model_manager,
-                completer,
-                model_name=default_name,
-            )
+        not Path(model_path).is_dir()
+        or (Path(model_path) / "model_index.json").exists()
+    ) and model_path.startswith(("http:", "https:")):
+        try:
+            default_name = url_attachment_name(model_path)
+            default_name = Path(default_name).stem
+        except Exception as e:
+            print(f"** URL: {str(e)}")
+        model_name, model_desc = _get_model_name_and_desc(
+            gen.model_manager,
+            completer,
+            model_name=default_name,
+        )
     imported_name = gen.model_manager.heuristic_import(
         model_path,
         model_name=model_name,
@@ -902,11 +895,7 @@ def do_textmask(gen, opt, callback):
 
 def do_postprocess(gen, opt, callback):
     file_path = opt.prompt  # treat the prompt as the file pathname
-    if opt.new_prompt is not None:
-        opt.prompt = opt.new_prompt
-    else:
-        opt.prompt = None
-
+    opt.prompt = opt.new_prompt if opt.new_prompt is not None else None
     if os.path.dirname(file_path) == "":  # basename given
         file_path = os.path.join(opt.outdir, file_path)
 
@@ -1017,20 +1006,15 @@ def prepare_image_metadata(
     elif len(prior_variations) > 0:
         formatted_dream_prompt = opt.dream_prompt_str(seed=first_seed)
     elif operation == "postprocess":
-        formatted_dream_prompt = "!fix " + opt.dream_prompt_str(
-            seed=seed, prompt=opt.input_file_path
-        )
+        formatted_dream_prompt = f"!fix {opt.dream_prompt_str(seed=seed, prompt=opt.input_file_path)}"
     else:
         formatted_dream_prompt = opt.dream_prompt_str(seed=seed)
     return filename, formatted_dream_prompt
 
 
 def choose_postprocess_name(opt, prefix, seed) -> str:
-    match = re.search("postprocess:(\w+)", opt.last_operation)
-    if match:
-        modifier = match.group(
-            1
-        )  # will look like "gfpgan", "upscale", "outpaint" or "embiggen"
+    if match := re.search("postprocess:(\w+)", opt.last_operation):
+        modifier = match[1]
     else:
         modifier = "postprocessed"
 
@@ -1105,12 +1089,7 @@ def split_variations(variations_string) -> list:
             broken = True
             break
         parts.append([seed, weight])
-    if broken:
-        return None
-    elif len(parts) == 0:
-        return None
-    else:
-        return parts
+    return None if broken or not parts else parts
 
 
 def load_face_restoration(opt):
@@ -1132,7 +1111,7 @@ def load_face_restoration(opt):
                 print(">> Upscaling disabled")
         else:
             print(">> Face restoration and upscaling disabled")
-    except (ModuleNotFoundError, ImportError):
+    except ImportError:
         print(traceback.format_exc(), file=sys.stderr)
         print(">> You may need to install the ESRGAN and/or GFPGAN modules")
     return gfpgan, codeformer, esrgan
@@ -1171,11 +1150,7 @@ def retrieve_dream_command(opt, command, completer):
 
     tokens = command.split()
     dir, basename = os.path.split(tokens[0])
-    if len(dir) == 0:
-        path = os.path.join(opt.outdir, basename)
-    else:
-        path = tokens[0]
-
+    path = os.path.join(opt.outdir, basename) if len(dir) == 0 else tokens[0]
     if len(tokens) > 1:
         return write_commands(opt, path, tokens[1])
 
@@ -1210,9 +1185,8 @@ def write_commands(opt, file_path: str, outfilepath: str):
         except:
             print(f"## {path}: file could not be processed")
         if cmd:
-            commands.append(f"# {path}")
-            commands.append(cmd)
-    if len(commands) > 0:
+            commands.extend((f"# {path}", cmd))
+    if commands:
         dir, basename = os.path.split(outfilepath)
         if len(dir) == 0:
             outfilepath = os.path.join(opt.outdir, basename)
@@ -1231,12 +1205,11 @@ def report_model_error(opt: Namespace, e: Exception):
         print(
             "** Reconfiguration is being forced by environment variable INVOKE_MODEL_RECONFIGURE"
         )
-    else:
-        if not click.confirm(
+    elif not click.confirm(
             "Do you want to run invokeai-configure script to select and/or reinstall models?",
             default=False,
         ):
-            return
+        return
 
     print("invokeai-configure is launching....\n")
 
@@ -1245,13 +1218,9 @@ def report_model_error(opt: Namespace, e: Exception):
     root_dir = ["--root", opt.root_dir] if opt.root_dir is not None else []
     config = ["--config", opt.conf] if opt.conf is not None else []
     previous_args = sys.argv
-    sys.argv = ["invokeai-configure"]
-    sys.argv.extend(root_dir)
-    sys.argv.extend(config)
+    sys.argv = ["invokeai-configure", *root_dir, *config]
     if yes_to_all is not None:
-        for arg in yes_to_all.split():
-            sys.argv.append(arg)
-
+        sys.argv.extend(iter(yes_to_all.split()))
     from ..install import invokeai_configure
 
     invokeai_configure()

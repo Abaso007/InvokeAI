@@ -79,9 +79,9 @@ def main():
     print("")
     print("")
     if os.system(cmd) == 0:
-        print(f":heavy_check_mark: Upgrade successful")
+        print(":heavy_check_mark: Upgrade successful")
     else:
-        print(f":exclamation: [bold red]Upgrade failed[/red bold]")
+        print(":exclamation: [bold red]Upgrade failed[/red bold]")
 
 
 if __name__ == "__main__":

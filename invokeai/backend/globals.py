@@ -114,7 +114,7 @@ def global_cache_dir(subdir: Union[str, Path] = "") -> Path:
         if home is not None:
             # Set `home` to $XDG_CACHE_HOME/huggingface, which is the default location mentioned in Hugging Face Hub Client Library.
             # See: https://huggingface.co/docs/huggingface_hub/main/en/package_reference/environment_variables#xdgcachehome
-            home += os.sep + "huggingface"
+            home += f"{os.sep}huggingface"
 
     if home is not None:
         return Path(home, subdir)

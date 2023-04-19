@@ -328,7 +328,7 @@ class StableDiffusionGeneratorPipeline(StableDiffusionPipeline):
         self.invokeai_diffuser = InvokeAIDiffuserComponent(
             self.unet, self._unet_forward, is_running_diffusers=True
         )
-        use_full_precision = precision == "float32" or precision == "autocast"
+        use_full_precision = precision in {"float32", "autocast"}
         self.textual_inversion_manager = TextualInversionManager(
             tokenizer=self.tokenizer,
             text_encoder=self.text_encoder,
@@ -354,38 +354,32 @@ class StableDiffusionGeneratorPipeline(StableDiffusionPipeline):
             and not Globals.disable_xformers
         ):
             self.enable_xformers_memory_efficient_attention()
-        else:
-            if torch.backends.mps.is_available():
-                # until pytorch #91617 is fixed, slicing is borked on MPS
-                # https://github.com/pytorch/pytorch/issues/91617
-                # fix is in https://github.com/kulinseth/pytorch/pull/222 but no idea when it will get merged to pytorch mainline.
-                pass
+        elif not torch.backends.mps.is_available():
+            if self.device.type in ["cpu", "mps"]:
+                mem_free = psutil.virtual_memory().free
+            elif self.device.type == "cuda":
+                mem_free, _ = torch.cuda.mem_get_info(normalize_device(self.device))
             else:
-                if self.device.type == "cpu" or self.device.type == "mps":
-                    mem_free = psutil.virtual_memory().free
-                elif self.device.type == "cuda":
-                    mem_free, _ = torch.cuda.mem_get_info(normalize_device(self.device))
-                else:
-                    raise ValueError(f"unrecognized device {self.device}")
-                # input tensor of [1, 4, h/8, w/8]
-                # output tensor of [16, (h/8 * w/8), (h/8 * w/8)]
-                bytes_per_element_needed_for_baddbmm_duplication = (
-                    latents.element_size() + 4
-                )
-                max_size_required_for_baddbmm = (
-                    16
-                    * latents.size(dim=2)
-                    * latents.size(dim=3)
-                    * latents.size(dim=2)
-                    * latents.size(dim=3)
-                    * bytes_per_element_needed_for_baddbmm_duplication
-                )
-                if max_size_required_for_baddbmm > (
-                    mem_free * 3.0 / 4.0
-                ):  # 3.3 / 4.0 is from old Invoke code
-                    self.enable_attention_slicing(slice_size="max")
-                else:
-                    self.disable_attention_slicing()
+                raise ValueError(f"unrecognized device {self.device}")
+            # input tensor of [1, 4, h/8, w/8]
+            # output tensor of [16, (h/8 * w/8), (h/8 * w/8)]
+            bytes_per_element_needed_for_baddbmm_duplication = (
+                latents.element_size() + 4
+            )
+            max_size_required_for_baddbmm = (
+                16
+                * latents.size(dim=2)
+                * latents.size(dim=3)
+                * latents.size(dim=2)
+                * latents.size(dim=3)
+                * bytes_per_element_needed_for_baddbmm_duplication
+            )
+            if max_size_required_for_baddbmm > (
+                mem_free * 3.0 / 4.0
+            ):  # 3.3 / 4.0 is from old Invoke code
+                self.enable_attention_slicing(slice_size="max")
+            else:
+                self.disable_attention_slicing()
 
     def enable_offload_submodels(self, device: torch.device):
         """

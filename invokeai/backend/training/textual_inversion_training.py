@@ -359,8 +359,7 @@ def parse_args():
         default=None,
         help="The token to use to push to the Model Hub.",
     )
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 imagenet_templates_small = [
@@ -471,23 +470,23 @@ class TextualInversionDataset(Dataset):
         return self._length
 
     def __getitem__(self, i):
-        example = {}
         image = Image.open(self.image_paths[i % self.num_images])
 
-        if not image.mode == "RGB":
+        if image.mode != "RGB":
             image = image.convert("RGB")
 
         placeholder_string = self.placeholder_token
         text = random.choice(self.templates).format(placeholder_string)
 
-        example["input_ids"] = self.tokenizer(
-            text,
-            padding="max_length",
-            truncation=True,
-            max_length=self.tokenizer.model_max_length,
-            return_tensors="pt",
-        ).input_ids[0]
-
+        example = {
+            "input_ids": self.tokenizer(
+                text,
+                padding="max_length",
+                truncation=True,
+                max_length=self.tokenizer.model_max_length,
+                return_tensors="pt",
+            ).input_ids[0]
+        }
         # default to score-sde preprocessing
         img = np.array(image).astype(np.uint8)
 
@@ -520,11 +519,10 @@ def get_full_repo_name(
 ):
     if token is None:
         token = HfFolder.get_token()
-    if organization is None:
-        username = whoami(token)["name"]
-        return f"{username}/{model_id}"
-    else:
+    if organization is not None:
         return f"{organization}/{model_id}"
+    username = whoami(token)["name"]
+    return f"{username}/{model_id}"
 
 
 def do_textual_inversion_training(

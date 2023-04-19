@@ -30,26 +30,24 @@ def configure_model_padding(model, seamless, seamless_axes):
     for m in model.modules():
         if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d)):
             if seamless:
-                m.asymmetric_padding_mode = {}
-                m.asymmetric_padding = {}
-                m.asymmetric_padding_mode["x"] = (
-                    "circular" if ("x" in seamless_axes) else "constant"
-                )
-                m.asymmetric_padding["x"] = (
-                    m._reversed_padding_repeated_twice[0],
-                    m._reversed_padding_repeated_twice[1],
-                    0,
-                    0,
-                )
-                m.asymmetric_padding_mode["y"] = (
-                    "circular" if ("y" in seamless_axes) else "constant"
-                )
-                m.asymmetric_padding["y"] = (
-                    0,
-                    0,
-                    m._reversed_padding_repeated_twice[2],
-                    m._reversed_padding_repeated_twice[3],
-                )
+                m.asymmetric_padding_mode = {
+                    "x": "circular" if "x" in seamless_axes else "constant",
+                    "y": "circular" if "y" in seamless_axes else "constant",
+                }
+                m.asymmetric_padding = {
+                    "x": (
+                        m._reversed_padding_repeated_twice[0],
+                        m._reversed_padding_repeated_twice[1],
+                        0,
+                        0,
+                    ),
+                    "y": (
+                        0,
+                        0,
+                        m._reversed_padding_repeated_twice[2],
+                        m._reversed_padding_repeated_twice[3],
+                    ),
+                }
                 m._conv_forward = _conv_forward_asymmetric.__get__(m, nn.Conv2d)
             else:
                 m._conv_forward = nn.Conv2d._conv_forward.__get__(m, nn.Conv2d)

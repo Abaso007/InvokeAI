@@ -273,14 +273,13 @@ class textualInversionForm(npyscreen.FormMultiPageAction):
             bad_fields.append("Data Training Directory cannot be empty")
         if self.output_dir.value is None:
             bad_fields.append("The Output Destination Directory cannot be empty")
-        if len(bad_fields) > 0:
-            message = "The following problems were detected and must be corrected:"
-            for problem in bad_fields:
-                message += f"\n* {problem}"
-            npyscreen.notify_confirm(message)
-            return False
-        else:
+        if not bad_fields:
             return True
+        message = "The following problems were detected and must be corrected:"
+        for problem in bad_fields:
+            message += f"\n* {problem}"
+        npyscreen.notify_confirm(message)
+        return False
 
     def get_model_names(self) -> Tuple[List[str], int]:
         conf = OmegaConf.load(os.path.join(Globals.root, "configs/models.yaml"))
@@ -294,11 +293,11 @@ class textualInversionForm(npyscreen.FormMultiPageAction):
             for idx in range(len(model_names))
             if "default" in conf[model_names[idx]]
         ]
-        default = defaults[0] if len(defaults) > 0 else 0
+        default = defaults[0] if defaults else 0
         return (model_names, default)
 
     def marshall_arguments(self) -> dict:
-        args = dict()
+        args = {}
 
         # the choices
         args.update(
@@ -423,7 +422,7 @@ def do_front_end(args: Namespace):
             copy_to_embeddings_folder(args)
         except Exception as e:
             print("** An exception occurred during training. The exception was:")
-            print(str(e))
+            print(e)
             print("** DETAILS:")
             print(traceback.format_exc())
 
@@ -437,7 +436,7 @@ def main():
         else:
             do_textual_inversion_training(**vars(args))
     except AssertionError as e:
-        print(str(e))
+        print(e)
         sys.exit(-1)
     except KeyboardInterrupt:
         pass

@@ -263,8 +263,7 @@ class InvokeAICrossAttentionMixin:
                 attention_slice, dim, offset, slice_size
             )
 
-        hidden_states = torch.bmm(attention_slice, value)
-        return hidden_states
+        return torch.bmm(attention_slice, value)
 
     def einsum_op_slice_dim0(self, q, k, v, slice_size):
         r = torch.zeros(
@@ -289,11 +288,10 @@ class InvokeAICrossAttentionMixin:
         return r
 
     def einsum_op_mps_v1(self, q, k, v):
-        if q.shape[1] <= 4096:  # (512x512) max q.shape[1]: 4096
+        if q.shape[1] <= 4096:
             return self.einsum_lowest_level(q, k, v, None, None, None)
-        else:
-            slice_size = math.floor(2**30 / (q.shape[0] * q.shape[1]))
-            return self.einsum_op_slice_dim1(q, k, v, slice_size)
+        slice_size = math.floor(2**30 / (q.shape[0] * q.shape[1]))
+        return self.einsum_op_slice_dim1(q, k, v, slice_size)
 
     def einsum_op_mps_v2(self, q, k, v):
         if self.mem_total_gb > 8 and q.shape[1] <= 4096:
@@ -332,7 +330,7 @@ class InvokeAICrossAttentionMixin:
             # print("in get_attention_mem_efficient with q shape", q.shape, ", k shape", k.shape, ", free memory is", get_mem_free_total(q.device))
             return self.einsum_op_cuda(q, k, v)
 
-        if q.device.type == "mps" or q.device.type == "cpu":
+        if q.device.type in ["mps", "cpu"]:
             if self.mem_total_gb >= 32:
                 return self.einsum_op_mps_v1(q, k, v)
             return self.einsum_op_mps_v2(q, k, v)
@@ -372,11 +370,10 @@ def override_cross_attention(model, context: Context, is_running_diffusers=False
     indices_target = torch.arange(max_length, dtype=torch.long)
     indices = torch.arange(max_length, dtype=torch.long)
     for name, a0, a1, b0, b1 in context.arguments.edit_opcodes:
-        if b0 < max_length:
-            if name == "equal":  # or (name == "replace" and a1 - a0 == b1 - b0):
-                # these tokens have not been edited
-                indices[b0:b1] = indices_target[a0:a1]
-                mask[b0:b1] = 1
+        if b0 < max_length and name == "equal":
+            # these tokens have not been edited
+            indices[b0:b1] = indices_target[a0:a1]
+            mask[b0:b1] = 1
 
     context.cross_attention_mask = mask.to(device)
     context.cross_attention_index_map = indices.to(device)
@@ -426,12 +423,20 @@ def get_cross_attention_modules(
     if cross_attention_modules_in_model_count != expected_count:
         # non-fatal error but .swap() won't work.
         print(
-            f"Error! CrossAttentionControl found an unexpected number of {cross_attention_class} modules in the model "
-            + f"(expected {expected_count}, found {cross_attention_modules_in_model_count}). Either monkey-patching failed "
-            + f"or some assumption has changed about the structure of the model itself. Please fix the monkey-patching, "
-            + f"and/or update the {expected_count} above to an appropriate number, and/or find and inform someone who knows "
-            + f"what it means. This error is non-fatal, but it is likely that .swap() and attention map display will not "
-            + f"work properly until it is fixed."
+            (
+                (
+                    (
+                        (
+                            f"Error! CrossAttentionControl found an unexpected number of {cross_attention_class} modules in the model "
+                            + f"(expected {expected_count}, found {cross_attention_modules_in_model_count}). Either monkey-patching failed "
+                            + "or some assumption has changed about the structure of the model itself. Please fix the monkey-patching, "
+                        )
+                        + f"and/or update the {expected_count} above to an appropriate number, and/or find and inform someone who knows "
+                    )
+                    + "what it means. This error is non-fatal, but it is likely that .swap() and attention map display will not "
+                )
+                + "work properly until it is fixed."
+            )
         )
     return attention_module_tuples
 
@@ -545,8 +550,7 @@ def get_mem_free_total(device):
     mem_reserved = stats["reserved_bytes.all.current"]
     mem_free_cuda, _ = torch.cuda.mem_get_info(device)
     mem_free_torch = mem_reserved - mem_active
-    mem_free_total = mem_free_cuda + mem_free_torch
-    return mem_free_total
+    return mem_free_cuda + mem_free_torch
 
 
 class InvokeAIDiffusersCrossAttention(
@@ -562,8 +566,7 @@ class InvokeAIDiffusersCrossAttention(
             print(f"{type(self).__name__} ignoring passed-in attention_mask")
         attention_result = self.get_invokeai_attention_mem_efficient(query, key, value)
 
-        hidden_states = self.reshape_batch_dim_to_heads(attention_result)
-        return hidden_states
+        return self.reshape_batch_dim_to_heads(attention_result)
 
 
 ## 🧨diffusers implementation follows
@@ -639,11 +642,10 @@ class SwapCrossAttnContext:
         indices_target = torch.arange(max_length, dtype=torch.long)
         indices = torch.arange(max_length, dtype=torch.long)
         for name, a0, a1, b0, b1 in edit_opcodes:
-            if b0 < max_length:
-                if name == "equal":
-                    # these tokens remain the same as in the original prompt
-                    indices[b0:b1] = indices_target[a0:a1]
-                    mask[b0:b1] = 1
+            if b0 < max_length and name == "equal":
+                # these tokens remain the same as in the original prompt
+                indices[b0:b1] = indices_target[a0:a1]
+                mask[b0:b1] = 1
 
         return mask, indices
 

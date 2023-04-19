@@ -36,8 +36,7 @@ async def create_session(
     )
 ) -> GraphExecutionState:
     """Creates a new session, optionally initializing it with an invocation graph"""
-    session = ApiDependencies.invoker.create_execution_state(graph)
-    return session
+    return ApiDependencies.invoker.create_execution_state(graph)
 
 
 @session_router.get(
@@ -51,15 +50,15 @@ async def list_sessions(
     query: str = Query(default="", description="The query string to search for"),
 ) -> PaginatedResults[GraphExecutionState]:
     """Gets a list of sessions, optionally searching"""
-    if query == "":
-        result = ApiDependencies.invoker.services.graph_execution_manager.list(
-            page, per_page
-        )
-    else:
-        result = ApiDependencies.invoker.services.graph_execution_manager.search(
+    return (
+        ApiDependencies.invoker.services.graph_execution_manager.search(
             query, page, per_page
         )
-    return result
+        if query
+        else ApiDependencies.invoker.services.graph_execution_manager.list(
+            page, per_page
+        )
+    )
 
 
 @session_router.get(
@@ -75,10 +74,7 @@ async def get_session(
 ) -> GraphExecutionState:
     """Gets a session"""
     session = ApiDependencies.invoker.services.graph_execution_manager.get(session_id)
-    if session is None:
-        return Response(status_code=404)
-    else:
-        return session
+    return Response(status_code=404) if session is None else session
 
 
 @session_router.post(

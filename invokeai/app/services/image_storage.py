@@ -50,7 +50,7 @@ class ImageStorageBase(ABC):
         pass
 
     def create_name(self, context_id: str, node_id: str) -> str:
-        return f"{context_id}_{node_id}_{str(int(datetime.datetime.now(datetime.timezone.utc).timestamp()))}.png"
+        return f"{context_id}_{node_id}_{int(datetime.datetime.now(datetime.timezone.utc).timestamp())}.png"
 
 
 class DiskImageStorage(ImageStorageBase):
@@ -65,7 +65,7 @@ class DiskImageStorage(ImageStorageBase):
     def __init__(self, output_folder: str):
         self.__output_folder = output_folder
         self.__pngWriter = PngWriter(output_folder)
-        self.__cache = dict()
+        self.__cache = {}
         self.__cache_ids = Queue()
         self.__max_cache_size = 10  # TODO: get this from config
 
@@ -116,8 +116,7 @@ class DiskImageStorage(ImageStorageBase):
                 )
             )
 
-        page_count_trunc = int(count / per_page)
-        page_count_mod = count % per_page
+        page_count_trunc, page_count_mod = divmod(count, per_page)
         page_count = page_count_trunc if page_count_mod == 0 else page_count_trunc + 1
 
         return PaginatedResults[ImageResponse](
@@ -130,8 +129,7 @@ class DiskImageStorage(ImageStorageBase):
 
     def get(self, image_type: ImageType, image_name: str) -> Image:
         image_path = self.get_path(image_type, image_name)
-        cache_item = self.__get_cache(image_path)
-        if cache_item:
+        if cache_item := self.__get_cache(image_path):
             return cache_item
 
         image = PILImage.open(image_path)
@@ -182,7 +180,7 @@ class DiskImageStorage(ImageStorageBase):
         return None if image_name not in self.__cache else self.__cache[image_name]
 
     def __set_cache(self, image_name: str, image: Image):
-        if not image_name in self.__cache:
+        if image_name not in self.__cache:
             self.__cache[image_name] = image
             self.__cache_ids.put(
                 image_name

@@ -56,11 +56,11 @@ class addModelsForm(npyscreen.FormMultiPage):
         try:
             self.existing_models = OmegaConf.load(default_config_file())
         except:
-            self.existing_models = dict()
+            self.existing_models = {}
         self.starter_model_list = [
             x for x in list(self.initial_models.keys()) if x not in self.existing_models
         ]
-        self.installed_models = dict()
+        self.installed_models = {}
         super().__init__(parentApp=parentApp, name=name, *args, **keywords)
 
     def create(self):
@@ -108,7 +108,7 @@ class addModelsForm(npyscreen.FormMultiPage):
                 MultiSelectColumns,
                 columns=columns,
                 values=self.installed_models,
-                value=[x for x in range(0, len(self.installed_models))],
+                value=list(range(len(self.installed_models))),
                 max_height=1 + len(self.installed_models) // columns,
                 relx=4,
                 slow_scroll=True,
@@ -206,10 +206,10 @@ class addModelsForm(npyscreen.FormMultiPage):
             when_pressed_function=self.on_cancel,
         )
         done_label = "DONE"
-        back_label = "BACK"
         button_length = len(done_label)
         button_offset = 0
         if self.multipage:
+            back_label = "BACK"
             button_length += len(back_label) + 1
             button_offset += len(back_label) + 1
             self.back_button = self.add_widget_intelligent(
@@ -252,14 +252,14 @@ class addModelsForm(npyscreen.FormMultiPage):
         im = self.initial_models
         names = self.starter_model_list
         descriptions = [
-            im[x].description[0 : description_width - 3] + "..."
+            f"{im[x].description[:description_width - 3]}..."
             if len(im[x].description) > description_width
             else im[x].description
             for x in names
         ]
         return [
             f"%-{label_width}s %s" % (names[x], descriptions[x])
-            for x in range(0, len(names))
+            for x in range(len(names))
         ]
 
     def _get_columns(self) -> int:
@@ -316,15 +316,15 @@ class addModelsForm(npyscreen.FormMultiPage):
                 )
             )
         else:
-            starter_models = dict()
+            starter_models = {}
         selections.purge_deleted_models = False
         if hasattr(self, "previously_installed_models"):
             unchecked = [
                 self.previously_installed_models.values[x]
-                for x in range(0, len(self.previously_installed_models.values))
+                for x in range(len(self.previously_installed_models.values))
                 if x not in self.previously_installed_models.value
             ]
-            starter_models.update(map(lambda x: (x, False), unchecked))
+            starter_models |= map(lambda x: (x, False), unchecked)
             selections.purge_deleted_models = self.purge_deleted.value
         selections.starter_models = starter_models
 
@@ -466,7 +466,7 @@ def main():
     try:
         select_and_download_models(opt)
     except AssertionError as e:
-        print(str(e))
+        print(e)
         sys.exit(-1)
     except KeyboardInterrupt:
         print("\nGoodbye! Come back soon.")

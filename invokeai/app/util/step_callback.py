@@ -34,10 +34,9 @@ def diffusers_step_callback_adapter(*cb_args, **kwargs):
     txt2img gives us a Tensor in the step_callbak, while img2img gives us a PipelineIntermediateState.
     This adapter grabs the needed data and passes it along to the callback function.
     """
-    if isinstance(cb_args[0], PipelineIntermediateState):
-        progress_state: PipelineIntermediateState = cb_args[0]
-        return fast_latents_step_callback(
-            progress_state.latents, progress_state.step, **kwargs
-        )
-    else:
+    if not isinstance(cb_args[0], PipelineIntermediateState):
         return fast_latents_step_callback(*cb_args, **kwargs)
+    progress_state: PipelineIntermediateState = cb_args[0]
+    return fast_latents_step_callback(
+        progress_state.latents, progress_state.step, **kwargs
+    )

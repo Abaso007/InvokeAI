@@ -563,14 +563,13 @@ class editOptsForm(npyscreen.FormMultiPage):
             bad_fields.append(
                 f"The embedding directory does not seem to be valid. Please check that {str(Path(opt.embedding_path).parent)} is an existing directory."
             )
-        if len(bad_fields) > 0:
-            message = "The following problems were detected and must be corrected:\n"
-            for problem in bad_fields:
-                message += f"* {problem}\n"
-            npyscreen.notify_confirm(message)
-            return False
-        else:
+        if not bad_fields:
             return True
+        message = "The following problems were detected and must be corrected:\n"
+        for problem in bad_fields:
+            message += f"* {problem}\n"
+        npyscreen.notify_confirm(message)
+        return False
 
     def marshall_arguments(self):
         new_opts = Namespace()
@@ -643,7 +642,7 @@ def default_user_selections(program_opts: Namespace) -> Namespace:
         if program_opts.default_only
         else recommended_datasets()
         if program_opts.yes_to_all
-        else dict(),
+        else {},
         purge_deleted_models=False,
         scan_directory=None,
         autoscan_on_startup=None,
@@ -722,9 +721,9 @@ def write_opts(opts: Namespace, init_file: Path):
 --embedding_path={opts.embedding_path}
 --precision={opts.precision}
 --max_loaded_models={int(opts.max_loaded_models)}
---{'no-' if not opts.safety_checker else ''}nsfw_checker
---{'no-' if not opts.xformers else ''}xformers
---{'no-' if not opts.ckpt_convert else ''}ckpt_convert
+--{'' if opts.safety_checker else 'no-'}nsfw_checker
+--{'' if opts.xformers else 'no-'}xformers
+--{'' if opts.ckpt_convert else 'no-'}ckpt_convert
 {'--free_gpu_mem' if opts.free_gpu_mem else ''}
 {'--always_use_cpu' if opts.always_use_cpu else ''}
 """

@@ -213,11 +213,7 @@ def main():
             uncond, cond = self.inner_model(x_in, sigma_in, cond=cond_in).chunk(2)
             return uncond + (cond - uncond) * cond_scale
 
-    if opt.plms:
-        sampler = PLMSSampler(model)
-    else:
-        sampler = DDIMSampler(model)
-
+    sampler = PLMSSampler(model) if opt.plms else DDIMSampler(model)
     os.makedirs(opt.outdir, exist_ok=True)
     outpath = opt.outdir
 
@@ -259,8 +255,8 @@ def main():
         with precision_scope(device.type):
             with model.ema_scope():
                 tic = time.time()
-                all_samples = list()
-                for n in trange(opt.n_iter, desc="Sampling"):
+                all_samples = []
+                for _ in trange(opt.n_iter, desc="Sampling"):
                     for prompts in tqdm(data, desc="data"):
                         uc = None
                         if opt.scale != 1.0:
@@ -282,10 +278,14 @@ def main():
                                                             x_T=start_code)
                         else:
                             sigmas = model_wrap.get_sigmas(opt.ddim_steps)
-                            if start_code:
-                                x = start_code
-                            else:
-                                x = torch.randn([opt.n_samples, *shape], device=device) * sigmas[0] # for GPU draw
+                            x = (
+                                start_code
+                                if start_code
+                                else torch.randn(
+                                    [opt.n_samples, *shape], device=device
+                                )
+                                * sigmas[0]
+                            )
                             model_wrap_cfg = CFGDenoiser(model_wrap)
                             extra_args = {'cond': c, 'uncond': uc, 'cond_scale': opt.scale}
                             samples_ddim = K.sampling.sample_lms(model_wrap_cfg, x, sigmas, extra_args=extra_args)

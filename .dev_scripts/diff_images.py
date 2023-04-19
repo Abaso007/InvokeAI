@@ -14,16 +14,14 @@ def calc_images_mean_L1(image1_path, image2_path):
     image2 = read_image_int16(image2_path)
     assert image1.shape == image2.shape
 
-    mean_L1 = np.abs(image1 - image2).mean()
-    return mean_L1
+    return np.abs(image1 - image2).mean()
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('image1_path')
     parser.add_argument('image2_path')
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 if __name__ == '__main__':

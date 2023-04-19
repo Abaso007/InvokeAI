@@ -32,7 +32,9 @@ async def get_thumbnail(
 ):
     """Gets a thumbnail"""
     # TODO: This is not really secure at all. At least make sure only output results are served
-    filename = ApiDependencies.invoker.services.images.get_path(image_type, 'thumbnails/' + image_name)
+    filename = ApiDependencies.invoker.services.images.get_path(
+        image_type, f'thumbnails/{image_name}'
+    )
     return FileResponse(filename)
 
 
@@ -55,7 +57,7 @@ async def upload_image(file: UploadFile, request: Request):
         # Error opening the image
         return Response(status_code=415)
 
-    filename = f"{uuid.uuid4()}_{str(int(datetime.now(timezone.utc).timestamp()))}.png"
+    filename = f"{uuid.uuid4()}_{int(datetime.now(timezone.utc).timestamp())}.png"
     ApiDependencies.invoker.services.images.save(ImageType.UPLOAD, filename, im)
 
     return Response(
@@ -78,7 +80,6 @@ async def list_images(
     per_page: int = Query(default=10, description="The number of images per page"),
 ) -> PaginatedResults[ImageResponse]:
     """Gets a list of images"""
-    result = ApiDependencies.invoker.services.images.list(
+    return ApiDependencies.invoker.services.images.list(
         image_type, page, per_page
     )
-    return result

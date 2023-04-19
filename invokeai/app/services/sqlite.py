@@ -62,19 +62,16 @@ class SqliteItemStorage(ItemStorageABC, Generic[T]):
     def get(self, id: str) -> Union[T, None]:
         with self._lock:
             self._cursor.execute(
-                f"""SELECT item FROM {self._table_name} WHERE id = ?;""", (str(id),)
+                f"""SELECT item FROM {self._table_name} WHERE id = ?;""", (id,)
             )
             result = self._cursor.fetchone()
 
-        if not result:
-            return None
-
-        return self._parse_item(result[0])
+        return self._parse_item(result[0]) if result else None
 
     def delete(self, id: str):
         with self._lock:
             self._cursor.execute(
-                f"""DELETE FROM {self._table_name} WHERE id = ?;""", (str(id),)
+                f"""DELETE FROM {self._table_name} WHERE id = ?;""", (id,)
             )
             self._conn.commit()
         self._on_deleted(id)

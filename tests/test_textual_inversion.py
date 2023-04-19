@@ -15,9 +15,7 @@ class DummyEmbeddingsList(list):
     def __getattr__(self, name):
         if name == 'num_embeddings':
             return len(self)
-        elif name == 'weight':
-            return self
-        elif name == 'data':
+        elif name in ['weight', 'data']:
             return self
 
 def make_dummy_embedding():
@@ -32,11 +30,10 @@ class DummyTransformer:
     def resize_token_embeddings(self, new_size=None):
         if new_size is None:
             return self.embeddings
-        else:
-            while len(self.embeddings) > new_size:
-                self.embeddings.pop(-1)
-            while len(self.embeddings) < new_size:
-                self.embeddings.append(make_dummy_embedding())
+        while len(self.embeddings) > new_size:
+            self.embeddings.pop(-1)
+        while len(self.embeddings) < new_size:
+            self.embeddings.append(make_dummy_embedding())
 
     def get_input_embeddings(self):
         return self.embeddings
@@ -199,7 +196,11 @@ class TextualInversionManagerTestCase(unittest.TestCase):
         self.assertEqual(prompt_token_ids_1v_prepend, expanded_prompt_token_ids)
 
         # in the middle
-        prompt_token_ids_1v_insert = prompt_token_ids[0:2] + [test_embedding_1v_token_id] + prompt_token_ids[2:3]
+        prompt_token_ids_1v_insert = (
+            prompt_token_ids[:2]
+            + [test_embedding_1v_token_id]
+            + prompt_token_ids[2:3]
+        )
         expanded_prompt_token_ids = tim.expand_textual_inversion_token_ids_if_necessary(prompt_token_ids=prompt_token_ids_1v_insert)
         self.assertEqual(prompt_token_ids_1v_insert, expanded_prompt_token_ids)
 
@@ -229,10 +230,20 @@ class TextualInversionManagerTestCase(unittest.TestCase):
         self.assertEqual([test_embedding_2v_token_id] + test_embedding_2v_pad_token_ids + prompt_token_ids, expanded_prompt_token_ids)
 
         # in the middle
-        prompt_token_ids_2v_insert = prompt_token_ids[0:2] + [test_embedding_2v_token_id] + prompt_token_ids[2:3]
+        prompt_token_ids_2v_insert = (
+            prompt_token_ids[:2]
+            + [test_embedding_2v_token_id]
+            + prompt_token_ids[2:3]
+        )
         expanded_prompt_token_ids = tim.expand_textual_inversion_token_ids_if_necessary(prompt_token_ids=prompt_token_ids_2v_insert)
         self.assertNotEqual(prompt_token_ids_2v_insert, expanded_prompt_token_ids)
-        self.assertEqual(prompt_token_ids[0:2] + [test_embedding_2v_token_id] + test_embedding_2v_pad_token_ids + prompt_token_ids[2:3], expanded_prompt_token_ids)
+        self.assertEqual(
+            prompt_token_ids[:2]
+            + [test_embedding_2v_token_id]
+            + test_embedding_2v_pad_token_ids
+            + prompt_token_ids[2:3],
+            expanded_prompt_token_ids,
+        )
 
     def test_pad_tokens_list_vector_length_8(self):
         tim = make_dummy_textual_inversion_manager()
@@ -260,10 +271,20 @@ class TextualInversionManagerTestCase(unittest.TestCase):
         self.assertEqual([test_embedding_8v_token_id] + test_embedding_8v_pad_token_ids + prompt_token_ids, expanded_prompt_token_ids)
 
         # in the middle
-        prompt_token_ids_8v_insert = prompt_token_ids[0:2] + [test_embedding_8v_token_id] + prompt_token_ids[2:3]
+        prompt_token_ids_8v_insert = (
+            prompt_token_ids[:2]
+            + [test_embedding_8v_token_id]
+            + prompt_token_ids[2:3]
+        )
         expanded_prompt_token_ids = tim.expand_textual_inversion_token_ids_if_necessary(prompt_token_ids=prompt_token_ids_8v_insert)
         self.assertNotEqual(prompt_token_ids_8v_insert, expanded_prompt_token_ids)
-        self.assertEqual(prompt_token_ids[0:2] + [test_embedding_8v_token_id] + test_embedding_8v_pad_token_ids + prompt_token_ids[2:3], expanded_prompt_token_ids)
+        self.assertEqual(
+            prompt_token_ids[:2]
+            + [test_embedding_8v_token_id]
+            + test_embedding_8v_pad_token_ids
+            + prompt_token_ids[2:3],
+            expanded_prompt_token_ids,
+        )
 
 
     def test_deferred_loading(self):

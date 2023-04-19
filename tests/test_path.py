@@ -16,8 +16,7 @@ class ConfigsTestCase(unittest.TestCase):
 
     def get_configs_path(self) -> pathlib.Path:
         """Get the path of the configs folder"""
-        configs_path = pathlib.Path(configs.__path__[0])
-        return configs_path
+        return pathlib.Path(configs.__path__[0])
 
     def get_frontend_path(self) -> pathlib.Path:
         """Get the path of the frontend dist folder"""
@@ -36,9 +35,9 @@ class ConfigsTestCase(unittest.TestCase):
     def test_caution_img(self):
         """Verify the caution image"""
         caution_img = Image.open(osp.join(assets_web.__path__[0], "caution.png"))
-        assert caution_img.width == int(500)
-        assert caution_img.height == int(441)
-        assert caution_img.format == str("PNG")
+        assert caution_img.width == 500
+        assert caution_img.height == 441
+        assert caution_img.format == "PNG"
 
 
 if __name__ == "__main__":

@@ -42,10 +42,10 @@ def create_text_to_image() -> LibraryGraph:
 def create_system_graphs(graph_library: ItemStorageABC[LibraryGraph]) -> list[LibraryGraph]:
     """Creates the default system graphs, or adds new versions if the old ones don't match"""
 
-    graphs: list[LibraryGraph] = list()
+    graphs: list[LibraryGraph] = []
 
     text_to_image = graph_library.get(default_text_to_image_graph_id)
-    
+
     # TODO: Check if the graph is the same as the default one, and if not, update it
     #if text_to_image is None:
     text_to_image = create_text_to_image()
