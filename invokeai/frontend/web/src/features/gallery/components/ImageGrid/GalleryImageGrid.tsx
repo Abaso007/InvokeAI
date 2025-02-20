@@ -1,166 +1,204 @@
-import { Box, Flex } from '@chakra-ui/react';
-import { useAppSelector } from 'app/store/storeHooks';
-import IAIButton from 'common/components/IAIButton';
+import { Box, Flex, Grid } from '@invoke-ai/ui-library';
+import { EMPTY_ARRAY } from 'app/store/constants';
+import { useAppDispatch, useAppSelector } from 'app/store/storeHooks';
 import { IAINoContentFallback } from 'common/components/IAIImageFallback';
-import { selectListImagesBaseQueryArgs } from 'features/gallery/store/gallerySelectors';
-import { IMAGE_LIMIT } from 'features/gallery/store/types';
+import { GallerySelectionCountTag } from 'features/gallery/components/ImageGrid/GallerySelectionCountTag';
+import { useGalleryHotkeys } from 'features/gallery/hooks/useGalleryHotkeys';
 import {
-  UseOverlayScrollbarsParams,
-  useOverlayScrollbars,
-} from 'overlayscrollbars-react';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+  selectGalleryImageMinimumWidth,
+  selectGalleryLimit,
+  selectListImagesQueryArgs,
+} from 'features/gallery/store/gallerySelectors';
+import { limitChanged } from 'features/gallery/store/gallerySlice';
+import { debounce } from 'lodash-es';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FaExclamationCircle, FaImage } from 'react-icons/fa';
-import { VirtuosoGrid } from 'react-virtuoso';
-import {
-  useLazyListImagesQuery,
-  useListImagesQuery,
-} from 'services/api/endpoints/images';
-import { useBoardTotal } from 'services/api/hooks/useBoardTotal';
-import GalleryImage from './GalleryImage';
-import ImageGridItemContainer from './ImageGridItemContainer';
-import ImageGridListContainer from './ImageGridListContainer';
+import { PiImageBold, PiWarningCircleBold } from 'react-icons/pi';
+import { useListImagesQuery } from 'services/api/endpoints/images';
 
-const overlayScrollbarsConfig: UseOverlayScrollbarsParams = {
-  defer: true,
-  options: {
-    scrollbars: {
-      visibility: 'auto',
-      autoHide: 'scroll',
-      autoHideDelay: 1300,
-      theme: 'os-theme-dark',
-    },
-    overflow: { x: 'hidden' },
-  },
-};
+import { GALLERY_GRID_CLASS_NAME } from './constants';
+import { GALLERY_IMAGE_CONTAINER_CLASS_NAME, GalleryImage } from './GalleryImage';
 
 const GalleryImageGrid = () => {
+  useGalleryHotkeys();
   const { t } = useTranslation();
-  const rootRef = useRef<HTMLDivElement>(null);
-  const [scroller, setScroller] = useState<HTMLElement | null>(null);
-  const [initialize, osInstance] = useOverlayScrollbars(
-    overlayScrollbarsConfig
-  );
-  const selectedBoardId = useAppSelector(
-    (state) => state.gallery.selectedBoardId
-  );
-  const { currentViewTotal } = useBoardTotal(selectedBoardId);
-  const queryArgs = useAppSelector(selectListImagesBaseQueryArgs);
-
-  const { currentData, isFetching, isSuccess, isError } =
-    useListImagesQuery(queryArgs);
-
-  const [listImages] = useLazyListImagesQuery();
-
-  const areMoreAvailable = useMemo(() => {
-    if (!currentData || !currentViewTotal) {
-      return false;
-    }
-    return currentData.ids.length < currentViewTotal;
-  }, [currentData, currentViewTotal]);
-
-  const handleLoadMoreImages = useCallback(() => {
-    if (!areMoreAvailable) {
-      return;
-    }
-
-    listImages({
-      ...queryArgs,
-      offset: currentData?.ids.length ?? 0,
-      limit: IMAGE_LIMIT,
-    });
-  }, [areMoreAvailable, listImages, queryArgs, currentData?.ids.length]);
-
-  useEffect(() => {
-    // Initialize the gallery's custom scrollbar
-    const { current: root } = rootRef;
-    if (scroller && root) {
-      initialize({
-        target: root,
-        elements: {
-          viewport: scroller,
-        },
-      });
-    }
-    return () => osInstance()?.destroy();
-  }, [scroller, initialize, osInstance]);
-
-  if (!currentData) {
-    return (
-      <Flex
-        sx={{
-          w: 'full',
-          h: 'full',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <IAINoContentFallback label={t('gallery.loading')} icon={FaImage} />
-      </Flex>
-    );
-  }
-
-  if (isSuccess && currentData?.ids.length === 0) {
-    return (
-      <Flex
-        sx={{
-          w: 'full',
-          h: 'full',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <IAINoContentFallback
-          label={t('gallery.noImagesInGallery')}
-          icon={FaImage}
-        />
-      </Flex>
-    );
-  }
-
-  if (isSuccess && currentData) {
-    return (
-      <>
-        <Box ref={rootRef} data-overlayscrollbars="" h="100%">
-          <VirtuosoGrid
-            style={{ height: '100%' }}
-            data={currentData.ids}
-            endReached={handleLoadMoreImages}
-            components={{
-              Item: ImageGridItemContainer,
-              List: ImageGridListContainer,
-            }}
-            scrollerRef={setScroller}
-            itemContent={(index, imageName) => (
-              <GalleryImage key={imageName} imageName={imageName as string} />
-            )}
-          />
-        </Box>
-        <IAIButton
-          onClick={handleLoadMoreImages}
-          isDisabled={!areMoreAvailable}
-          isLoading={isFetching}
-          loadingText={t('gallery.loading')}
-          flexShrink={0}
-        >
-          {`Load More (${currentData.ids.length} of ${currentViewTotal})`}
-        </IAIButton>
-      </>
-    );
-  }
+  const queryArgs = useAppSelector(selectListImagesQueryArgs);
+  const { hasImages, isLoading, isError } = useListImagesQuery(queryArgs, {
+    selectFromResult: ({ data, isLoading, isSuccess, isError }) => ({
+      hasImages: data && data.items.length > 0,
+      isLoading,
+      isSuccess,
+      isError,
+    }),
+  });
 
   if (isError) {
     return (
-      <Box sx={{ w: 'full', h: 'full' }}>
-        <IAINoContentFallback
-          label={t('gallery.unableToLoad')}
-          icon={FaExclamationCircle}
-        />
+      <Box w="full" h="full">
+        <IAINoContentFallback label={t('gallery.unableToLoad')} icon={PiWarningCircleBold} />
       </Box>
     );
   }
 
-  return null;
+  if (isLoading) {
+    return (
+      <Flex w="full" h="full" alignItems="center" justifyContent="center">
+        <IAINoContentFallback label={t('gallery.loading')} icon={PiImageBold} />
+      </Flex>
+    );
+  }
+
+  if (!hasImages) {
+    return (
+      <Flex w="full" h="full" alignItems="center" justifyContent="center">
+        <IAINoContentFallback label={t('gallery.noImagesInGallery')} icon={PiImageBold} />
+      </Flex>
+    );
+  }
+
+  return <GalleryImageGridContent />;
 };
 
 export default memo(GalleryImageGrid);
+
+const GalleryImageGridContent = memo(() => {
+  const dispatch = useAppDispatch();
+  const galleryImageMinimumWidth = useAppSelector(selectGalleryImageMinimumWidth);
+  const limit = useAppSelector(selectGalleryLimit);
+
+  // Use a callback ref to get reactivity on the container element because it is conditionally rendered
+  const [container, containerRef] = useState<HTMLDivElement | null>(null);
+
+  const calculateNewLimit = useMemo(() => {
+    // Debounce this to not thrash the API
+    return debounce(() => {
+      if (!container) {
+        // Container not rendered yet
+        return;
+      }
+      // Managing refs for dynamically rendered components is a bit tedious:
+      // - https://react.dev/learn/manipulating-the-dom-with-refs#how-to-manage-a-list-of-refs-using-a-ref-callback
+      // As a easy workaround, we can just grab the first gallery image element directly.
+      const imageEl = document.querySelector(`.${GALLERY_IMAGE_CONTAINER_CLASS_NAME}`);
+      if (!imageEl) {
+        // No images in gallery?
+        return;
+      }
+
+      const gridEl = document.querySelector(`.${GALLERY_GRID_CLASS_NAME}`);
+
+      if (!gridEl) {
+        return;
+      }
+
+      const imageRect = imageEl.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+
+      // We need to account for the gap between images
+      const gridElStyle = window.getComputedStyle(gridEl);
+      const gap = parseFloat(gridElStyle.gap);
+
+      if (!imageRect.width || !imageRect.height || !containerRect.width || !containerRect.height) {
+        // Gallery is too small to fit images or not rendered yet
+        return;
+      }
+
+      let imagesPerColumn = 0;
+      let spaceUsed = 0;
+
+      // Floating point precision can cause imagesPerColumn to be 1 too small. Adding 1px to the container size fixes
+      // this. Because the minimum image size is  without the possibility of overshooting.
+      while (spaceUsed + imageRect.height <= containerRect.height + 1) {
+        imagesPerColumn++; // Increment the number of images
+        spaceUsed += imageRect.height; // Add image size to the used space
+        if (spaceUsed + gap <= containerRect.height) {
+          spaceUsed += gap; // Add gap size to the used space after each image except after the last image
+        }
+      }
+
+      let imagesPerRow = 0;
+      spaceUsed = 0;
+
+      // Floating point precision can cause imagesPerRow to be 1 too small. Adding 1px to the container size fixes
+      // this, without the possibility of accidentally adding an extra column.
+      while (spaceUsed + imageRect.width <= containerRect.width + 1) {
+        imagesPerRow++; // Increment the number of images
+        spaceUsed += imageRect.width; // Add image size to the used space
+        if (spaceUsed + gap <= containerRect.width) {
+          spaceUsed += gap; // Add gap size to the used space after each image except after the last image
+        }
+      }
+
+      // Always load at least 1 row of images
+      const newLimit = Math.max(imagesPerRow, imagesPerRow * imagesPerColumn);
+
+      if (limit === 0 || limit === newLimit) {
+        return;
+      }
+      dispatch(limitChanged(newLimit));
+    }, 300);
+  }, [container, dispatch, limit]);
+
+  useEffect(() => {
+    // We want to recalculate the limit when image size changes
+    calculateNewLimit();
+  }, [calculateNewLimit, galleryImageMinimumWidth]);
+
+  useEffect(() => {
+    if (!container) {
+      return;
+    }
+
+    const resizeObserver = new ResizeObserver(calculateNewLimit);
+    resizeObserver.observe(container);
+
+    // First render
+    calculateNewLimit();
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [calculateNewLimit, container, dispatch]);
+
+  return (
+    <Box position="relative" w="full" h="full" mt={2}>
+      <Box
+        ref={containerRef}
+        position="absolute"
+        top={0}
+        right={0}
+        bottom={0}
+        left={0}
+        w="full"
+        h="full"
+        overflow="hidden"
+      >
+        <Grid
+          className={GALLERY_GRID_CLASS_NAME}
+          gridTemplateColumns={`repeat(auto-fill, minmax(${galleryImageMinimumWidth}px, 1fr))`}
+          gap={1}
+        >
+          <GalleryImageGridImages />
+        </Grid>
+      </Box>
+      <GallerySelectionCountTag />
+    </Box>
+  );
+});
+
+GalleryImageGridContent.displayName = 'GalleryImageGridContent';
+
+const GalleryImageGridImages = memo(() => {
+  const queryArgs = useAppSelector(selectListImagesQueryArgs);
+  const { imageDTOs } = useListImagesQuery(queryArgs, {
+    selectFromResult: ({ data }) => ({ imageDTOs: data?.items ?? EMPTY_ARRAY }),
+  });
+  return (
+    <>
+      {imageDTOs.map((imageDTO) => (
+        <GalleryImage key={imageDTO.image_name} imageDTO={imageDTO} />
+      ))}
+    </>
+  );
+});
+GalleryImageGridImages.displayName = 'GalleryImageGridImages';

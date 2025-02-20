@@ -1,25 +1,19 @@
-import { useAppDispatch, useAppSelector } from 'app/store/storeHooks';
-import { addToast } from 'features/system/store/systemSlice';
+import { useStore } from '@nanostores/react';
+import { toast } from 'features/toast/toast';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  useGetQueueStatusQuery,
-  useResumeProcessorMutation,
-} from 'services/api/endpoints/queue';
+import { useGetQueueStatusQuery, useResumeProcessorMutation } from 'services/api/endpoints/queue';
+import { $isConnected } from 'services/events/stores';
 
 export const useResumeProcessor = () => {
-  const dispatch = useAppDispatch();
-  const isConnected = useAppSelector((state) => state.system.isConnected);
+  const isConnected = useStore($isConnected);
   const { data: queueStatus } = useGetQueueStatusQuery();
   const { t } = useTranslation();
   const [trigger, { isLoading }] = useResumeProcessorMutation({
     fixedCacheKey: 'resumeProcessor',
   });
 
-  const isStarted = useMemo(
-    () => Boolean(queueStatus?.processor.is_started),
-    [queueStatus?.processor.is_started]
-  );
+  const isStarted = useMemo(() => Boolean(queueStatus?.processor.is_started), [queueStatus?.processor.is_started]);
 
   const resumeProcessor = useCallback(async () => {
     if (isStarted) {
@@ -27,26 +21,21 @@ export const useResumeProcessor = () => {
     }
     try {
       await trigger().unwrap();
-      dispatch(
-        addToast({
-          title: t('queue.resumeSucceeded'),
-          status: 'success',
-        })
-      );
+      toast({
+        id: 'PROCESSOR_RESUMED',
+        title: t('queue.resumeSucceeded'),
+        status: 'success',
+      });
     } catch {
-      dispatch(
-        addToast({
-          title: t('queue.resumeFailed'),
-          status: 'error',
-        })
-      );
+      toast({
+        id: 'PROCESSOR_RESUME_FAILED',
+        title: t('queue.resumeFailed'),
+        status: 'error',
+      });
     }
-  }, [isStarted, trigger, dispatch, t]);
+  }, [isStarted, trigger, t]);
 
-  const isDisabled = useMemo(
-    () => !isConnected || isStarted,
-    [isConnected, isStarted]
-  );
+  const isDisabled = useMemo(() => !isConnected || isStarted, [isConnected, isStarted]);
 
   return { resumeProcessor, isLoading, isStarted, isDisabled };
 };

@@ -1,51 +1,22 @@
-## What type of PR is this? (check all applicable)
+## Summary
 
-- [ ] Refactor
-- [ ] Feature
-- [ ] Bug Fix
-- [ ] Optimization
-- [ ] Documentation Update
-- [ ] Community Node Submission
+<!--A description of the changes in this PR. Include the kind of change (fix, feature, docs, etc), the "why" and the "how". Screenshots or videos are useful for frontend changes.-->
 
+## Related Issues / Discussions
 
-## Have you discussed this change with the InvokeAI team?
-- [ ] Yes
-- [ ] No, because:
+<!--WHEN APPLICABLE: List any related issues or discussions on github or discord. If this PR closes an issue, please use the "Closes #1234" format, so that the issue will be automatically closed when the PR merges.-->
 
-      
-## Have you updated all relevant documentation?
-- [ ] Yes
-- [ ] No
+## QA Instructions
 
+<!--WHEN APPLICABLE: Describe how you have tested the changes in this PR. Provide enough detail that a reviewer can reproduce your tests.-->
 
-## Description
+## Merge Plan
 
+<!--WHEN APPLICABLE: Large PRs, or PRs that touch sensitive things like DB schemas, may need some care when merging. For example, a careful rebase by the change author, timing to not interfere with a pending release, or a message to contributors on discord after merging.-->
 
-## Related Tickets & Documents
+## Checklist
 
-<!--
-For pull requests that relate or close an issue, please include them
-below. 
-
-For example having the text: "closes #1234" would connect the current pull
-request to issue 1234.  And when we merge the pull request, Github will
-automatically close the issue.
--->
-
-- Related Issue #
-- Closes #
-
-## QA Instructions, Screenshots, Recordings
-
-<!-- 
-Please provide steps on how to test changes, any hardware or 
-software specifications as well as any other pertinent information. 
--->
-
-## Added/updated tests?
-
-- [ ] Yes
-- [ ] No : _please replace this line with details on why tests
-      have not been included_
-
-## [optional] Are there any post deployment tasks we need to perform?
+- [ ] _The PR has a short but descriptive title, suitable for a changelog_
+- [ ] _Tests added / updated (if applicable)_
+- [ ] _Documentation added / updated (if applicable)_
+- [ ] _Updated `What's New` copy (if doing a release after this PR)_

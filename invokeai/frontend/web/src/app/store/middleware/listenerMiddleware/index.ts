@@ -1,96 +1,45 @@
-import type { TypedAddListener, TypedStartListening } from '@reduxjs/toolkit';
-import {
-  AnyAction,
-  ListenerEffect,
-  addListener,
-  createListenerMiddleware,
-} from '@reduxjs/toolkit';
+import type { TypedStartListening } from '@reduxjs/toolkit';
+import { addListener, createListenerMiddleware } from '@reduxjs/toolkit';
+import { addAdHocPostProcessingRequestedListener } from 'app/store/middleware/listenerMiddleware/listeners/addAdHocPostProcessingRequestedListener';
+import { addStagingListeners } from 'app/store/middleware/listenerMiddleware/listeners/addCommitStagingAreaImageListener';
+import { addAnyEnqueuedListener } from 'app/store/middleware/listenerMiddleware/listeners/anyEnqueued';
+import { addAppConfigReceivedListener } from 'app/store/middleware/listenerMiddleware/listeners/appConfigReceived';
+import { addAppStartedListener } from 'app/store/middleware/listenerMiddleware/listeners/appStarted';
+import { addBatchEnqueuedListener } from 'app/store/middleware/listenerMiddleware/listeners/batchEnqueued';
+import { addDeleteBoardAndImagesFulfilledListener } from 'app/store/middleware/listenerMiddleware/listeners/boardAndImagesDeleted';
+import { addBoardIdSelectedListener } from 'app/store/middleware/listenerMiddleware/listeners/boardIdSelected';
+import { addBulkDownloadListeners } from 'app/store/middleware/listenerMiddleware/listeners/bulkDownload';
+import { addEnqueueRequestedLinear } from 'app/store/middleware/listenerMiddleware/listeners/enqueueRequestedLinear';
+import { addEnqueueRequestedNodes } from 'app/store/middleware/listenerMiddleware/listeners/enqueueRequestedNodes';
+import { addGalleryImageClickedListener } from 'app/store/middleware/listenerMiddleware/listeners/galleryImageClicked';
+import { addGalleryOffsetChangedListener } from 'app/store/middleware/listenerMiddleware/listeners/galleryOffsetChanged';
+import { addGetOpenAPISchemaListener } from 'app/store/middleware/listenerMiddleware/listeners/getOpenAPISchema';
+import { addImageAddedToBoardFulfilledListener } from 'app/store/middleware/listenerMiddleware/listeners/imageAddedToBoard';
+import { addImageDeletionListeners } from 'app/store/middleware/listenerMiddleware/listeners/imageDeletionListeners';
+import { addImageRemovedFromBoardFulfilledListener } from 'app/store/middleware/listenerMiddleware/listeners/imageRemovedFromBoard';
+import { addImagesStarredListener } from 'app/store/middleware/listenerMiddleware/listeners/imagesStarred';
+import { addImagesUnstarredListener } from 'app/store/middleware/listenerMiddleware/listeners/imagesUnstarred';
+import { addImageToDeleteSelectedListener } from 'app/store/middleware/listenerMiddleware/listeners/imageToDeleteSelected';
+import { addImageUploadedFulfilledListener } from 'app/store/middleware/listenerMiddleware/listeners/imageUploaded';
+import { addModelSelectedListener } from 'app/store/middleware/listenerMiddleware/listeners/modelSelected';
+import { addModelsLoadedListener } from 'app/store/middleware/listenerMiddleware/listeners/modelsLoaded';
+import { addDynamicPromptsListener } from 'app/store/middleware/listenerMiddleware/listeners/promptChanged';
+import { addSetDefaultSettingsListener } from 'app/store/middleware/listenerMiddleware/listeners/setDefaultSettings';
+import { addSocketConnectedEventListener } from 'app/store/middleware/listenerMiddleware/listeners/socketConnected';
+import { addUpdateAllNodesRequestedListener } from 'app/store/middleware/listenerMiddleware/listeners/updateAllNodesRequested';
+import { addWorkflowLoadRequestedListener } from 'app/store/middleware/listenerMiddleware/listeners/workflowLoadRequested';
+import type { AppDispatch, RootState } from 'app/store/store';
 
-import type { AppDispatch, RootState } from '../../store';
-import { addCommitStagingAreaImageListener } from './listeners/addCommitStagingAreaImageListener';
-import { addFirstListImagesListener } from './listeners/addFirstListImagesListener.ts';
-import { addAnyEnqueuedListener } from './listeners/anyEnqueued';
-import { addAppConfigReceivedListener } from './listeners/appConfigReceived';
-import { addAppStartedListener } from './listeners/appStarted';
-import { addDeleteBoardAndImagesFulfilledListener } from './listeners/boardAndImagesDeleted';
-import { addBoardIdSelectedListener } from './listeners/boardIdSelected';
-import { addCanvasCopiedToClipboardListener } from './listeners/canvasCopiedToClipboard';
-import { addCanvasDownloadedAsImageListener } from './listeners/canvasDownloadedAsImage';
-import { addCanvasImageToControlNetListener } from './listeners/canvasImageToControlNet';
-import { addCanvasMaskSavedToGalleryListener } from './listeners/canvasMaskSavedToGallery';
-import { addCanvasMaskToControlNetListener } from './listeners/canvasMaskToControlNet';
-import { addCanvasMergedListener } from './listeners/canvasMerged';
-import { addCanvasSavedToGalleryListener } from './listeners/canvasSavedToGallery';
-import { addControlNetAutoProcessListener } from './listeners/controlNetAutoProcess';
-import { addControlNetImageProcessedListener } from './listeners/controlNetImageProcessed';
-import { addEnqueueRequestedCanvasListener } from './listeners/enqueueRequestedCanvas';
-import { addEnqueueRequestedLinear } from './listeners/enqueueRequestedLinear';
-import { addEnqueueRequestedNodes } from './listeners/enqueueRequestedNodes';
-import {
-  addImageAddedToBoardFulfilledListener,
-  addImageAddedToBoardRejectedListener,
-} from './listeners/imageAddedToBoard';
-import {
-  addImageDeletedFulfilledListener,
-  addImageDeletedPendingListener,
-  addImageDeletedRejectedListener,
-  addRequestedMultipleImageDeletionListener,
-  addRequestedSingleImageDeletionListener,
-} from './listeners/imageDeleted';
-import { addImageDroppedListener } from './listeners/imageDropped';
-import {
-  addImageRemovedFromBoardFulfilledListener,
-  addImageRemovedFromBoardRejectedListener,
-} from './listeners/imageRemovedFromBoard';
-import { addImageToDeleteSelectedListener } from './listeners/imageToDeleteSelected';
-import {
-  addImageUploadedFulfilledListener,
-  addImageUploadedRejectedListener,
-} from './listeners/imageUploaded';
-import { addImagesStarredListener } from './listeners/imagesStarred';
-import { addImagesUnstarredListener } from './listeners/imagesUnstarred';
-import { addInitialImageSelectedListener } from './listeners/initialImageSelected';
-import { addModelSelectedListener } from './listeners/modelSelected';
-import { addModelsLoadedListener } from './listeners/modelsLoaded';
-import { addDynamicPromptsListener } from './listeners/promptChanged';
-import { addReceivedOpenAPISchemaListener } from './listeners/receivedOpenAPISchema';
-import { addSocketConnectedEventListener as addSocketConnectedListener } from './listeners/socketio/socketConnected';
-import { addSocketDisconnectedEventListener as addSocketDisconnectedListener } from './listeners/socketio/socketDisconnected';
-import { addGeneratorProgressEventListener as addGeneratorProgressListener } from './listeners/socketio/socketGeneratorProgress';
-import { addGraphExecutionStateCompleteEventListener as addGraphExecutionStateCompleteListener } from './listeners/socketio/socketGraphExecutionStateComplete';
-import { addInvocationCompleteEventListener as addInvocationCompleteListener } from './listeners/socketio/socketInvocationComplete';
-import { addInvocationErrorEventListener as addInvocationErrorListener } from './listeners/socketio/socketInvocationError';
-import { addInvocationRetrievalErrorEventListener } from './listeners/socketio/socketInvocationRetrievalError';
-import { addInvocationStartedEventListener as addInvocationStartedListener } from './listeners/socketio/socketInvocationStarted';
-import { addModelLoadEventListener } from './listeners/socketio/socketModelLoad';
-import { addSocketQueueItemStatusChangedEventListener } from './listeners/socketio/socketQueueItemStatusChanged';
-import { addSessionRetrievalErrorEventListener } from './listeners/socketio/socketSessionRetrievalError';
-import { addSocketSubscribedEventListener as addSocketSubscribedListener } from './listeners/socketio/socketSubscribed';
-import { addSocketUnsubscribedEventListener as addSocketUnsubscribedListener } from './listeners/socketio/socketUnsubscribed';
-import { addStagingAreaImageSavedListener } from './listeners/stagingAreaImageSaved';
-import { addTabChangedListener } from './listeners/tabChanged';
-import { addUpscaleRequestedListener } from './listeners/upscaleRequested';
-import { addWorkflowLoadedListener } from './listeners/workflowLoaded';
-import { addBatchEnqueuedListener } from './listeners/batchEnqueued';
-import { addControlAdapterAddedOrEnabledListener } from './listeners/controlAdapterAddedOrEnabled';
+import { addArchivedOrDeletedBoardListener } from './listeners/addArchivedOrDeletedBoardListener';
+import { addEnqueueRequestedUpscale } from './listeners/enqueueRequestedUpscale';
 
 export const listenerMiddleware = createListenerMiddleware();
 
 export type AppStartListening = TypedStartListening<RootState, AppDispatch>;
 
-export const startAppListening =
-  listenerMiddleware.startListening as AppStartListening;
+const startAppListening = listenerMiddleware.startListening as AppStartListening;
 
-export const addAppListener = addListener as TypedAddListener<
-  RootState,
-  AppDispatch
->;
-
-export type AppListenerEffect = ListenerEffect<
-  AnyAction,
-  RootState,
-  AppDispatch
->;
+export const addAppListener = addListener.withTypes<RootState, AppDispatch>();
 
 /**
  * The RTK listener middleware is a lightweight alternative sagas/observables.
@@ -99,108 +48,62 @@ export type AppListenerEffect = ListenerEffect<
  */
 
 // Image uploaded
-addImageUploadedFulfilledListener();
-addImageUploadedRejectedListener();
-
-// Image selected
-addInitialImageSelectedListener();
+addImageUploadedFulfilledListener(startAppListening);
 
 // Image deleted
-addRequestedSingleImageDeletionListener();
-addRequestedMultipleImageDeletionListener();
-addImageDeletedPendingListener();
-addImageDeletedFulfilledListener();
-addImageDeletedRejectedListener();
-addDeleteBoardAndImagesFulfilledListener();
-addImageToDeleteSelectedListener();
+addImageDeletionListeners(startAppListening);
+addDeleteBoardAndImagesFulfilledListener(startAppListening);
+addImageToDeleteSelectedListener(startAppListening);
 
 // Image starred
-addImagesStarredListener();
-addImagesUnstarredListener();
+addImagesStarredListener(startAppListening);
+addImagesUnstarredListener(startAppListening);
+
+// Gallery
+addGalleryImageClickedListener(startAppListening);
+addGalleryOffsetChangedListener(startAppListening);
 
 // User Invoked
-addEnqueueRequestedCanvasListener();
-addEnqueueRequestedNodes();
-addEnqueueRequestedLinear();
-addAnyEnqueuedListener();
-addBatchEnqueuedListener();
+addEnqueueRequestedNodes(startAppListening);
+addEnqueueRequestedLinear(startAppListening);
+addEnqueueRequestedUpscale(startAppListening);
+addAnyEnqueuedListener(startAppListening);
+addBatchEnqueuedListener(startAppListening);
 
 // Canvas actions
-addCanvasSavedToGalleryListener();
-addCanvasMaskSavedToGalleryListener();
-addCanvasImageToControlNetListener();
-addCanvasMaskToControlNetListener();
-addCanvasDownloadedAsImageListener();
-addCanvasCopiedToClipboardListener();
-addCanvasMergedListener();
-addStagingAreaImageSavedListener();
-addCommitStagingAreaImageListener();
+addStagingListeners(startAppListening);
 
-/**
- * Socket.IO Events - these handle SIO events directly and pass on internal application actions.
- * We don't handle SIO events in slices via `extraReducers` because some of these events shouldn't
- * actually be handled at all.
- *
- * For example, we don't want to respond to progress events for canceled sessions. To avoid
- * duplicating the logic to determine if an event should be responded to, we handle all of that
- * "is this session canceled?" logic in these listeners.
- *
- * The `socketGeneratorProgress` listener will then only dispatch the `appSocketGeneratorProgress`
- * action if it should be handled by the rest of the application. It is this `appSocketGeneratorProgress`
- * action that is handled by reducers in slices.
- */
-addGeneratorProgressListener();
-addGraphExecutionStateCompleteListener();
-addInvocationCompleteListener();
-addInvocationErrorListener();
-addInvocationStartedListener();
-addSocketConnectedListener();
-addSocketDisconnectedListener();
-addSocketSubscribedListener();
-addSocketUnsubscribedListener();
-addModelLoadEventListener();
-addSessionRetrievalErrorEventListener();
-addInvocationRetrievalErrorEventListener();
-addSocketQueueItemStatusChangedEventListener();
+// Socket.IO
+addSocketConnectedEventListener(startAppListening);
 
-// ControlNet
-addControlNetImageProcessedListener();
-addControlNetAutoProcessListener();
+// Gallery bulk download
+addBulkDownloadListeners(startAppListening);
 
 // Boards
-addImageAddedToBoardFulfilledListener();
-addImageAddedToBoardRejectedListener();
-addImageRemovedFromBoardFulfilledListener();
-addImageRemovedFromBoardRejectedListener();
-addBoardIdSelectedListener();
+addImageAddedToBoardFulfilledListener(startAppListening);
+addImageRemovedFromBoardFulfilledListener(startAppListening);
+addBoardIdSelectedListener(startAppListening);
+addArchivedOrDeletedBoardListener(startAppListening);
 
 // Node schemas
-addReceivedOpenAPISchemaListener();
+addGetOpenAPISchemaListener(startAppListening);
 
 // Workflows
-addWorkflowLoadedListener();
-
-// DND
-addImageDroppedListener();
+addWorkflowLoadRequestedListener(startAppListening);
+addUpdateAllNodesRequestedListener(startAppListening);
 
 // Models
-addModelSelectedListener();
+addModelSelectedListener(startAppListening);
 
 // app startup
-addAppStartedListener();
-addModelsLoadedListener();
-addAppConfigReceivedListener();
-addFirstListImagesListener();
+addAppStartedListener(startAppListening);
+addModelsLoadedListener(startAppListening);
+addAppConfigReceivedListener(startAppListening);
 
 // Ad-hoc upscale workflwo
-addUpscaleRequestedListener();
+addAdHocPostProcessingRequestedListener(startAppListening);
 
-// Tab Change
-addTabChangedListener();
+// Prompts
+addDynamicPromptsListener(startAppListening);
 
-// Dynamic prompts
-addDynamicPromptsListener();
-
-// Display toast when controlnet or t2i adapter enabled
-// TODO: Remove when they can both be enabled at same time
-addControlAdapterAddedOrEnabledListener();
+addSetDefaultSettingsListener(startAppListening);

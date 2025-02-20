@@ -1,29 +1,37 @@
-import { SchedulerParam } from 'features/parameters/types/parameterSchemas';
-import { InvokeTabName } from './tabMap';
-
-export type Coordinates = {
-  x: number;
-  y: number;
-};
-
-export type Dimensions = {
-  width: number | string;
-  height: number | string;
-};
-
-export type Rect = Coordinates & Dimensions;
+export type TabName = 'canvas' | 'upscaling' | 'workflows' | 'models' | 'queue';
+export type CanvasRightPanelTabName = 'layers' | 'gallery';
 
 export interface UIState {
-  activeTab: InvokeTabName;
+  /**
+   * Slice schema version.
+   */
+  _version: 3;
+  /**
+   * The currently active tab.
+   */
+  activeTab: TabName;
+  /**
+   * The currently active right panel canvas tab
+   */
+  activeTabCanvasRightPanel: CanvasRightPanelTabName;
+  /**
+   * Whether or not to show image details, e.g. metadata, workflow, etc.
+   */
   shouldShowImageDetails: boolean;
-  shouldUseCanvasBetaLayout: boolean;
-  shouldShowExistingModelsInSearch: boolean;
-  shouldUseSliders: boolean;
-  shouldHidePreview: boolean;
+  /**
+   * Whether or not to show progress in the viewer.
+   */
   shouldShowProgressInViewer: boolean;
-  shouldShowEmbeddingPicker: boolean;
-  shouldAutoChangeDimensions: boolean;
-  favoriteSchedulers: SchedulerParam[];
-  globalContextMenuCloseTrigger: number;
-  panels: Record<string, string>;
+  /**
+   * The state of accordions. The key is the id of the accordion, and the value is a boolean representing the open state.
+   */
+  accordions: Record<string, boolean>;
+  /**
+   * The state of expanders. The key is the id of the expander, and the value is a boolean representing the open state.
+   */
+  expanders: Record<string, boolean>;
+  /**
+   * Whether or not to show the user the open notification. Bump version to reset users who may have closed previous version.
+   */
+  shouldShowNotificationV2: boolean;
 }

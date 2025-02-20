@@ -1,71 +1,114 @@
-from __future__ import annotations
-
-import platform
-from contextlib import nullcontext
-from typing import Union
+from typing import Dict, Literal, Optional, Union
 
 import torch
-from packaging import version
-from torch import autocast
+from deprecated import deprecated
 
-from invokeai.app.services.config import InvokeAIAppConfig
+from invokeai.app.services.config.config_default import get_config
 
+# legacy APIs
+TorchPrecisionNames = Literal["float32", "float16", "bfloat16"]
 CPU_DEVICE = torch.device("cpu")
 CUDA_DEVICE = torch.device("cuda")
 MPS_DEVICE = torch.device("mps")
-config = InvokeAIAppConfig.get_config()
 
 
+@deprecated("Use TorchDevice.choose_torch_dtype() instead.")  # type: ignore
+def choose_precision(device: torch.device) -> TorchPrecisionNames:
+    """Return the string representation of the recommended torch device."""
+    torch_dtype = TorchDevice.choose_torch_dtype(device)
+    return PRECISION_TO_NAME[torch_dtype]
+
+
+@deprecated("Use TorchDevice.choose_torch_device() instead.")  # type: ignore
 def choose_torch_device() -> torch.device:
-    """Convenience routine for guessing which GPU device to run model on"""
-    if config.use_cpu:  # legacy setting - force CPU
-        return CPU_DEVICE
-    elif config.device == "auto":
-        if torch.cuda.is_available():
-            return torch.device("cuda")
-        if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-            return torch.device("mps")
-        else:
-            return CPU_DEVICE
-    else:
-        return torch.device(config.device)
+    """Return the torch.device to use for accelerated inference."""
+    return TorchDevice.choose_torch_device()
 
 
-def choose_precision(device: torch.device) -> str:
-    """Returns an appropriate precision for the given torch device"""
-    if device.type == "cuda":
-        device_name = torch.cuda.get_device_name(device)
-        if not ("GeForce GTX 1660" in device_name or "GeForce GTX 1650" in device_name):
-            return "float16"
-    elif device.type == "mps" and version.parse(platform.mac_ver()[0]) < version.parse("14.0.0"):
-        return "float16"
-    return "float32"
-
-
+@deprecated("Use TorchDevice.choose_torch_dtype() instead.")  # type: ignore
 def torch_dtype(device: torch.device) -> torch.dtype:
-    if config.full_precision:
-        return torch.float32
-    if choose_precision(device) == "float16":
-        return torch.float16
-    else:
-        return torch.float32
+    """Return the torch precision for the recommended torch device."""
+    return TorchDevice.choose_torch_dtype(device)
 
 
-def choose_autocast(precision):
-    """Returns an autocast context or nullcontext for the given precision string"""
-    # float16 currently requires autocast to avoid errors like:
-    # 'expected scalar type Half but found Float'
-    if precision == "autocast" or precision == "float16":
-        return autocast
-    return nullcontext
+NAME_TO_PRECISION: Dict[TorchPrecisionNames, torch.dtype] = {
+    "float32": torch.float32,
+    "float16": torch.float16,
+    "bfloat16": torch.bfloat16,
+}
+PRECISION_TO_NAME: Dict[torch.dtype, TorchPrecisionNames] = {v: k for k, v in NAME_TO_PRECISION.items()}
 
 
-def normalize_device(device: Union[str, torch.device]) -> torch.device:
-    """Ensure device has a device index defined, if appropriate."""
-    device = torch.device(device)
-    if device.index is None:
-        # cuda might be the only torch backend that currently uses the device index?
-        # I don't see anything like `current_device` for cpu or mps.
-        if device.type == "cuda":
+class TorchDevice:
+    """Abstraction layer for torch devices."""
+
+    CPU_DEVICE = torch.device("cpu")
+    CUDA_DEVICE = torch.device("cuda")
+    MPS_DEVICE = torch.device("mps")
+
+    @classmethod
+    def choose_torch_device(cls) -> torch.device:
+        """Return the torch.device to use for accelerated inference."""
+        app_config = get_config()
+        if app_config.device != "auto":
+            device = torch.device(app_config.device)
+        elif torch.cuda.is_available():
+            device = CUDA_DEVICE
+        elif torch.backends.mps.is_available():
+            device = MPS_DEVICE
+        else:
+            device = CPU_DEVICE
+        return cls.normalize(device)
+
+    @classmethod
+    def choose_torch_dtype(cls, device: Optional[torch.device] = None) -> torch.dtype:
+        """Return the precision to use for accelerated inference."""
+        device = device or cls.choose_torch_device()
+        config = get_config()
+        if device.type == "cuda" and torch.cuda.is_available():
+            device_name = torch.cuda.get_device_name(device)
+            if "GeForce GTX 1660" in device_name or "GeForce GTX 1650" in device_name:
+                # These GPUs have limited support for float16
+                return cls._to_dtype("float32")
+            elif config.precision == "auto":
+                # Default to float16 for CUDA devices
+                return cls._to_dtype("float16")
+            else:
+                # Use the user-defined precision
+                return cls._to_dtype(config.precision)
+
+        elif device.type == "mps" and torch.backends.mps.is_available():
+            if config.precision == "auto":
+                # Default to float16 for MPS devices
+                return cls._to_dtype("float16")
+            else:
+                # Use the user-defined precision
+                return cls._to_dtype(config.precision)
+        # CPU / safe fallback
+        return cls._to_dtype("float32")
+
+    @classmethod
+    def get_torch_device_name(cls) -> str:
+        """Return the device name for the current torch device."""
+        device = cls.choose_torch_device()
+        return torch.cuda.get_device_name(device) if device.type == "cuda" else device.type.upper()
+
+    @classmethod
+    def normalize(cls, device: Union[str, torch.device]) -> torch.device:
+        """Add the device index to CUDA devices."""
+        device = torch.device(device)
+        if device.index is None and device.type == "cuda" and torch.cuda.is_available():
             device = torch.device(device.type, torch.cuda.current_device())
-    return device
+        return device
+
+    @classmethod
+    def empty_cache(cls) -> None:
+        """Clear the GPU device cache."""
+        if torch.backends.mps.is_available():
+            torch.mps.empty_cache()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+    @classmethod
+    def _to_dtype(cls, precision_name: TorchPrecisionNames) -> torch.dtype:
+        return NAME_TO_PRECISION[precision_name]

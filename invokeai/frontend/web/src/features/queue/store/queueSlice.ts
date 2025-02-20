@@ -1,24 +1,24 @@
-import { PayloadAction, createSlice } from '@reduxjs/toolkit';
+import type { PayloadAction, Selector } from '@reduxjs/toolkit';
+import { createSelector, createSlice } from '@reduxjs/toolkit';
+import type { RootState } from 'app/store/store';
 
-export interface QueueState {
+interface QueueState {
   listCursor: number | undefined;
   listPriority: number | undefined;
   selectedQueueItem: string | undefined;
   resumeProcessorOnEnqueue: boolean;
 }
 
-export const initialQueueState: QueueState = {
+const initialQueueState: QueueState = {
   listCursor: undefined,
   listPriority: undefined,
   selectedQueueItem: undefined,
   resumeProcessorOnEnqueue: true,
 };
 
-const initialState: QueueState = initialQueueState;
-
 export const queueSlice = createSlice({
   name: 'queue',
-  initialState,
+  initialState: initialQueueState,
   reducers: {
     listCursorChanged: (state, action: PayloadAction<number | undefined>) => {
       state.listCursor = action.payload;
@@ -30,31 +30,12 @@ export const queueSlice = createSlice({
       state.listCursor = undefined;
       state.listPriority = undefined;
     },
-    queueItemSelectionToggled: (
-      state,
-      action: PayloadAction<string | undefined>
-    ) => {
-      if (state.selectedQueueItem === action.payload) {
-        state.selectedQueueItem = undefined;
-      } else {
-        state.selectedQueueItem = action.payload;
-      }
-    },
-    resumeProcessorOnEnqueueChanged: (
-      state,
-      action: PayloadAction<boolean>
-    ) => {
-      state.resumeProcessorOnEnqueue = action.payload;
-    },
   },
 });
 
-export const {
-  listCursorChanged,
-  listPriorityChanged,
-  listParamsReset,
-  queueItemSelectionToggled,
-  resumeProcessorOnEnqueueChanged,
-} = queueSlice.actions;
+export const { listCursorChanged, listPriorityChanged, listParamsReset } = queueSlice.actions;
 
-export default queueSlice.reducer;
+const selectQueueSlice = (state: RootState) => state.queue;
+const createQueueSelector = <T>(selector: Selector<QueueState, T>) => createSelector(selectQueueSlice, selector);
+export const selectQueueListCursor = createQueueSelector((queue) => queue.listCursor);
+export const selectQueueListPriority = createQueueSelector((queue) => queue.listPriority);

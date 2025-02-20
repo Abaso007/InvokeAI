@@ -1,95 +1,91 @@
-import { Box, ChakraProps, Flex, IconButton, Spinner } from '@chakra-ui/react';
-import { memo } from 'react';
+import type { ChakraProps } from '@invoke-ai/ui-library';
+import { Box, IconButton } from '@invoke-ai/ui-library';
+import { useGalleryImages } from 'features/gallery/hooks/useGalleryImages';
+import { useGalleryNavigation } from 'features/gallery/hooks/useGalleryNavigation';
+import { useGalleryPagination } from 'features/gallery/hooks/useGalleryPagination';
+import { memo, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FaAngleDoubleRight, FaAngleLeft, FaAngleRight } from 'react-icons/fa';
-import { useNextPrevImage } from '../hooks/useNextPrevImage';
+import { PiCaretLeftBold, PiCaretRightBold } from 'react-icons/pi';
 
-const nextPrevButtonStyles: ChakraProps['sx'] = {
-  color: 'base.100',
-  pointerEvents: 'auto',
-};
-
-const NextPrevImageButtons = () => {
+const NextPrevImageButtons = ({ inset = 8 }: { inset?: ChakraProps['insetInlineStart' | 'insetInlineEnd'] }) => {
   const { t } = useTranslation();
+  const { prevImage, nextImage, isOnFirstImageOfView, isOnLastImageOfView } = useGalleryNavigation();
 
-  const {
-    handlePrevImage,
-    handleNextImage,
-    isOnFirstImage,
-    isOnLastImage,
-    handleLoadMoreImages,
-    areMoreImagesAvailable,
-    isFetching,
-  } = useNextPrevImage();
+  const { isFetching } = useGalleryImages().queryResult;
+  const { isNextEnabled, goNext, isPrevEnabled, goPrev } = useGalleryPagination();
+
+  const shouldShowLeftArrow = useMemo(() => {
+    if (!isOnFirstImageOfView) {
+      return true;
+    }
+    if (isPrevEnabled) {
+      return true;
+    }
+    return false;
+  }, [isOnFirstImageOfView, isPrevEnabled]);
+
+  const onClickLeftArrow = useCallback(() => {
+    if (isOnFirstImageOfView) {
+      if (isPrevEnabled && !isFetching) {
+        goPrev('arrow');
+      }
+    } else {
+      prevImage();
+    }
+  }, [goPrev, isFetching, isOnFirstImageOfView, isPrevEnabled, prevImage]);
+
+  const shouldShowRightArrow = useMemo(() => {
+    if (!isOnLastImageOfView) {
+      return true;
+    }
+    if (isNextEnabled) {
+      return true;
+    }
+    return false;
+  }, [isNextEnabled, isOnLastImageOfView]);
+
+  const onClickRightArrow = useCallback(() => {
+    if (isOnLastImageOfView) {
+      if (isNextEnabled && !isFetching) {
+        goNext('arrow');
+      }
+    } else {
+      nextImage();
+    }
+  }, [goNext, isFetching, isNextEnabled, isOnLastImageOfView, nextImage]);
 
   return (
-    <Box
-      sx={{
-        position: 'relative',
-        height: '100%',
-        width: '100%',
-      }}
-    >
-      <Box
-        sx={{
-          pos: 'absolute',
-          top: '50%',
-          transform: 'translate(0, -50%)',
-          insetInlineStart: 0,
-        }}
-      >
-        {!isOnFirstImage && (
-          <IconButton
-            aria-label={t('accessibility.previousImage')}
-            icon={<FaAngleLeft size={64} />}
-            variant="unstyled"
-            onClick={handlePrevImage}
-            boxSize={16}
-            sx={nextPrevButtonStyles}
-          />
-        )}
-      </Box>
-      <Box
-        sx={{
-          pos: 'absolute',
-          top: '50%',
-          transform: 'translate(0, -50%)',
-          insetInlineEnd: 0,
-        }}
-      >
-        {!isOnLastImage && (
-          <IconButton
-            aria-label={t('accessibility.nextImage')}
-            icon={<FaAngleRight size={64} />}
-            variant="unstyled"
-            onClick={handleNextImage}
-            boxSize={16}
-            sx={nextPrevButtonStyles}
-          />
-        )}
-        {isOnLastImage && areMoreImagesAvailable && !isFetching && (
-          <IconButton
-            aria-label={t('accessibility.loadMore')}
-            icon={<FaAngleDoubleRight size={64} />}
-            variant="unstyled"
-            onClick={handleLoadMoreImages}
-            boxSize={16}
-            sx={nextPrevButtonStyles}
-          />
-        )}
-        {isOnLastImage && areMoreImagesAvailable && isFetching && (
-          <Flex
-            sx={{
-              w: 16,
-              h: 16,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Spinner opacity={0.5} size="xl" />
-          </Flex>
-        )}
-      </Box>
+    <Box pos="relative" h="full" w="full">
+      {shouldShowLeftArrow && (
+        <IconButton
+          position="absolute"
+          top="50%"
+          transform="translate(0, -50%)"
+          aria-label={t('accessibility.previousImage')}
+          icon={<PiCaretLeftBold size={64} />}
+          variant="unstyled"
+          onClick={onClickLeftArrow}
+          isDisabled={isFetching}
+          color="base.100"
+          pointerEvents="auto"
+          insetInlineStart={inset}
+        />
+      )}
+      {shouldShowRightArrow && (
+        <IconButton
+          position="absolute"
+          top="50%"
+          transform="translate(0, -50%)"
+          aria-label={t('accessibility.nextImage')}
+          icon={<PiCaretRightBold size={64} />}
+          variant="unstyled"
+          onClick={onClickRightArrow}
+          isDisabled={isFetching}
+          color="base.100"
+          pointerEvents="auto"
+          insetInlineEnd={inset}
+        />
+      )}
     </Box>
   );
 };

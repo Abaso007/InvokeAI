@@ -1,46 +1,43 @@
+import { useStore } from '@nanostores/react';
 import { createSelector } from '@reduxjs/toolkit';
-import { stateSelector } from 'app/store/store';
+import type { Node, NodeProps } from '@xyflow/react';
 import { useAppSelector } from 'app/store/storeHooks';
-import { InvocationNodeData } from 'features/nodes/types/types';
+import NodeWrapper from 'features/nodes/components/flow/nodes/common/NodeWrapper';
+import InvocationNode from 'features/nodes/components/flow/nodes/Invocation/InvocationNode';
+import { $templates } from 'features/nodes/store/nodesSlice';
+import { selectNodes } from 'features/nodes/store/selectors';
+import type { InvocationNodeData } from 'features/nodes/types/invocation';
 import { memo, useMemo } from 'react';
-import { NodeProps } from 'reactflow';
-import InvocationNode from '../Invocation/InvocationNode';
+
 import InvocationNodeUnknownFallback from './InvocationNodeUnknownFallback';
 
-const InvocationNodeWrapper = (props: NodeProps<InvocationNodeData>) => {
+const InvocationNodeWrapper = (props: NodeProps<Node<InvocationNodeData>>) => {
   const { data, selected } = props;
   const { id: nodeId, type, isOpen, label } = data;
-
-  const hasTemplateSelector = useMemo(
-    () =>
-      createSelector(stateSelector, ({ nodes }) =>
-        Boolean(nodes.nodeTemplates[type])
-      ),
-    [type]
+  const templates = useStore($templates);
+  const hasTemplate = useMemo(() => Boolean(templates[type]), [templates, type]);
+  const selectNodeExists = useMemo(
+    () => createSelector(selectNodes, (nodes) => Boolean(nodes.find((n) => n.id === nodeId))),
+    [nodeId]
   );
+  const nodeExists = useAppSelector(selectNodeExists);
 
-  const nodeTemplate = useAppSelector(hasTemplateSelector);
+  if (!nodeExists) {
+    return null;
+  }
 
-  if (!nodeTemplate) {
+  if (!hasTemplate) {
     return (
-      <InvocationNodeUnknownFallback
-        nodeId={nodeId}
-        isOpen={isOpen}
-        label={label}
-        type={type}
-        selected={selected}
-      />
+      <NodeWrapper nodeId={nodeId} selected={selected}>
+        <InvocationNodeUnknownFallback nodeId={nodeId} isOpen={isOpen} label={label} type={type} />
+      </NodeWrapper>
     );
   }
 
   return (
-    <InvocationNode
-      nodeId={nodeId}
-      isOpen={isOpen}
-      label={label}
-      type={type}
-      selected={selected}
-    />
+    <NodeWrapper nodeId={nodeId} selected={selected}>
+      <InvocationNode nodeId={nodeId} isOpen={isOpen} />
+    </NodeWrapper>
   );
 };
 

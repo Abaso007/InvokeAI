@@ -1,29 +1,20 @@
 from __future__ import annotations
 
 import math
-from contextlib import contextmanager
 from typing import Any, Callable, Optional, Union
 
 import torch
-from diffusers import UNet2DConditionModel
 from typing_extensions import TypeAlias
 
-from invokeai.app.services.config import InvokeAIAppConfig
+from invokeai.app.services.config.config_default import get_config
 from invokeai.backend.stable_diffusion.diffusion.conditioning_data import (
-    ConditioningData,
-    ExtraConditioningInfo,
-    PostprocessingSettings,
-    SDXLConditioningInfo,
+    IPAdapterData,
+    Range,
+    TextConditioningData,
+    TextConditioningRegions,
 )
-
-from .cross_attention_control import (
-    Context,
-    CrossAttentionType,
-    SwapCrossAttnContext,
-    get_cross_attention_modules,
-    setup_cross_attention_control_attention_processors,
-)
-from .cross_attention_map_saving import AttentionMapSaver
+from invokeai.backend.stable_diffusion.diffusion.regional_ip_data import RegionalIPData
+from invokeai.backend.stable_diffusion.diffusion.regional_prompt_data import RegionalPromptData
 
 ModelForwardCallback: TypeAlias = Union[
     # x, t, conditioning, Optional[cross-attention kwargs]
@@ -57,57 +48,11 @@ class InvokeAIDiffuserComponent:
         :param model: the unet model to pass through to cross attention control
         :param model_forward_callback: a lambda with arguments (x, sigma, conditioning_to_apply). will be called repeatedly. most likely, this should simply call model.forward(x, sigma, conditioning)
         """
-        config = InvokeAIAppConfig.get_config()
+        config = get_config()
         self.conditioning = None
         self.model = model
         self.model_forward_callback = model_forward_callback
-        self.cross_attention_control_context = None
         self.sequential_guidance = config.sequential_guidance
-
-    @contextmanager
-    def custom_attention_context(
-        self,
-        unet: UNet2DConditionModel,
-        extra_conditioning_info: Optional[ExtraConditioningInfo],
-        step_count: int,
-    ):
-        old_attn_processors = unet.attn_processors
-
-        try:
-            self.cross_attention_control_context = Context(
-                arguments=extra_conditioning_info.cross_attention_control_args,
-                step_count=step_count,
-            )
-            setup_cross_attention_control_attention_processors(
-                unet,
-                self.cross_attention_control_context,
-            )
-
-            yield None
-        finally:
-            self.cross_attention_control_context = None
-            unet.set_attn_processor(old_attn_processors)
-            # TODO resuscitate attention map saving
-            # self.remove_attention_map_saving()
-
-    def setup_attention_map_saving(self, saver: AttentionMapSaver):
-        def callback(slice, dim, offset, slice_size, key):
-            if dim is not None:
-                # sliced tokens attention map saving is not implemented
-                return
-            saver.add_attention_maps(slice, key)
-
-        tokens_cross_attention_modules = get_cross_attention_modules(self.model, CrossAttentionType.TOKENS)
-        for identifier, module in tokens_cross_attention_modules:
-            key = "down" if identifier.startswith("down") else "up" if identifier.startswith("up") else "mid"
-            module.set_attention_slice_calculated_callback(
-                lambda slice, dim, offset, slice_size, key=key: callback(slice, dim, offset, slice_size, key)
-            )
-
-    def remove_attention_map_saving(self):
-        tokens_cross_attention_modules = get_cross_attention_modules(self.model, CrossAttentionType.TOKENS)
-        for _, module in tokens_cross_attention_modules:
-            module.set_attention_slice_calculated_callback(None)
 
     def do_controlnet_step(
         self,
@@ -116,14 +61,14 @@ class InvokeAIDiffuserComponent:
         timestep: torch.Tensor,
         step_index: int,
         total_step_count: int,
-        conditioning_data,
+        conditioning_data: TextConditioningData,
     ):
         down_block_res_samples, mid_block_res_sample = None, None
 
         # control_data should be type List[ControlNetData]
         # this loop covers both ControlNet (one ControlNetData in list)
         #      and MultiControlNet (multiple ControlNetData in list)
-        for i, control_datum in enumerate(control_data):
+        for _i, control_datum in enumerate(control_data):
             control_mode = control_datum.control_mode
             # soft_injection and cfg_injection are the two ControlNet control_mode booleans
             #     that are combined at higher level to make control_mode enum
@@ -149,28 +94,28 @@ class InvokeAIDiffuserComponent:
                 added_cond_kwargs = None
 
                 if cfg_injection:  # only applying ControlNet to conditional instead of in unconditioned
-                    if type(conditioning_data.text_embeddings) is SDXLConditioningInfo:
+                    if conditioning_data.is_sdxl():
                         added_cond_kwargs = {
-                            "text_embeds": conditioning_data.text_embeddings.pooled_embeds,
-                            "time_ids": conditioning_data.text_embeddings.add_time_ids,
+                            "text_embeds": conditioning_data.cond_text.pooled_embeds,
+                            "time_ids": conditioning_data.cond_text.add_time_ids,
                         }
-                    encoder_hidden_states = conditioning_data.text_embeddings.embeds
+                    encoder_hidden_states = conditioning_data.cond_text.embeds
                     encoder_attention_mask = None
                 else:
-                    if type(conditioning_data.text_embeddings) is SDXLConditioningInfo:
+                    if conditioning_data.is_sdxl():
                         added_cond_kwargs = {
                             "text_embeds": torch.cat(
                                 [
                                     # TODO: how to pad? just by zeros? or even truncate?
-                                    conditioning_data.unconditioned_embeddings.pooled_embeds,
-                                    conditioning_data.text_embeddings.pooled_embeds,
+                                    conditioning_data.uncond_text.pooled_embeds,
+                                    conditioning_data.cond_text.pooled_embeds,
                                 ],
                                 dim=0,
                             ),
                             "time_ids": torch.cat(
                                 [
-                                    conditioning_data.unconditioned_embeddings.add_time_ids,
-                                    conditioning_data.text_embeddings.add_time_ids,
+                                    conditioning_data.uncond_text.add_time_ids,
+                                    conditioning_data.cond_text.add_time_ids,
                                 ],
                                 dim=0,
                             ),
@@ -179,8 +124,8 @@ class InvokeAIDiffuserComponent:
                         encoder_hidden_states,
                         encoder_attention_mask,
                     ) = self._concat_conditionings_for_batch(
-                        conditioning_data.unconditioned_embeddings.embeds,
-                        conditioning_data.text_embeddings.embeds,
+                        conditioning_data.uncond_text.embeds,
+                        conditioning_data.cond_text.embeds,
                     )
                 if isinstance(control_datum.weight, list):
                     # if controlnet has multiple weights, use the weight for the current step
@@ -214,7 +159,7 @@ class InvokeAIDiffuserComponent:
                     # add controlnet outputs together if have multiple controlnets
                     down_block_res_samples = [
                         samples_prev + samples_curr
-                        for samples_prev, samples_curr in zip(down_block_res_samples, down_samples)
+                        for samples_prev, samples_curr in zip(down_block_res_samples, down_samples, strict=True)
                     ]
                     mid_block_res_sample += mid_sample
 
@@ -224,68 +169,46 @@ class InvokeAIDiffuserComponent:
         self,
         sample: torch.Tensor,
         timestep: torch.Tensor,
-        conditioning_data,  # TODO: type
+        conditioning_data: TextConditioningData,
+        ip_adapter_data: Optional[list[IPAdapterData]],
         step_index: int,
         total_step_count: int,
-        **kwargs,
+        down_block_additional_residuals: Optional[torch.Tensor] = None,  # for ControlNet
+        mid_block_additional_residual: Optional[torch.Tensor] = None,  # for ControlNet
+        down_intrablock_additional_residuals: Optional[torch.Tensor] = None,  # for T2I-Adapter
     ):
-        cross_attention_control_types_to_do = []
-        context: Context = self.cross_attention_control_context
-        if self.cross_attention_control_context is not None:
-            percent_through = step_index / total_step_count
-            cross_attention_control_types_to_do = context.get_active_cross_attention_control_types_for_step(
-                percent_through
-            )
-
-        wants_cross_attention_control = len(cross_attention_control_types_to_do) > 0
-
-        if wants_cross_attention_control:
-            (
-                unconditioned_next_x,
-                conditioned_next_x,
-            ) = self._apply_cross_attention_controlled_conditioning(
-                sample,
-                timestep,
-                conditioning_data,
-                cross_attention_control_types_to_do,
-                **kwargs,
-            )
-        elif self.sequential_guidance:
+        if self.sequential_guidance:
             (
                 unconditioned_next_x,
                 conditioned_next_x,
             ) = self._apply_standard_conditioning_sequentially(
-                sample,
-                timestep,
-                conditioning_data,
-                **kwargs,
+                x=sample,
+                sigma=timestep,
+                conditioning_data=conditioning_data,
+                ip_adapter_data=ip_adapter_data,
+                step_index=step_index,
+                total_step_count=total_step_count,
+                down_block_additional_residuals=down_block_additional_residuals,
+                mid_block_additional_residual=mid_block_additional_residual,
+                down_intrablock_additional_residuals=down_intrablock_additional_residuals,
             )
-
         else:
             (
                 unconditioned_next_x,
                 conditioned_next_x,
             ) = self._apply_standard_conditioning(
-                sample,
-                timestep,
-                conditioning_data,
-                **kwargs,
+                x=sample,
+                sigma=timestep,
+                conditioning_data=conditioning_data,
+                ip_adapter_data=ip_adapter_data,
+                step_index=step_index,
+                total_step_count=total_step_count,
+                down_block_additional_residuals=down_block_additional_residuals,
+                mid_block_additional_residual=mid_block_additional_residual,
+                down_intrablock_additional_residuals=down_intrablock_additional_residuals,
             )
 
         return unconditioned_next_x, conditioned_next_x
-
-    def do_latent_postprocessing(
-        self,
-        postprocessing_settings: PostprocessingSettings,
-        latents: torch.Tensor,
-        sigma,
-        step_index,
-        total_step_count,
-    ) -> torch.Tensor:
-        if postprocessing_settings is not None:
-            percent_through = step_index / total_step_count
-            latents = self.apply_symmetry(postprocessing_settings, latents, percent_through)
-        return latents
 
     def _concat_conditionings_for_batch(self, unconditioning, conditioning):
         def _pad_conditioning(cond, target_len, encoder_attention_mask):
@@ -336,47 +259,86 @@ class InvokeAIDiffuserComponent:
 
     # methods below are called from do_diffusion_step and should be considered private to this class.
 
-    def _apply_standard_conditioning(self, x, sigma, conditioning_data: ConditioningData, **kwargs):
+    def _apply_standard_conditioning(
+        self,
+        x: torch.Tensor,
+        sigma: torch.Tensor,
+        conditioning_data: TextConditioningData,
+        ip_adapter_data: Optional[list[IPAdapterData]],
+        step_index: int,
+        total_step_count: int,
+        down_block_additional_residuals: Optional[torch.Tensor] = None,  # for ControlNet
+        mid_block_additional_residual: Optional[torch.Tensor] = None,  # for ControlNet
+        down_intrablock_additional_residuals: Optional[torch.Tensor] = None,  # for T2I-Adapter
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """Runs the conditioned and unconditioned UNet forward passes in a single batch for faster inference speed at
         the cost of higher memory usage.
         """
         x_twice = torch.cat([x] * 2)
         sigma_twice = torch.cat([sigma] * 2)
 
-        cross_attention_kwargs = None
-        if conditioning_data.ip_adapter_conditioning is not None:
+        cross_attention_kwargs = {}
+        if ip_adapter_data is not None:
+            ip_adapter_conditioning = [ipa.ip_adapter_conditioning for ipa in ip_adapter_data]
             # Note that we 'stack' to produce tensors of shape (batch_size, num_ip_images, seq_len, token_len).
-            cross_attention_kwargs = {
-                "ip_adapter_image_prompt_embeds": [
-                    torch.stack(
-                        [ipa_conditioning.uncond_image_prompt_embeds, ipa_conditioning.cond_image_prompt_embeds]
-                    )
-                    for ipa_conditioning in conditioning_data.ip_adapter_conditioning
-                ]
-            }
+            image_prompt_embeds = [
+                torch.stack([ipa_conditioning.uncond_image_prompt_embeds, ipa_conditioning.cond_image_prompt_embeds])
+                for ipa_conditioning in ip_adapter_conditioning
+            ]
+            scales = [ipa.scale_for_step(step_index, total_step_count) for ipa in ip_adapter_data]
+            ip_masks = [ipa.mask for ipa in ip_adapter_data]
+            regional_ip_data = RegionalIPData(
+                image_prompt_embeds=image_prompt_embeds, scales=scales, masks=ip_masks, dtype=x.dtype, device=x.device
+            )
+            cross_attention_kwargs["regional_ip_data"] = regional_ip_data
 
         added_cond_kwargs = None
-        if type(conditioning_data.text_embeddings) is SDXLConditioningInfo:
+        if conditioning_data.is_sdxl():
             added_cond_kwargs = {
                 "text_embeds": torch.cat(
                     [
                         # TODO: how to pad? just by zeros? or even truncate?
-                        conditioning_data.unconditioned_embeddings.pooled_embeds,
-                        conditioning_data.text_embeddings.pooled_embeds,
+                        conditioning_data.uncond_text.pooled_embeds,
+                        conditioning_data.cond_text.pooled_embeds,
                     ],
                     dim=0,
                 ),
                 "time_ids": torch.cat(
                     [
-                        conditioning_data.unconditioned_embeddings.add_time_ids,
-                        conditioning_data.text_embeddings.add_time_ids,
+                        conditioning_data.uncond_text.add_time_ids,
+                        conditioning_data.cond_text.add_time_ids,
                     ],
                     dim=0,
                 ),
             }
 
+        if conditioning_data.cond_regions is not None or conditioning_data.uncond_regions is not None:
+            # TODO(ryand): We currently initialize RegionalPromptData for every denoising step. The text conditionings
+            # and masks are not changing from step-to-step, so this really only needs to be done once. While this seems
+            # painfully inefficient, the time spent is typically negligible compared to the forward inference pass of
+            # the UNet. The main reason that this hasn't been moved up to eliminate redundancy is that it is slightly
+            # awkward to handle both standard conditioning and sequential conditioning further up the stack.
+            regions = []
+            for c, r in [
+                (conditioning_data.uncond_text, conditioning_data.uncond_regions),
+                (conditioning_data.cond_text, conditioning_data.cond_regions),
+            ]:
+                if r is None:
+                    # Create a dummy mask and range for text conditioning that doesn't have region masks.
+                    _, _, h, w = x.shape
+                    r = TextConditioningRegions(
+                        masks=torch.ones((1, 1, h, w), dtype=x.dtype),
+                        ranges=[Range(start=0, end=c.embeds.shape[1])],
+                    )
+                regions.append(r)
+
+            cross_attention_kwargs["regional_prompt_data"] = RegionalPromptData(
+                regions=regions, device=x.device, dtype=x.dtype
+            )
+            cross_attention_kwargs["percent_through"] = step_index / total_step_count
+
         both_conditionings, encoder_attention_mask = self._concat_conditionings_for_batch(
-            conditioning_data.unconditioned_embeddings.embeds, conditioning_data.text_embeddings.embeds
+            conditioning_data.uncond_text.embeds, conditioning_data.cond_text.embeds
         )
         both_results = self.model_forward_callback(
             x_twice,
@@ -384,8 +346,10 @@ class InvokeAIDiffuserComponent:
             both_conditionings,
             cross_attention_kwargs=cross_attention_kwargs,
             encoder_attention_mask=encoder_attention_mask,
+            down_block_additional_residuals=down_block_additional_residuals,
+            mid_block_additional_residual=mid_block_additional_residual,
+            down_intrablock_additional_residuals=down_intrablock_additional_residuals,
             added_cond_kwargs=added_cond_kwargs,
-            **kwargs,
         )
         unconditioned_next_x, conditioned_next_x = both_results.chunk(2)
         return unconditioned_next_x, conditioned_next_x
@@ -394,15 +358,20 @@ class InvokeAIDiffuserComponent:
         self,
         x: torch.Tensor,
         sigma,
-        conditioning_data: ConditioningData,
-        **kwargs,
+        conditioning_data: TextConditioningData,
+        ip_adapter_data: Optional[list[IPAdapterData]],
+        step_index: int,
+        total_step_count: int,
+        down_block_additional_residuals: Optional[torch.Tensor] = None,  # for ControlNet
+        mid_block_additional_residual: Optional[torch.Tensor] = None,  # for ControlNet
+        down_intrablock_additional_residuals: Optional[torch.Tensor] = None,  # for T2I-Adapter
     ):
         """Runs the conditioned and unconditioned UNet forward passes sequentially for lower memory usage at the cost of
         slower execution speed.
         """
-        # low-memory sequential path
+        # Since we are running the conditioned and unconditioned passes sequentially, we need to split the ControlNet
+        # and T2I-Adapter residuals into two chunks.
         uncond_down_block, cond_down_block = None, None
-        down_block_additional_residuals = kwargs.pop("down_block_additional_residuals", None)
         if down_block_additional_residuals is not None:
             uncond_down_block, cond_down_block = [], []
             for down_block in down_block_additional_residuals:
@@ -410,139 +379,113 @@ class InvokeAIDiffuserComponent:
                 uncond_down_block.append(_uncond_down)
                 cond_down_block.append(_cond_down)
 
+        uncond_down_intrablock, cond_down_intrablock = None, None
+        if down_intrablock_additional_residuals is not None:
+            uncond_down_intrablock, cond_down_intrablock = [], []
+            for down_intrablock in down_intrablock_additional_residuals:
+                _uncond_down, _cond_down = down_intrablock.chunk(2)
+                uncond_down_intrablock.append(_uncond_down)
+                cond_down_intrablock.append(_cond_down)
+
         uncond_mid_block, cond_mid_block = None, None
-        mid_block_additional_residual = kwargs.pop("mid_block_additional_residual", None)
         if mid_block_additional_residual is not None:
             uncond_mid_block, cond_mid_block = mid_block_additional_residual.chunk(2)
 
-        # Run unconditional UNet denoising.
-        cross_attention_kwargs = None
-        if conditioning_data.ip_adapter_conditioning is not None:
+        #####################
+        # Unconditioned pass
+        #####################
+
+        cross_attention_kwargs = {}
+
+        # Prepare IP-Adapter cross-attention kwargs for the unconditioned pass.
+        if ip_adapter_data is not None:
+            ip_adapter_conditioning = [ipa.ip_adapter_conditioning for ipa in ip_adapter_data]
             # Note that we 'unsqueeze' to produce tensors of shape (batch_size=1, num_ip_images, seq_len, token_len).
-            cross_attention_kwargs = {
-                "ip_adapter_image_prompt_embeds": [
-                    torch.unsqueeze(ipa_conditioning.uncond_image_prompt_embeds, dim=0)
-                    for ipa_conditioning in conditioning_data.ip_adapter_conditioning
-                ]
-            }
+            image_prompt_embeds = [
+                torch.unsqueeze(ipa_conditioning.uncond_image_prompt_embeds, dim=0)
+                for ipa_conditioning in ip_adapter_conditioning
+            ]
 
+            scales = [ipa.scale_for_step(step_index, total_step_count) for ipa in ip_adapter_data]
+            ip_masks = [ipa.mask for ipa in ip_adapter_data]
+            regional_ip_data = RegionalIPData(
+                image_prompt_embeds=image_prompt_embeds, scales=scales, masks=ip_masks, dtype=x.dtype, device=x.device
+            )
+            cross_attention_kwargs["regional_ip_data"] = regional_ip_data
+
+        # Prepare SDXL conditioning kwargs for the unconditioned pass.
         added_cond_kwargs = None
-        is_sdxl = type(conditioning_data.text_embeddings) is SDXLConditioningInfo
-        if is_sdxl:
+        if conditioning_data.is_sdxl():
             added_cond_kwargs = {
-                "text_embeds": conditioning_data.unconditioned_embeddings.pooled_embeds,
-                "time_ids": conditioning_data.unconditioned_embeddings.add_time_ids,
+                "text_embeds": conditioning_data.uncond_text.pooled_embeds,
+                "time_ids": conditioning_data.uncond_text.add_time_ids,
             }
 
+        # Prepare prompt regions for the unconditioned pass.
+        if conditioning_data.uncond_regions is not None:
+            cross_attention_kwargs["regional_prompt_data"] = RegionalPromptData(
+                regions=[conditioning_data.uncond_regions], device=x.device, dtype=x.dtype
+            )
+            cross_attention_kwargs["percent_through"] = step_index / total_step_count
+
+        # Run unconditioned UNet denoising (i.e. negative prompt).
         unconditioned_next_x = self.model_forward_callback(
             x,
             sigma,
-            conditioning_data.unconditioned_embeddings.embeds,
+            conditioning_data.uncond_text.embeds,
             cross_attention_kwargs=cross_attention_kwargs,
             down_block_additional_residuals=uncond_down_block,
             mid_block_additional_residual=uncond_mid_block,
+            down_intrablock_additional_residuals=uncond_down_intrablock,
             added_cond_kwargs=added_cond_kwargs,
-            **kwargs,
         )
 
-        # Run conditional UNet denoising.
-        cross_attention_kwargs = None
-        if conditioning_data.ip_adapter_conditioning is not None:
+        ###################
+        # Conditioned pass
+        ###################
+
+        cross_attention_kwargs = {}
+
+        if ip_adapter_data is not None:
+            ip_adapter_conditioning = [ipa.ip_adapter_conditioning for ipa in ip_adapter_data]
             # Note that we 'unsqueeze' to produce tensors of shape (batch_size=1, num_ip_images, seq_len, token_len).
-            cross_attention_kwargs = {
-                "ip_adapter_image_prompt_embeds": [
-                    torch.unsqueeze(ipa_conditioning.cond_image_prompt_embeds, dim=0)
-                    for ipa_conditioning in conditioning_data.ip_adapter_conditioning
-                ]
-            }
+            image_prompt_embeds = [
+                torch.unsqueeze(ipa_conditioning.cond_image_prompt_embeds, dim=0)
+                for ipa_conditioning in ip_adapter_conditioning
+            ]
 
+            scales = [ipa.scale_for_step(step_index, total_step_count) for ipa in ip_adapter_data]
+            ip_masks = [ipa.mask for ipa in ip_adapter_data]
+            regional_ip_data = RegionalIPData(
+                image_prompt_embeds=image_prompt_embeds, scales=scales, masks=ip_masks, dtype=x.dtype, device=x.device
+            )
+            cross_attention_kwargs["regional_ip_data"] = regional_ip_data
+
+        # Prepare SDXL conditioning kwargs for the conditioned pass.
         added_cond_kwargs = None
-        if is_sdxl:
+        if conditioning_data.is_sdxl():
             added_cond_kwargs = {
-                "text_embeds": conditioning_data.text_embeddings.pooled_embeds,
-                "time_ids": conditioning_data.text_embeddings.add_time_ids,
+                "text_embeds": conditioning_data.cond_text.pooled_embeds,
+                "time_ids": conditioning_data.cond_text.add_time_ids,
             }
 
+        # Prepare prompt regions for the conditioned pass.
+        if conditioning_data.cond_regions is not None:
+            cross_attention_kwargs["regional_prompt_data"] = RegionalPromptData(
+                regions=[conditioning_data.cond_regions], device=x.device, dtype=x.dtype
+            )
+            cross_attention_kwargs["percent_through"] = step_index / total_step_count
+
+        # Run conditioned UNet denoising (i.e. positive prompt).
         conditioned_next_x = self.model_forward_callback(
             x,
             sigma,
-            conditioning_data.text_embeddings.embeds,
+            conditioning_data.cond_text.embeds,
             cross_attention_kwargs=cross_attention_kwargs,
             down_block_additional_residuals=cond_down_block,
             mid_block_additional_residual=cond_mid_block,
+            down_intrablock_additional_residuals=cond_down_intrablock,
             added_cond_kwargs=added_cond_kwargs,
-            **kwargs,
-        )
-        return unconditioned_next_x, conditioned_next_x
-
-    def _apply_cross_attention_controlled_conditioning(
-        self,
-        x: torch.Tensor,
-        sigma,
-        conditioning_data,
-        cross_attention_control_types_to_do,
-        **kwargs,
-    ):
-        context: Context = self.cross_attention_control_context
-
-        uncond_down_block, cond_down_block = None, None
-        down_block_additional_residuals = kwargs.pop("down_block_additional_residuals", None)
-        if down_block_additional_residuals is not None:
-            uncond_down_block, cond_down_block = [], []
-            for down_block in down_block_additional_residuals:
-                _uncond_down, _cond_down = down_block.chunk(2)
-                uncond_down_block.append(_uncond_down)
-                cond_down_block.append(_cond_down)
-
-        uncond_mid_block, cond_mid_block = None, None
-        mid_block_additional_residual = kwargs.pop("mid_block_additional_residual", None)
-        if mid_block_additional_residual is not None:
-            uncond_mid_block, cond_mid_block = mid_block_additional_residual.chunk(2)
-
-        cross_attn_processor_context = SwapCrossAttnContext(
-            modified_text_embeddings=context.arguments.edited_conditioning,
-            index_map=context.cross_attention_index_map,
-            mask=context.cross_attention_mask,
-            cross_attention_types_to_do=[],
-        )
-
-        added_cond_kwargs = None
-        is_sdxl = type(conditioning_data.text_embeddings) is SDXLConditioningInfo
-        if is_sdxl:
-            added_cond_kwargs = {
-                "text_embeds": conditioning_data.unconditioned_embeddings.pooled_embeds,
-                "time_ids": conditioning_data.unconditioned_embeddings.add_time_ids,
-            }
-
-        # no cross attention for unconditioning (negative prompt)
-        unconditioned_next_x = self.model_forward_callback(
-            x,
-            sigma,
-            conditioning_data.unconditioned_embeddings.embeds,
-            {"swap_cross_attn_context": cross_attn_processor_context},
-            down_block_additional_residuals=uncond_down_block,
-            mid_block_additional_residual=uncond_mid_block,
-            added_cond_kwargs=added_cond_kwargs,
-            **kwargs,
-        )
-
-        if is_sdxl:
-            added_cond_kwargs = {
-                "text_embeds": conditioning_data.text_embeddings.pooled_embeds,
-                "time_ids": conditioning_data.text_embeddings.add_time_ids,
-            }
-
-        # do requested cross attention types for conditioning (positive prompt)
-        cross_attn_processor_context.cross_attention_types_to_do = cross_attention_control_types_to_do
-        conditioned_next_x = self.model_forward_callback(
-            x,
-            sigma,
-            conditioning_data.text_embeddings.embeds,
-            {"swap_cross_attn_context": cross_attn_processor_context},
-            down_block_additional_residuals=cond_down_block,
-            mid_block_additional_residual=cond_mid_block,
-            added_cond_kwargs=added_cond_kwargs,
-            **kwargs,
         )
         return unconditioned_next_x, conditioned_next_x
 
@@ -551,113 +494,3 @@ class InvokeAIDiffuserComponent:
         scaled_delta = (conditioned_next_x - unconditioned_next_x) * guidance_scale
         combined_next_x = unconditioned_next_x + scaled_delta
         return combined_next_x
-
-    def apply_symmetry(
-        self,
-        postprocessing_settings: PostprocessingSettings,
-        latents: torch.Tensor,
-        percent_through: float,
-    ) -> torch.Tensor:
-        # Reset our last percent through if this is our first step.
-        if percent_through == 0.0:
-            self.last_percent_through = 0.0
-
-        if postprocessing_settings is None:
-            return latents
-
-        # Check for out of bounds
-        h_symmetry_time_pct = postprocessing_settings.h_symmetry_time_pct
-        if h_symmetry_time_pct is not None and (h_symmetry_time_pct <= 0.0 or h_symmetry_time_pct > 1.0):
-            h_symmetry_time_pct = None
-
-        v_symmetry_time_pct = postprocessing_settings.v_symmetry_time_pct
-        if v_symmetry_time_pct is not None and (v_symmetry_time_pct <= 0.0 or v_symmetry_time_pct > 1.0):
-            v_symmetry_time_pct = None
-
-        dev = latents.device.type
-
-        latents.to(device="cpu")
-
-        if (
-            h_symmetry_time_pct is not None
-            and self.last_percent_through < h_symmetry_time_pct
-            and percent_through >= h_symmetry_time_pct
-        ):
-            # Horizontal symmetry occurs on the 3rd dimension of the latent
-            width = latents.shape[3]
-            x_flipped = torch.flip(latents, dims=[3])
-            latents = torch.cat(
-                [
-                    latents[:, :, :, 0 : int(width / 2)],
-                    x_flipped[:, :, :, int(width / 2) : int(width)],
-                ],
-                dim=3,
-            )
-
-        if (
-            v_symmetry_time_pct is not None
-            and self.last_percent_through < v_symmetry_time_pct
-            and percent_through >= v_symmetry_time_pct
-        ):
-            # Vertical symmetry occurs on the 2nd dimension of the latent
-            height = latents.shape[2]
-            y_flipped = torch.flip(latents, dims=[2])
-            latents = torch.cat(
-                [
-                    latents[:, :, 0 : int(height / 2)],
-                    y_flipped[:, :, int(height / 2) : int(height)],
-                ],
-                dim=2,
-            )
-
-        self.last_percent_through = percent_through
-        return latents.to(device=dev)
-
-    # todo: make this work
-    @classmethod
-    def apply_conjunction(cls, x, t, forward_func, uc, c_or_weighted_c_list, global_guidance_scale):
-        x_in = torch.cat([x] * 2)
-        t_in = torch.cat([t] * 2)  # aka sigmas
-
-        deltas = None
-        uncond_latents = None
-        weighted_cond_list = c_or_weighted_c_list if type(c_or_weighted_c_list) is list else [(c_or_weighted_c_list, 1)]
-
-        # below is fugly omg
-        conditionings = [uc] + [c for c, weight in weighted_cond_list]
-        weights = [1] + [weight for c, weight in weighted_cond_list]
-        chunk_count = math.ceil(len(conditionings) / 2)
-        deltas = None
-        for chunk_index in range(chunk_count):
-            offset = chunk_index * 2
-            chunk_size = min(2, len(conditionings) - offset)
-
-            if chunk_size == 1:
-                c_in = conditionings[offset]
-                latents_a = forward_func(x_in[:-1], t_in[:-1], c_in)
-                latents_b = None
-            else:
-                c_in = torch.cat(conditionings[offset : offset + 2])
-                latents_a, latents_b = forward_func(x_in, t_in, c_in).chunk(2)
-
-            # first chunk is guaranteed to be 2 entries: uncond_latents + first conditioining
-            if chunk_index == 0:
-                uncond_latents = latents_a
-                deltas = latents_b - uncond_latents
-            else:
-                deltas = torch.cat((deltas, latents_a - uncond_latents))
-                if latents_b is not None:
-                    deltas = torch.cat((deltas, latents_b - uncond_latents))
-
-        # merge the weighted deltas together into a single merged delta
-        per_delta_weights = torch.tensor(weights[1:], dtype=deltas.dtype, device=deltas.device)
-        normalize = False
-        if normalize:
-            per_delta_weights /= torch.sum(per_delta_weights)
-        reshaped_weights = per_delta_weights.reshape(per_delta_weights.shape + (1, 1, 1))
-        deltas_merged = torch.sum(deltas * reshaped_weights, dim=0, keepdim=True)
-
-        # old_return_value = super().forward(x, sigma, uncond, cond, cond_scale)
-        # assert(0 == len(torch.nonzero(old_return_value - (uncond_latents + deltas_merged * cond_scale))))
-
-        return uncond_latents + deltas_merged * global_guidance_scale

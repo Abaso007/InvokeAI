@@ -1,20 +1,15 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { stateSelector } from 'app/store/store';
 import { useAppSelector } from 'app/store/storeHooks';
-import { defaultSelectorOptions } from 'app/store/util/defaultMemoizeOptions';
+import { selectNodeData, selectNodesSlice } from 'features/nodes/store/selectors';
+import type { InvocationNodeData } from 'features/nodes/types/invocation';
 import { useMemo } from 'react';
 
-export const useNodeData = (nodeId: string) => {
+export const useNodeData = (nodeId: string): InvocationNodeData => {
   const selector = useMemo(
     () =>
-      createSelector(
-        stateSelector,
-        ({ nodes }) => {
-          const node = nodes.nodes.find((node) => node.id === nodeId);
-          return node?.data;
-        },
-        defaultSelectorOptions
-      ),
+      createSelector(selectNodesSlice, (nodes) => {
+        return selectNodeData(nodes, nodeId);
+      }),
     [nodeId]
   );
 

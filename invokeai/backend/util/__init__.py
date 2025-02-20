@@ -1,14 +1,12 @@
 """
 Initialization file for invokeai.backend.util
 """
-from .attention import auto_detect_slice_size  # noqa: F401
-from .devices import (  # noqa: F401
-    CPU_DEVICE,
-    CUDA_DEVICE,
-    MPS_DEVICE,
-    choose_precision,
-    choose_torch_device,
-    normalize_device,
-    torch_dtype,
-)
-from .util import Chdir, ask_user, download_with_resume, instantiate_from_config, url_attachment_name  # noqa: F401
+
+from invokeai.backend.util.logging import InvokeAILogger
+from invokeai.backend.util.util import Chdir, directory_size
+
+__all__ = [
+    "directory_size",
+    "Chdir",
+    "InvokeAILogger",
+]

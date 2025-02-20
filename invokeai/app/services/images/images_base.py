@@ -3,7 +3,7 @@ from typing import Callable, Optional
 
 from PIL.Image import Image as PILImageType
 
-from invokeai.app.invocations.baseinvocation import MetadataField, WorkflowField
+from invokeai.app.invocations.fields import MetadataField
 from invokeai.app.services.image_records.image_records_common import (
     ImageCategory,
     ImageRecord,
@@ -12,6 +12,7 @@ from invokeai.app.services.image_records.image_records_common import (
 )
 from invokeai.app.services.images.images_common import ImageDTO
 from invokeai.app.services.shared.pagination import OffsetPaginatedResults
+from invokeai.app.services.shared.sqlite.sqlite_common import SQLiteDirection
 
 
 class ImageServiceABC(ABC):
@@ -21,8 +22,8 @@ class ImageServiceABC(ABC):
     _on_deleted_callbacks: list[Callable[[str], None]]
 
     def __init__(self) -> None:
-        self._on_changed_callbacks = list()
-        self._on_deleted_callbacks = list()
+        self._on_changed_callbacks = []
+        self._on_deleted_callbacks = []
 
     def on_changed(self, on_changed: Callable[[ImageDTO], None]) -> None:
         """Register a callback for when an image is changed"""
@@ -50,8 +51,9 @@ class ImageServiceABC(ABC):
         session_id: Optional[str] = None,
         board_id: Optional[str] = None,
         is_intermediate: Optional[bool] = False,
-        metadata: Optional[MetadataField] = None,
-        workflow: Optional[WorkflowField] = None,
+        metadata: Optional[str] = None,
+        workflow: Optional[str] = None,
+        graph: Optional[str] = None,
     ) -> ImageDTO:
         """Creates an image, storing the file and its metadata."""
         pass
@@ -86,6 +88,16 @@ class ImageServiceABC(ABC):
         pass
 
     @abstractmethod
+    def get_workflow(self, image_name: str) -> Optional[str]:
+        """Gets an image's workflow."""
+        pass
+
+    @abstractmethod
+    def get_graph(self, image_name: str) -> Optional[str]:
+        """Gets an image's workflow."""
+        pass
+
+    @abstractmethod
     def get_path(self, image_name: str, thumbnail: bool = False) -> str:
         """Gets an image's path."""
         pass
@@ -105,10 +117,13 @@ class ImageServiceABC(ABC):
         self,
         offset: int = 0,
         limit: int = 10,
+        starred_first: bool = True,
+        order_dir: SQLiteDirection = SQLiteDirection.Descending,
         image_origin: Optional[ResourceOrigin] = None,
         categories: Optional[list[ImageCategory]] = None,
         is_intermediate: Optional[bool] = None,
         board_id: Optional[str] = None,
+        search_term: Optional[str] = None,
     ) -> OffsetPaginatedResults[ImageDTO]:
         """Gets a paginated list of image DTOs."""
         pass

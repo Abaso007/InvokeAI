@@ -1,23 +1,17 @@
-import { ExternalLinkIcon } from '@chakra-ui/icons';
-import {
-  Flex,
-  Link,
-  Tab,
-  TabList,
-  TabPanel,
-  TabPanels,
-  Tabs,
-  Text,
-} from '@chakra-ui/react';
+import { ExternalLink, Flex, Tab, TabList, TabPanel, TabPanels, Tabs, Text } from '@invoke-ai/ui-library';
 import { IAINoContentFallback } from 'common/components/IAIImageFallback';
-import ScrollableContent from 'features/nodes/components/sidePanel/ScrollableContent';
+import ScrollableContent from 'common/components/OverlayScrollbars/ScrollableContent';
+import ImageMetadataGraphTabContent from 'features/gallery/components/ImageMetadataViewer/ImageMetadataGraphTabContent';
+import { useMetadataItem } from 'features/metadata/hooks/useMetadataItem';
+import { handlers } from 'features/metadata/util/handlers';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDebouncedMetadata } from 'services/api/hooks/useDebouncedMetadata';
-import { useDebouncedWorkflow } from 'services/api/hooks/useDebouncedWorkflow';
-import { ImageDTO } from 'services/api/types';
+import type { ImageDTO } from 'services/api/types';
+
 import DataViewer from './DataViewer';
 import ImageMetadataActions from './ImageMetadataActions';
+import ImageMetadataWorkflowTabContent from './ImageMetadataWorkflowTabContent';
 
 type ImageMetadataViewerProps = {
   image: ImageDTO;
@@ -32,44 +26,34 @@ const ImageMetadataViewer = ({ image }: ImageMetadataViewerProps) => {
   const { t } = useTranslation();
 
   const { metadata } = useDebouncedMetadata(image.image_name);
-  const { workflow } = useDebouncedWorkflow(image.workflow_id);
+  const createdBy = useMetadataItem(metadata, handlers.createdBy);
 
   return (
     <Flex
       layerStyle="first"
-      sx={{
-        padding: 4,
-        gap: 1,
-        flexDirection: 'column',
-        width: 'full',
-        height: 'full',
-        borderRadius: 'base',
-        position: 'absolute',
-        overflow: 'hidden',
-      }}
+      padding={4}
+      gap={1}
+      flexDirection="column"
+      width="full"
+      height="full"
+      borderRadius="base"
+      position="absolute"
+      overflow="hidden"
     >
-      <Flex gap={2}>
-        <Text fontWeight="semibold">File:</Text>
-        <Link href={image.image_url} isExternal maxW="calc(100% - 3rem)">
-          {image.image_name}
-          <ExternalLinkIcon mx="2px" />
-        </Link>
-      </Flex>
+      <ExternalLink href={image.image_url} label={image.image_name} />
+      {createdBy.valueOrNull && (
+        <Text>
+          {t('metadata.createdBy')}: {createdBy.valueOrNull}
+        </Text>
+      )}
 
-      <Tabs
-        variant="line"
-        sx={{
-          display: 'flex',
-          flexDir: 'column',
-          w: 'full',
-          h: 'full',
-        }}
-      >
+      <Tabs variant="line" isLazy={true} display="flex" flexDir="column" w="full" h="full">
         <TabList>
           <Tab>{t('metadata.recallParameters')}</Tab>
           <Tab>{t('metadata.metadata')}</Tab>
           <Tab>{t('metadata.imageDetails')}</Tab>
           <Tab>{t('metadata.workflow')}</Tab>
+          <Tab>{t('nodes.graph')}</Tab>
         </TabList>
 
         <TabPanels>
@@ -84,24 +68,31 @@ const ImageMetadataViewer = ({ image }: ImageMetadataViewerProps) => {
           </TabPanel>
           <TabPanel>
             {metadata ? (
-              <DataViewer data={metadata} label={t('metadata.metadata')} />
+              <DataViewer
+                fileName={`${image.image_name.replace('.png', '')}_metadata`}
+                data={metadata}
+                label={t('metadata.metadata')}
+              />
             ) : (
               <IAINoContentFallback label={t('metadata.noMetaData')} />
             )}
           </TabPanel>
           <TabPanel>
             {image ? (
-              <DataViewer data={image} label={t('metadata.imageDetails')} />
+              <DataViewer
+                fileName={`${image.image_name.replace('.png', '')}_details`}
+                data={image}
+                label={t('metadata.imageDetails')}
+              />
             ) : (
               <IAINoContentFallback label={t('metadata.noImageDetails')} />
             )}
           </TabPanel>
           <TabPanel>
-            {workflow ? (
-              <DataViewer data={workflow} label={t('metadata.workflow')} />
-            ) : (
-              <IAINoContentFallback label={t('nodes.noWorkflow')} />
-            )}
+            <ImageMetadataWorkflowTabContent image={image} />
+          </TabPanel>
+          <TabPanel>
+            <ImageMetadataGraphTabContent image={image} />
           </TabPanel>
         </TabPanels>
       </Tabs>

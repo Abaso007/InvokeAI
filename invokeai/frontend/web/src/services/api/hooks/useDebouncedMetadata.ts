@@ -1,21 +1,15 @@
 import { skipToken } from '@reduxjs/toolkit/query';
-import { useDebounce } from 'use-debounce';
-import { useGetImageMetadataQuery } from '../endpoints/images';
 import { useAppSelector } from 'app/store/storeHooks';
+import { selectMetadataFetchDebounce } from 'features/system/store/configSlice';
+import { useGetImageMetadataQuery } from 'services/api/endpoints/images';
+import { useDebounce } from 'use-debounce';
 
 export const useDebouncedMetadata = (imageName?: string | null) => {
-  const metadataFetchDebounce = useAppSelector(
-    (state) => state.config.metadataFetchDebounce
-  );
+  const metadataFetchDebounce = useAppSelector(selectMetadataFetchDebounce);
 
-  const [debouncedImageName] = useDebounce(
-    imageName,
-    metadataFetchDebounce ?? 0
-  );
+  const [debouncedImageName] = useDebounce(imageName, metadataFetchDebounce);
 
-  const { data: metadata, isLoading } = useGetImageMetadataQuery(
-    debouncedImageName ?? skipToken
-  );
+  const { data: metadata, isLoading } = useGetImageMetadataQuery(debouncedImageName ?? skipToken);
 
   return { metadata, isLoading };
 };

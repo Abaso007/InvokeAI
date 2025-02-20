@@ -5,111 +5,117 @@
         "reportBugLabel": "Segnala un errore",
         "settingsLabel": "Impostazioni",
         "img2img": "Immagine a Immagine",
-        "unifiedCanvas": "Tela unificata",
-        "nodes": "Editor del flusso di lavoro",
-        "langItalian": "Italiano",
-        "nodesDesc": "Attualmente è in fase di sviluppo un sistema basato su nodi per la generazione di immagini. Resta sintonizzato per gli aggiornamenti su questa fantastica funzionalità.",
-        "postProcessing": "Post-elaborazione",
-        "postProcessDesc1": "Invoke AI offre un'ampia varietà di funzionalità di post-elaborazione. Ampliamento Immagine e Restaura Volti sono già disponibili nell'interfaccia Web. È possibile accedervi dal menu 'Opzioni avanzate' delle schede 'Testo a Immagine' e 'Immagine a Immagine'. È inoltre possibile elaborare le immagini direttamente, utilizzando i pulsanti di azione dell'immagine sopra la visualizzazione dell'immagine corrente o nel visualizzatore.",
-        "postProcessDesc2": "Presto verrà rilasciata un'interfaccia utente dedicata per facilitare flussi di lavoro di post-elaborazione più avanzati.",
-        "postProcessDesc3": "L'interfaccia da riga di comando di 'Invoke AI' offre varie altre funzionalità tra cui Embiggen.",
-        "training": "Addestramento",
-        "trainingDesc1": "Un flusso di lavoro dedicato per addestrare i tuoi Incorporamenti e Checkpoint utilizzando Inversione Testuale e Dreambooth dall'interfaccia web.",
-        "trainingDesc2": "InvokeAI supporta già l'addestramento di incorporamenti personalizzati utilizzando l'inversione testuale tramite lo script principale.",
+        "nodes": "Flussi di lavoro",
         "upload": "Caricamento",
-        "close": "Chiudi",
         "load": "Carica",
         "back": "Indietro",
-        "statusConnected": "Collegato",
         "statusDisconnected": "Disconnesso",
-        "statusError": "Errore",
-        "statusPreparing": "Preparazione",
-        "statusProcessingCanceled": "Elaborazione annullata",
-        "statusProcessingComplete": "Elaborazione completata",
-        "statusGenerating": "Generazione in corso",
-        "statusGeneratingTextToImage": "Generazione Testo a Immagine",
-        "statusGeneratingImageToImage": "Generazione da Immagine a Immagine",
-        "statusGeneratingInpainting": "Generazione Inpainting",
-        "statusGeneratingOutpainting": "Generazione Outpainting",
-        "statusGenerationComplete": "Generazione completata",
-        "statusIterationComplete": "Iterazione completata",
-        "statusSavingImage": "Salvataggio dell'immagine",
-        "statusRestoringFaces": "Restaura volti",
-        "statusRestoringFacesGFPGAN": "Restaura volti (GFPGAN)",
-        "statusRestoringFacesCodeFormer": "Restaura volti (CodeFormer)",
-        "statusUpscaling": "Ampliamento",
-        "statusUpscalingESRGAN": "Ampliamento (ESRGAN)",
-        "statusLoadingModel": "Caricamento del modello",
-        "statusModelChanged": "Modello cambiato",
         "githubLabel": "GitHub",
         "discordLabel": "Discord",
-        "langArabic": "Arabo",
-        "langEnglish": "Inglese",
-        "langFrench": "Francese",
-        "langGerman": "Tedesco",
-        "langJapanese": "Giapponese",
-        "langPolish": "Polacco",
-        "langBrPortuguese": "Portoghese Basiliano",
-        "langRussian": "Russo",
-        "langUkranian": "Ucraino",
-        "langSpanish": "Spagnolo",
-        "statusMergingModels": "Fusione Modelli",
-        "statusMergedModels": "Modelli fusi",
-        "langSimplifiedChinese": "Cinese semplificato",
-        "langDutch": "Olandese",
-        "statusModelConverted": "Modello Convertito",
-        "statusConvertingModel": "Conversione Modello",
-        "langKorean": "Coreano",
-        "langPortuguese": "Portoghese",
         "loading": "Caricamento in corso",
-        "langHebrew": "Ebraico",
-        "loadingInvokeAI": "Caricamento Invoke AI",
         "postprocessing": "Post Elaborazione",
         "txt2img": "Testo a Immagine",
         "accept": "Accetta",
         "cancel": "Annulla",
         "linear": "Lineare",
-        "generate": "Genera",
         "random": "Casuale",
         "openInNewTab": "Apri in una nuova scheda",
         "areYouSure": "Sei sicuro?",
         "dontAskMeAgain": "Non chiedermelo più",
-        "imagePrompt": "Prompt Immagine",
-        "darkMode": "Modalità scura",
-        "lightMode": "Modalità chiara",
         "batch": "Gestione Lotto",
-        "modelManager": "Gestore modello",
+        "modelManager": "Gestione Modelli",
         "communityLabel": "Comunità",
-        "nodeEditor": "Editor dei nodi",
-        "statusProcessing": "Elaborazione in corso",
         "advanced": "Avanzate",
         "imageFailedToLoad": "Impossibile caricare l'immagine",
         "learnMore": "Per saperne di più",
         "ipAdapter": "Adattatore IP",
         "t2iAdapter": "Adattatore T2I",
-        "controlAdapter": "Adattatore di Controllo",
         "controlNet": "ControlNet",
-        "auto": "Automatico"
+        "auto": "Automatico",
+        "simple": "Semplice",
+        "details": "Dettagli",
+        "format": "Formato",
+        "unknown": "Sconosciuto",
+        "folder": "Cartella",
+        "error": "Errore",
+        "installed": "Installato",
+        "template": "Schema",
+        "outputs": "Risultati",
+        "data": "Dati",
+        "somethingWentWrong": "Qualcosa è andato storto",
+        "copyError": "Errore $t(gallery.copy)",
+        "input": "Ingresso",
+        "notInstalled": "Non $t(common.installed)",
+        "unknownError": "Errore sconosciuto",
+        "updated": "Aggiornato",
+        "save": "Salva",
+        "created": "Creato",
+        "prevPage": "Pagina precedente",
+        "delete": "Elimina",
+        "orderBy": "Ordina per",
+        "nextPage": "Pagina successiva",
+        "saveAs": "Salva come",
+        "direction": "Direzione",
+        "or": "o",
+        "red": "Rosso",
+        "aboutHeading": "Possiedi il tuo potere creativo",
+        "aboutDesc": "Utilizzi Invoke per lavoro? Guarda qui:",
+        "localSystem": "Sistema locale",
+        "green": "Verde",
+        "blue": "Blu",
+        "alpha": "Alfa",
+        "copy": "Copia",
+        "on": "Acceso",
+        "checkpoint": "Checkpoint",
+        "safetensors": "Safetensors",
+        "ai": "ia",
+        "file": "File",
+        "toResolve": "Da risolvere",
+        "add": "Aggiungi",
+        "beta": "Beta",
+        "positivePrompt": "Prompt positivo",
+        "negativePrompt": "Prompt negativo",
+        "selected": "Selezionato",
+        "goTo": "Vai a",
+        "editor": "Editor",
+        "tab": "Scheda",
+        "enabled": "Abilitato",
+        "disabled": "Disabilitato",
+        "dontShowMeThese": "Non mostrare più",
+        "openInViewer": "Apri nel visualizzatore",
+        "apply": "Applica",
+        "loadingImage": "Caricamento immagine",
+        "off": "Spento",
+        "edit": "Modifica",
+        "placeholderSelectAModel": "Seleziona un modello",
+        "reset": "Reimposta",
+        "none": "Niente",
+        "new": "Nuovo",
+        "view": "Vista",
+        "close": "Chiudi",
+        "clipboard": "Appunti",
+        "ok": "Ok",
+        "generating": "Generazione",
+        "loadingModel": "Caricamento del modello",
+        "warnings": "Avvisi",
+        "step": "Passo",
+        "values": "Valori",
+        "start": "Inizio",
+        "end": "Fine",
+        "resetToDefaults": "Ripristina le impostazioni predefinite",
+        "seed": "Seme",
+        "combinatorial": "Combinatorio",
+        "count": "Quantità"
     },
     "gallery": {
-        "generations": "Generazioni",
-        "showGenerations": "Mostra Generazioni",
-        "uploads": "Caricamenti",
-        "showUploads": "Mostra caricamenti",
         "galleryImageSize": "Dimensione dell'immagine",
-        "galleryImageResetSize": "Ripristina dimensioni",
         "gallerySettings": "Impostazioni della galleria",
-        "maintainAspectRatio": "Mantenere le proporzioni",
         "autoSwitchNewImages": "Passaggio automatico a nuove immagini",
-        "singleColumnLayout": "Layout a colonna singola",
-        "allImagesLoaded": "Tutte le immagini caricate",
-        "loadMore": "Carica altro",
         "noImagesInGallery": "Nessuna immagine da visualizzare",
-        "deleteImage": "Elimina l'immagine",
+        "deleteImage_one": "Elimina l'immagine",
+        "deleteImage_many": "Elimina {{count}} immagini",
+        "deleteImage_other": "Elimina {{count}} immagini",
         "deleteImagePermanent": "Le immagini eliminate non possono essere ripristinate.",
-        "deleteImageBin": "Le immagini eliminate verranno spostate nel Cestino del tuo sistema operativo.",
-        "images": "Immagini",
-        "assets": "Risorse",
         "autoAssignBoardOnClick": "Assegna automaticamente la bacheca al clic",
         "featuresWillReset": "Se elimini questa immagine, quelle funzionalità verranno immediatamente ripristinate.",
         "loading": "Caricamento in corso",
@@ -117,364 +123,508 @@
         "currentlyInUse": "Questa immagine è attualmente utilizzata nelle seguenti funzionalità:",
         "copy": "Copia",
         "download": "Scarica",
-        "setCurrentImage": "Imposta come immagine corrente",
-        "preparingDownload": "Preparazione del download",
-        "preparingDownloadFailed": "Problema durante la preparazione del download",
-        "downloadSelection": "Scarica gli elementi selezionati"
+        "downloadSelection": "Scarica gli elementi selezionati",
+        "noImageSelected": "Nessuna immagine selezionata",
+        "deleteSelection": "Elimina la selezione",
+        "image": "immagine",
+        "drop": "Rilascia",
+        "unstarImage": "Rimuovi contrassegno immagine",
+        "dropOrUpload": "$t(gallery.drop) o carica",
+        "starImage": "Contrassegna l'immagine",
+        "dropToUpload": "$t(gallery.drop) per aggiornare",
+        "bulkDownloadRequested": "Preparazione del download",
+        "bulkDownloadRequestedDesc": "La tua richiesta di download è in preparazione. L'operazione potrebbe richiedere alcuni istanti.",
+        "bulkDownloadRequestFailed": "Problema durante la preparazione del download",
+        "bulkDownloadFailed": "Scaricamento fallito",
+        "alwaysShowImageSizeBadge": "Mostra sempre le dimensioni dell'immagine",
+        "openInViewer": "Apri nel visualizzatore",
+        "selectForCompare": "Seleziona per il confronto",
+        "selectAnImageToCompare": "Seleziona un'immagine da confrontare",
+        "slider": "Cursore",
+        "sideBySide": "Fianco a Fianco",
+        "compareImage": "Immagine di confronto",
+        "viewerImage": "Immagine visualizzata",
+        "hover": "Al passaggio del mouse",
+        "swapImages": "Scambia le immagini",
+        "stretchToFit": "Scala per adattare",
+        "exitCompare": "Esci dal confronto",
+        "compareHelp1": "Tieni premuto <Kbd>Alt</Kbd> mentre fai clic su un'immagine della galleria o usi i tasti freccia per cambiare l'immagine di confronto.",
+        "compareHelp2": "Premi <Kbd>M</Kbd> per scorrere le modalità di confronto.",
+        "compareHelp3": "Premi <Kbd>C</Kbd> per scambiare le immagini confrontate.",
+        "compareHelp4": "Premi <Kbd>Z</Kbd> o <Kbd>Esc</Kbd> per uscire.",
+        "newestFirst": "Prima i più nuovi",
+        "oldestFirst": "Prima i più vecchi",
+        "sortDirection": "Direzione dell'ordinamento",
+        "showStarredImagesFirst": "Mostra prima le immagini contrassegnate",
+        "showArchivedBoards": "Mostra le bacheche archiviate",
+        "searchImages": "Ricerca per metadati",
+        "displayBoardSearch": "Ricerca nella Bacheca",
+        "displaySearch": "Ricerca immagine",
+        "selectAllOnPage": "Seleziona tutto nella pagina",
+        "exitBoardSearch": "Esci da Ricerca bacheca",
+        "exitSearch": "Esci dalla ricerca immagini",
+        "go": "Vai",
+        "jump": "Salta",
+        "move": "Sposta",
+        "gallery": "Galleria",
+        "openViewer": "Apri visualizzatore",
+        "closeViewer": "Chiudi visualizzatore",
+        "imagesTab": "Immagini create e salvate in Invoke.",
+        "assetsTab": "File che hai caricato per usarli nei tuoi progetti.",
+        "boardsSettings": "Impostazioni Bacheche",
+        "imagesSettings": "Impostazioni Immagini Galleria",
+        "assets": "Risorse"
     },
     "hotkeys": {
-        "keyboardShortcuts": "Tasti rapidi",
-        "appHotkeys": "Tasti di scelta rapida dell'applicazione",
-        "generalHotkeys": "Tasti di scelta rapida generali",
-        "galleryHotkeys": "Tasti di scelta rapida della galleria",
-        "unifiedCanvasHotkeys": "Tasti di scelta rapida Tela Unificata",
-        "invoke": {
-            "title": "Invoke",
-            "desc": "Genera un'immagine"
+        "searchHotkeys": "Cerca tasti di scelta rapida",
+        "noHotkeysFound": "Nessun tasto di scelta rapida trovato",
+        "clearSearch": "Cancella ricerca",
+        "app": {
+            "selectCanvasTab": {
+                "title": "Seleziona la scheda Tela",
+                "desc": "Seleziona la scheda Tela."
+            },
+            "title": "Applicazione",
+            "invoke": {
+                "desc": "Metti in coda una generazione, aggiungendola alla fine della coda."
+            },
+            "invokeFront": {
+                "title": "Invoke (Fronte)",
+                "desc": "Metti in coda una generazione, aggiungendola all'inizio della coda."
+            },
+            "cancelQueueItem": {
+                "desc": "Annulla l'elemento della coda in elaborazione.",
+                "title": "Annulla"
+            },
+            "clearQueue": {
+                "title": "Cancella la coda",
+                "desc": "Annulla e cancella tutti gli elementi in coda."
+            },
+            "selectUpscalingTab": {
+                "title": "Seleziona la scheda Amplia",
+                "desc": "Seleziona la scheda Amplia."
+            },
+            "selectModelsTab": {
+                "title": "Seleziona la scheda Modelli",
+                "desc": "Seleziona la scheda Modelli."
+            },
+            "selectQueueTab": {
+                "title": "Seleziona la scheda della Coda",
+                "desc": "Seleziona la scheda della Coda."
+            },
+            "selectWorkflowsTab": {
+                "desc": "Seleziona la scheda dei Flussi di lavoro.",
+                "title": "Seleziona la scheda dei Flussi di lavoro"
+            },
+            "focusPrompt": {
+                "title": "Seleziona il Prompt",
+                "desc": "Sposta il cursore sul prompt positivo."
+            },
+            "toggleLeftPanel": {
+                "title": "Attiva/disattiva il pannello sinistro",
+                "desc": "Attiva/disattiva il pannello sinistro."
+            },
+            "toggleRightPanel": {
+                "title": "Attiva/disattiva il pannello destro",
+                "desc": "Attiva/disattiva il pannello destro."
+            },
+            "resetPanelLayout": {
+                "title": "Ripristina il layout del pannello",
+                "desc": "Ripristina le dimensioni e il layout predefiniti dei pannelli sinistro e destro."
+            },
+            "togglePanels": {
+                "title": "Attiva/disattiva i pannelli",
+                "desc": "Mostra o nascondi contemporaneamente i pannelli sinistro e destro."
+            }
         },
-        "cancel": {
-            "title": "Annulla",
-            "desc": "Annulla la generazione dell'immagine"
+        "hotkeys": "Tasti di scelta rapida",
+        "canvas": {
+            "transformSelected": {
+                "desc": "Trasforma il livello selezionato.",
+                "title": "Trasforma"
+            },
+            "fitBboxToCanvas": {
+                "desc": "Scala e posiziona la vista per adattarla al riquadro di delimitazione.",
+                "title": "Adatta il riquadro di delimitazione alla tela"
+            },
+            "redo": {
+                "title": "Ripeti",
+                "desc": "Ripeti l'ultima azione sulla tela."
+            },
+            "selectBrushTool": {
+                "title": "Strumento pennello",
+                "desc": "Seleziona lo strumento pennello."
+            },
+            "selectBboxTool": {
+                "title": "Strumento di selezione riquadro",
+                "desc": "Seleziona lo strumento riquadro di delimitazione."
+            },
+            "decrementToolWidth": {
+                "title": "Diminuisci la larghezza dello strumento",
+                "desc": "Diminuisce la larghezza dello strumento pennello o gomma, a seconda di quello selezionato."
+            },
+            "incrementToolWidth": {
+                "title": "Aumenta la larghezza dello strumento",
+                "desc": "Aumenta la larghezza dello strumento pennello o gomma, a seconda di quello selezionato."
+            },
+            "selectColorPickerTool": {
+                "title": "Strumento di selezione del colore",
+                "desc": "Seleziona lo strumento di selezione del colore."
+            },
+            "resetSelected": {
+                "title": "Reimposta il Livello",
+                "desc": "Reimposta il livello selezionato. Si applica solo alla Maschera Inpaint e alla Guida Regionale."
+            },
+            "undo": {
+                "title": "Annulla",
+                "desc": "Annulla l'ultima azione sulla tela."
+            },
+            "nextEntity": {
+                "title": "Livello successivo",
+                "desc": "Seleziona il livello successivo nell'elenco."
+            },
+            "filterSelected": {
+                "title": "Filtro",
+                "desc": "Filtra il livello selezionato. Applicabile solo ai livelli Raster e Controllo."
+            },
+            "setZoomTo100Percent": {
+                "title": "Zoom al 100%",
+                "desc": "Imposta l'ingrandimento della tela al 100%."
+            },
+            "setZoomTo200Percent": {
+                "title": "Zoom al 200%",
+                "desc": "Imposta l'ingrandimento della tela al 200%."
+            },
+            "setZoomTo400Percent": {
+                "title": "Zoom al 400%",
+                "desc": "Imposta l'ingrandimento della tela al 400%."
+            },
+            "setZoomTo800Percent": {
+                "title": "Zoom al 800%",
+                "desc": "Imposta l'ingrandimento della tela al 800%."
+            },
+            "quickSwitch": {
+                "title": "Cambio rapido livello",
+                "desc": "Passa tra gli ultimi due livelli selezionati. Se un livello è aggiunto ai segnalibri, passa sempre tra questo e l'ultimo livello non aggiunto ai segnalibri."
+            },
+            "deleteSelected": {
+                "title": "Elimina livello",
+                "desc": "Elimina il livello selezionato."
+            },
+            "prevEntity": {
+                "title": "Livello precedente",
+                "desc": "Seleziona il livello precedente nell'elenco."
+            },
+            "setFillToWhite": {
+                "title": "Imposta il colore su bianco",
+                "desc": "Imposta il colore dello strumento corrente su bianco."
+            },
+            "title": "Tela",
+            "selectMoveTool": {
+                "title": "Strumento Sposta",
+                "desc": "Seleziona lo strumento sposta."
+            },
+            "fitLayersToCanvas": {
+                "desc": "Scala e posiziona la vista per adattarla a tutti i livelli visibili.",
+                "title": "Adatta i livelli alla tela"
+            },
+            "selectEraserTool": {
+                "title": "Strumento gomma",
+                "desc": "Selezionare lo strumento gomma."
+            },
+            "selectRectTool": {
+                "title": "Strumento Rettangolo",
+                "desc": "Seleziona lo strumento rettangolo."
+            },
+            "selectViewTool": {
+                "title": "Strumento Visualizza",
+                "desc": "Seleziona lo strumento Visualizza."
+            },
+            "applyFilter": {
+                "title": "Applica filtro",
+                "desc": "Applica il filtro in sospeso al livello selezionato."
+            },
+            "cancelFilter": {
+                "title": "Annulla filtro",
+                "desc": "Annulla il filtro in sospeso."
+            },
+            "cancelTransform": {
+                "desc": "Annulla la trasformazione in sospeso.",
+                "title": "Annulla Trasforma"
+            },
+            "applyTransform": {
+                "title": "Applica trasformazione",
+                "desc": "Applica la trasformazione in sospeso al livello selezionato."
+            }
         },
-        "focusPrompt": {
-            "title": "Metti a fuoco il Prompt",
-            "desc": "Mette a fuoco l'area di immissione del prompt"
+        "workflows": {
+            "addNode": {
+                "title": "Aggiungi nodo",
+                "desc": "Apri il menu aggiungi nodo."
+            },
+            "pasteSelectionWithEdges": {
+                "title": "Incolla con collegamenti",
+                "desc": "Incolla i nodi copiati, i collegamenti e tutti i collegamenti connessi ai nodi copiati."
+            },
+            "copySelection": {
+                "title": "Copia",
+                "desc": "Copia i nodi ed i collegamenti selezionati."
+            },
+            "pasteSelection": {
+                "title": "Incolla",
+                "desc": "Incolla i nodi ed i collegamenti copiati."
+            },
+            "deleteSelection": {
+                "title": "Elimina",
+                "desc": "Elimina i nodi ed i collegamenti selezionati."
+            },
+            "redo": {
+                "title": "Ripeti",
+                "desc": "Ripeti l'ultima azione del flusso di lavoro."
+            },
+            "selectAll": {
+                "desc": "Seleziona tutti i nodi ed i collegamenti.",
+                "title": "Seleziona tutto"
+            },
+            "undo": {
+                "desc": "Annulla l'ultima azione del flusso di lavoro.",
+                "title": "Annulla"
+            },
+            "title": "Flussi di lavoro"
         },
-        "toggleOptions": {
-            "title": "Attiva/disattiva le opzioni",
-            "desc": "Apre e chiude il pannello delle opzioni"
+        "viewer": {
+            "nextComparisonMode": {
+                "title": "Modalità di confronto successiva",
+                "desc": "Scorri le modalità di confronto."
+            },
+            "recallPrompts": {
+                "title": "Richiama i Prompt",
+                "desc": "Richiama i prompt positivo e negativo per l'immagine corrente."
+            },
+            "remix": {
+                "title": "Remixa",
+                "desc": "Richiama tutti i metadati, ad eccezione del seme, per l'immagine corrente."
+            },
+            "useSize": {
+                "desc": "Utilizza la dimensione dell'immagine corrente come dimensione del riquadro di delimitazione.",
+                "title": "Usa Dimensioni"
+            },
+            "runPostprocessing": {
+                "title": "Esegui Post-elaborazione",
+                "desc": "Esegue la post-elaborazione selezionata sull'immagine corrente."
+            },
+            "title": "Visualizzatore immagini",
+            "toggleViewer": {
+                "title": "Mostra/Nascondi visualizzatore immagini",
+                "desc": "Mostra o nascondi il visualizzatore di immagini. Disponibile solo nella scheda Tela."
+            },
+            "loadWorkflow": {
+                "title": "Carica Flusso di lavoro",
+                "desc": "Carica il flusso di lavoro salvato dell'immagine corrente (se presente)."
+            },
+            "recallAll": {
+                "title": "Richiama tutti i metadati",
+                "desc": "Richiama tutti i metadati dell'immagine corrente."
+            },
+            "swapImages": {
+                "title": "Scambia le immagini di confronto",
+                "desc": "Scambia le immagini da confrontare."
+            },
+            "recallSeed": {
+                "title": "Richiama il seme",
+                "desc": "Richiama il seme per l'immagine corrente."
+            },
+            "toggleMetadata": {
+                "title": "Mostra/Nascondi metadati",
+                "desc": "Mostra o nasconde la sovrapposizione dei metadati dell'immagine corrente."
+            }
         },
-        "pinOptions": {
-            "title": "Appunta le opzioni",
-            "desc": "Blocca il pannello delle opzioni"
-        },
-        "toggleViewer": {
-            "title": "Attiva/disattiva visualizzatore",
-            "desc": "Apre e chiude il visualizzatore immagini"
-        },
-        "toggleGallery": {
-            "title": "Attiva/disattiva Galleria",
-            "desc": "Apre e chiude il pannello della galleria"
-        },
-        "maximizeWorkSpace": {
-            "title": "Massimizza lo spazio di lavoro",
-            "desc": "Chiude i pannelli e massimizza l'area di lavoro"
-        },
-        "changeTabs": {
-            "title": "Cambia scheda",
-            "desc": "Passa a un'altra area di lavoro"
-        },
-        "consoleToggle": {
-            "title": "Attiva/disattiva console",
-            "desc": "Apre e chiude la console"
-        },
-        "setPrompt": {
-            "title": "Imposta Prompt",
-            "desc": "Usa il prompt dell'immagine corrente"
-        },
-        "setSeed": {
-            "title": "Imposta seme",
-            "desc": "Usa il seme dell'immagine corrente"
-        },
-        "setParameters": {
-            "title": "Imposta parametri",
-            "desc": "Utilizza tutti i parametri dell'immagine corrente"
-        },
-        "restoreFaces": {
-            "title": "Restaura volti",
-            "desc": "Restaura l'immagine corrente"
-        },
-        "upscale": {
-            "title": "Amplia",
-            "desc": "Amplia l'immagine corrente"
-        },
-        "showInfo": {
-            "title": "Mostra informazioni",
-            "desc": "Mostra le informazioni sui metadati dell'immagine corrente"
-        },
-        "sendToImageToImage": {
-            "title": "Invia a Immagine a Immagine",
-            "desc": "Invia l'immagine corrente a da Immagine a Immagine"
-        },
-        "deleteImage": {
-            "title": "Elimina immagine",
-            "desc": "Elimina l'immagine corrente"
-        },
-        "closePanels": {
-            "title": "Chiudi pannelli",
-            "desc": "Chiude i pannelli aperti"
-        },
-        "previousImage": {
-            "title": "Immagine precedente",
-            "desc": "Visualizza l'immagine precedente nella galleria"
-        },
-        "nextImage": {
-            "title": "Immagine successiva",
-            "desc": "Visualizza l'immagine successiva nella galleria"
-        },
-        "toggleGalleryPin": {
-            "title": "Attiva/disattiva il blocco della galleria",
-            "desc": "Blocca/sblocca la galleria dall'interfaccia utente"
-        },
-        "increaseGalleryThumbSize": {
-            "title": "Aumenta dimensione immagini nella galleria",
-            "desc": "Aumenta la dimensione delle miniature della galleria"
-        },
-        "decreaseGalleryThumbSize": {
-            "title": "Riduci dimensione immagini nella galleria",
-            "desc": "Riduce le dimensioni delle miniature della galleria"
-        },
-        "selectBrush": {
-            "title": "Seleziona Pennello",
-            "desc": "Seleziona il pennello della tela"
-        },
-        "selectEraser": {
-            "title": "Seleziona Cancellino",
-            "desc": "Seleziona il cancellino della tela"
-        },
-        "decreaseBrushSize": {
-            "title": "Riduci la dimensione del pennello",
-            "desc": "Riduce la dimensione del pennello/cancellino della tela"
-        },
-        "increaseBrushSize": {
-            "title": "Aumenta la dimensione del pennello",
-            "desc": "Aumenta la dimensione del pennello/cancellino della tela"
-        },
-        "decreaseBrushOpacity": {
-            "title": "Riduci l'opacità del pennello",
-            "desc": "Diminuisce l'opacità del pennello della tela"
-        },
-        "increaseBrushOpacity": {
-            "title": "Aumenta l'opacità del pennello",
-            "desc": "Aumenta l'opacità del pennello della tela"
-        },
-        "moveTool": {
-            "title": "Strumento Sposta",
-            "desc": "Consente la navigazione nella tela"
-        },
-        "fillBoundingBox": {
-            "title": "Riempi riquadro di selezione",
-            "desc": "Riempie il riquadro di selezione con il colore del pennello"
-        },
-        "eraseBoundingBox": {
-            "title": "Cancella riquadro di selezione",
-            "desc": "Cancella l'area del riquadro di selezione"
-        },
-        "colorPicker": {
-            "title": "Seleziona Selettore colore",
-            "desc": "Seleziona il selettore colore della tela"
-        },
-        "toggleSnap": {
-            "title": "Attiva/disattiva Aggancia",
-            "desc": "Attiva/disattiva Aggancia alla griglia"
-        },
-        "quickToggleMove": {
-            "title": "Attiva/disattiva Sposta rapido",
-            "desc": "Attiva/disattiva temporaneamente la modalità Sposta"
-        },
-        "toggleLayer": {
-            "title": "Attiva/disattiva livello",
-            "desc": "Attiva/disattiva la selezione del livello base/maschera"
-        },
-        "clearMask": {
-            "title": "Cancella maschera",
-            "desc": "Cancella l'intera maschera"
-        },
-        "hideMask": {
-            "title": "Nascondi maschera",
-            "desc": "Nasconde e mostra la maschera"
-        },
-        "showHideBoundingBox": {
-            "title": "Mostra/Nascondi riquadro di selezione",
-            "desc": "Attiva/disattiva la visibilità del riquadro di selezione"
-        },
-        "mergeVisible": {
-            "title": "Fondi il visibile",
-            "desc": "Fonde tutti gli strati visibili della tela"
-        },
-        "saveToGallery": {
-            "title": "Salva nella galleria",
-            "desc": "Salva la tela corrente nella galleria"
-        },
-        "copyToClipboard": {
-            "title": "Copia negli appunti",
-            "desc": "Copia la tela corrente negli appunti"
-        },
-        "downloadImage": {
-            "title": "Scarica l'immagine",
-            "desc": "Scarica la tela corrente"
-        },
-        "undoStroke": {
-            "title": "Annulla tratto",
-            "desc": "Annulla una pennellata"
-        },
-        "redoStroke": {
-            "title": "Ripeti tratto",
-            "desc": "Ripeti una pennellata"
-        },
-        "resetView": {
-            "title": "Reimposta vista",
-            "desc": "Ripristina la visualizzazione della tela"
-        },
-        "previousStagingImage": {
-            "title": "Immagine della sessione precedente",
-            "desc": "Immagine dell'area della sessione precedente"
-        },
-        "nextStagingImage": {
-            "title": "Immagine della sessione successivo",
-            "desc": "Immagine dell'area della sessione successiva"
-        },
-        "acceptStagingImage": {
-            "title": "Accetta l'immagine della sessione",
-            "desc": "Accetta l'immagine dell'area della sessione corrente"
-        },
-        "nodesHotkeys": "Tasti di scelta rapida dei Nodi",
-        "addNodes": {
-            "title": "Aggiungi Nodi",
-            "desc": "Apre il menu Aggiungi Nodi"
+        "gallery": {
+            "selectAllOnPage": {
+                "desc": "Seleziona tutte le immagini nella pagina corrente.",
+                "title": "Seleziona tutto nella pagina"
+            },
+            "galleryNavUp": {
+                "desc": "Naviga verso l'alto nella griglia della galleria, selezionando quell'immagine. Se sei in cima alla pagina, andrai alla pagina precedente.",
+                "title": "Naviga verso l'alto"
+            },
+            "galleryNavRight": {
+                "title": "Naviga a destra",
+                "desc": "Naviga a destra nella griglia della galleria, selezionando quell'immagine. Se sei all'ultima immagine della riga, andrai alla riga successiva. Se sei all'ultima immagine della pagina, andrai alla pagina successiva."
+            },
+            "galleryNavLeftAlt": {
+                "desc": "Uguale a Naviga a sinistra, ma seleziona l'immagine da confrontare, aprendo la modalità di confronto se non è già aperta.",
+                "title": "Naviga a sinistra (Confronta immagine)"
+            },
+            "deleteSelection": {
+                "title": "Elimina",
+                "desc": "Elimina tutte le immagini selezionate. Per impostazione predefinita, ti verrà chiesto di confermare l'eliminazione. Se le immagini sono attualmente in uso nell'applicazione, verrai avvisato."
+            },
+            "clearSelection": {
+                "title": "Cancella selezione",
+                "desc": "Cancella la selezione corrente, se presente."
+            },
+            "galleryNavRightAlt": {
+                "desc": "Uguale a Naviga a destra, ma seleziona l'immagine da confrontare, aprendo la modalità di confronto se non è già aperta.",
+                "title": "Naviga a destra (Confronta immagine)"
+            },
+            "galleryNavDownAlt": {
+                "title": "Naviga in basso (Confronta immagine)",
+                "desc": "Uguale a Naviga in basso, ma seleziona l'immagine da confrontare, aprendo la modalità di confronto se non è già aperta."
+            },
+            "title": "Galleria",
+            "galleryNavDown": {
+                "desc": "Naviga verso il basso nella griglia della galleria, selezionando quell'immagine. Se sei in fondo alla pagina, andrai alla pagina successiva.",
+                "title": "Naviga in basso"
+            },
+            "galleryNavLeft": {
+                "title": "Naviga a sinistra",
+                "desc": "Naviga a sinistra nella griglia della galleria, selezionando quell'immagine. Se sei alla prima immagine della riga, andrai alla riga precedente. Se sei alla prima immagine della pagina, andrai alla pagina precedente."
+            },
+            "galleryNavUpAlt": {
+                "desc": "Uguale a Naviga verso l'alto, ma seleziona l'immagine da confrontare, aprendo la modalità di confronto se non è già aperta.",
+                "title": "Naviga verso l'alto (Confronta immagine)"
+            }
         }
     },
     "modelManager": {
         "modelManager": "Gestione Modelli",
         "model": "Modello",
-        "allModels": "Tutti i Modelli",
-        "checkpointModels": "Checkpoint",
-        "diffusersModels": "Diffusori",
-        "safetensorModels": "SafeTensor",
-        "modelAdded": "Modello Aggiunto",
-        "modelUpdated": "Modello Aggiornato",
-        "modelEntryDeleted": "Voce del modello eliminata",
-        "cannotUseSpaces": "Impossibile utilizzare gli spazi",
-        "addNew": "Aggiungi nuovo",
-        "addNewModel": "Aggiungi nuovo Modello",
-        "addCheckpointModel": "Aggiungi modello Checkpoint / Safetensor",
-        "addDiffuserModel": "Aggiungi Diffusori",
-        "addManually": "Aggiungi manualmente",
+        "allModels": "Tutti i modelli",
+        "modelUpdated": "Modello aggiornato",
         "manual": "Manuale",
         "name": "Nome",
-        "nameValidationMsg": "Inserisci un nome per il modello",
         "description": "Descrizione",
-        "descriptionValidationMsg": "Aggiungi una descrizione per il modello",
         "config": "Configurazione",
-        "configValidationMsg": "Percorso del file di configurazione del modello.",
-        "modelLocation": "Posizione del modello",
-        "modelLocationValidationMsg": "Fornisci il percorso di una cartella locale in cui è archiviato il tuo modello di diffusori",
         "repo_id": "Repo ID",
-        "repoIDValidationMsg": "Repository online del modello",
-        "vaeLocation": "Posizione file VAE",
-        "vaeLocationValidationMsg": "Percorso dove si trova il file VAE.",
-        "vaeRepoID": "VAE Repo ID",
-        "vaeRepoIDValidationMsg": "Repository online del file VAE",
         "width": "Larghezza",
-        "widthValidationMsg": "Larghezza predefinita del modello.",
         "height": "Altezza",
-        "heightValidationMsg": "Altezza predefinita del modello.",
         "addModel": "Aggiungi modello",
-        "updateModel": "Aggiorna modello",
         "availableModels": "Modelli disponibili",
         "search": "Ricerca",
         "load": "Carica",
         "active": "attivo",
-        "notLoaded": "non caricato",
-        "cached": "memorizzato nella cache",
-        "checkpointFolder": "Cartella Checkpoint",
-        "clearCheckpointFolder": "Svuota cartella checkpoint",
-        "findModels": "Trova modelli",
-        "scanAgain": "Scansiona nuovamente",
-        "modelsFound": "Modelli trovati",
-        "selectFolder": "Seleziona cartella",
         "selected": "Selezionato",
-        "selectAll": "Seleziona tutto",
-        "deselectAll": "Deseleziona tutto",
-        "showExisting": "Mostra esistenti",
-        "addSelected": "Aggiungi selezionato",
-        "modelExists": "Il modello esiste",
-        "selectAndAdd": "Seleziona e aggiungi i modelli elencati",
-        "noModelsFound": "Nessun modello trovato",
         "delete": "Elimina",
         "deleteModel": "Elimina modello",
         "deleteConfig": "Elimina configurazione",
         "deleteMsg1": "Sei sicuro di voler eliminare questo modello da InvokeAI?",
-        "deleteMsg2": "Questo eliminerà il modello dal disco se si trova nella cartella principale di InvokeAI. Se utilizzi una cartella personalizzata, il modello NON verrà eliminato dal disco.",
-        "formMessageDiffusersModelLocation": "Ubicazione modelli diffusori",
-        "formMessageDiffusersModelLocationDesc": "Inseriscine almeno uno.",
-        "formMessageDiffusersVAELocation": "Ubicazione file VAE",
-        "formMessageDiffusersVAELocationDesc": "Se non fornito, InvokeAI cercherà il file VAE all'interno dell'ubicazione del modello sopra indicata.",
+        "deleteMsg2": "Questo eliminerà il modello dal disco se si trova nella cartella principale di InvokeAI. Se invece utilizzi una cartella personalizzata, il modello NON verrà eliminato dal disco.",
         "convert": "Converti",
         "convertToDiffusers": "Converti in Diffusori",
         "convertToDiffusersHelpText2": "Questo processo sostituirà la voce in Gestione Modelli con la versione Diffusori dello stesso modello.",
         "convertToDiffusersHelpText4": "Questo è un processo una tantum. Potrebbero essere necessari circa 30-60 secondi a seconda delle specifiche del tuo computer.",
-        "convertToDiffusersHelpText5": "Assicurati di avere spazio su disco sufficiente. I modelli generalmente variano tra 2 GB e 7 GB di dimensioni.",
+        "convertToDiffusersHelpText5": "Assicurati di avere spazio su disco sufficiente. I modelli generalmente variano tra 2 GB e 7 GB in dimensione.",
         "convertToDiffusersHelpText6": "Vuoi convertire questo modello?",
-        "convertToDiffusersSaveLocation": "Ubicazione salvataggio",
-        "inpainting": "v1 Inpainting",
-        "customConfig": "Configurazione personalizzata",
-        "statusConverting": "Conversione in corso",
         "modelConverted": "Modello convertito",
-        "sameFolder": "Stessa cartella",
-        "invokeRoot": "Cartella InvokeAI",
-        "merge": "Unisci",
-        "modelsMerged": "Modelli uniti",
-        "mergeModels": "Unisci Modelli",
-        "modelOne": "Modello 1",
-        "modelTwo": "Modello 2",
-        "mergedModelName": "Nome del modello unito",
         "alpha": "Alpha",
-        "interpolationType": "Tipo di interpolazione",
-        "mergedModelCustomSaveLocation": "Percorso personalizzato",
-        "invokeAIFolder": "Cartella Invoke AI",
-        "ignoreMismatch": "Ignora le discrepanze tra i modelli selezionati",
-        "modelMergeHeaderHelp2": "Solo i diffusori sono disponibili per l'unione. Se desideri unire un modello Checkpoint, convertilo prima in Diffusori.",
-        "modelMergeInterpAddDifferenceHelp": "In questa modalità, il Modello 3 viene prima sottratto dal Modello 2. La versione risultante viene unita al Modello 1 con il tasso Alpha impostato sopra.",
-        "mergedModelSaveLocation": "Ubicazione salvataggio",
-        "convertToDiffusersHelpText1": "Questo modello verrà convertito nel formato 🧨 Diffusore.",
-        "custom": "Personalizzata",
-        "convertToDiffusersHelpText3": "Il file checkpoint su disco SARÀ eliminato se si trova nella cartella principale di InvokeAI. Se si trova in una posizione personalizzata, NON verrà eliminato.",
-        "v1": "v1",
-        "pathToCustomConfig": "Percorso alla configurazione personalizzata",
-        "modelThree": "Modello 3",
-        "modelMergeHeaderHelp1": "Puoi unire fino a tre diversi modelli per creare una miscela adatta alle tue esigenze.",
-        "modelMergeAlphaHelp": "Il valore Alpha controlla la forza di miscelazione dei modelli. Valori Alpha più bassi attenuano l'influenza del secondo modello.",
-        "customSaveLocation": "Ubicazione salvataggio personalizzata",
-        "weightedSum": "Somma pesata",
-        "sigmoid": "Sigmoide",
-        "inverseSigmoid": "Sigmoide inverso",
-        "v2_base": "v2 (512px)",
-        "v2_768": "v2 (768px)",
+        "convertToDiffusersHelpText1": "Questo modello verrà convertito nel formato 🧨 Diffusori.",
+        "convertToDiffusersHelpText3": "Il file del modello su disco verrà eliminato se si trova nella cartella principale di InvokeAI. Se si trova invece in una posizione personalizzata, NON verrà eliminato.",
         "none": "nessuno",
-        "addDifference": "Aggiungi differenza",
-        "pickModelType": "Scegli il tipo di modello",
-        "scanForModels": "Cerca modelli",
         "variant": "Variante",
         "baseModel": "Modello Base",
         "vae": "VAE",
         "modelUpdateFailed": "Aggiornamento del modello non riuscito",
         "modelConversionFailed": "Conversione del modello non riuscita",
-        "modelsMergeFailed": "Unione modelli non riuscita",
         "selectModel": "Seleziona Modello",
         "modelDeleted": "Modello eliminato",
         "modelDeleteFailed": "Impossibile eliminare il modello",
-        "noCustomLocationProvided": "Nessuna posizione personalizzata fornita",
         "convertingModelBegin": "Conversione del modello. Attendere prego.",
-        "importModels": "Importa modelli",
-        "modelsSynced": "Modelli sincronizzati",
-        "modelSyncFailed": "Sincronizzazione modello non riuscita",
         "settings": "Impostazioni",
-        "syncModels": "Sincronizza Modelli",
-        "syncModelsDesc": "Se i tuoi modelli non sono sincronizzati con il back-end, puoi aggiornarli utilizzando questa opzione. Questo è generalmente utile nei casi in cui aggiorni manualmente il tuo file models.yaml o aggiungi modelli alla cartella principale di InvokeAI dopo l'avvio dell'applicazione.",
-        "loraModels": "LoRA",
-        "oliveModels": "Olive",
-        "onnxModels": "ONNX",
-        "noModels": "Nessun modello trovato",
-        "predictionType": "Tipo di previsione (per modelli Stable Diffusion 2.x ed alcuni modelli Stable Diffusion 1.x)",
-        "quickAdd": "Aggiunta rapida",
-        "simpleModelDesc": "Fornire un percorso a un modello diffusori locale, un modello checkpoint/safetensor locale, un ID repository HuggingFace o un URL del modello checkpoint/diffusori.",
+        "syncModels": "Sincronizza modelli",
+        "predictionType": "Tipo di previsione",
         "advanced": "Avanzate",
-        "useCustomConfig": "Utilizza configurazione personalizzata",
-        "closeAdvanced": "Chiudi Avanzate",
         "modelType": "Tipo di modello",
-        "customConfigFileLocation": "Posizione del file di configurazione personalizzato",
-        "vaePrecision": "Precisione VAE"
+        "vaePrecision": "Precisione VAE",
+        "noModelSelected": "Nessun modello selezionato",
+        "modelName": "Nome del modello",
+        "modelSettings": "Impostazioni del modello",
+        "addModels": "Aggiungi modelli",
+        "cancel": "Annulla",
+        "edit": "Modifica",
+        "imageEncoderModelId": "ID modello codificatore di immagini",
+        "path": "Percorso",
+        "prune": "Elimina",
+        "pruneTooltip": "Elimina dalla coda le importazioni completate",
+        "repoVariant": "Variante del repository",
+        "scanFolder": "Scansione cartella",
+        "scanResults": "Risultati della scansione",
+        "source": "Sorgente",
+        "upcastAttention": "Eleva l'attenzione",
+        "typePhraseHere": "Digita la frase qui",
+        "defaultSettingsSaved": "Impostazioni predefinite salvate",
+        "defaultSettings": "Impostazioni predefinite",
+        "metadata": "Metadati",
+        "triggerPhrases": "Frasi Trigger",
+        "deleteModelImage": "Elimina l'immagine del modello",
+        "localOnly": "solo locale",
+        "modelImageDeleted": "Immagine del modello eliminata",
+        "modelImageDeleteFailed": "Eliminazione dell'immagine del modello non riuscita",
+        "modelImageUpdated": "Immagine del modello aggiornata",
+        "modelImageUpdateFailed": "Aggiornamento dell'immagine del modello non riuscito",
+        "pathToConfig": "Percorso file di configurazione",
+        "uploadImage": "Carica immagine",
+        "loraTriggerPhrases": "Frasi Trigger LoRA",
+        "mainModelTriggerPhrases": "Frasi Trigger del modello principale",
+        "inplaceInstall": "Installazione sul posto",
+        "inplaceInstallDesc": "Installa i modelli senza copiare i file. Quando si utilizza il modello, verrà caricato da questa posizione. Se disabilitato, i file del modello verranno copiati nella directory dei modelli gestiti da Invoke durante l'installazione.",
+        "installQueue": "Coda di installazione",
+        "install": "Installa",
+        "installRepo": "Installa Repository",
+        "huggingFacePlaceholder": "proprietario/nome-modello",
+        "huggingFaceHelper": "Se in questo repository vengono trovati più modelli, ti verrà richiesto di selezionarne uno da installare.",
+        "installAll": "Installa tutto",
+        "scanFolderHelper": "La cartella verrà sottoposta a scansione ricorsiva per i modelli. L'operazione può richiedere un po' di tempo per cartelle molto grandi.",
+        "scanPlaceholder": "Percorso di una cartella locale",
+        "simpleModelPlaceholder": "URL o percorso di un file locale o di una cartella diffusori",
+        "urlOrLocalPath": "URL o percorso locale",
+        "urlOrLocalPathHelper": "Gli URL dovrebbero puntare a un singolo file. I percorsi locali possono puntare a un singolo file o cartella per un singolo modello di diffusore.",
+        "loraModels": "LoRA",
+        "starterModels": "Modelli iniziali",
+        "textualInversions": "Inversioni Testuali",
+        "noModelsInstalled": "Nessun modello installato",
+        "main": "Principali",
+        "noModelsInstalledDesc1": "Installa i modelli con",
+        "ipAdapters": "Adattatori IP",
+        "noMatchingModels": "Nessun modello corrispondente",
+        "starterModelsInModelManager": "I modelli iniziali possono essere trovati in Gestione Modelli",
+        "spandrelImageToImage": "Immagine a immagine (Spandrel)",
+        "learnMoreAboutSupportedModels": "Scopri di più sui modelli che supportiamo",
+        "starterBundles": "Pacchetti per iniziare",
+        "installingBundle": "Installazione del pacchetto",
+        "skippingXDuplicates_one": ", saltando {{count}} duplicato",
+        "skippingXDuplicates_many": ", saltando {{count}} duplicati",
+        "skippingXDuplicates_other": ", saltando {{count}} duplicati",
+        "installingModel": "Installazione del modello",
+        "installingXModels_one": "Installazione di {{count}} modello",
+        "installingXModels_many": "Installazione di {{count}} modelli",
+        "installingXModels_other": "Installazione di {{count}} modelli",
+        "includesNModels": "Include {{n}} modelli e le loro dipendenze",
+        "starterBundleHelpText": "Installa facilmente tutti i modelli necessari per iniziare con un modello base, tra cui un modello principale, controlnet, adattatori IP e altro. Selezionando un pacchetto salterai tutti i modelli che hai già installato.",
+        "noDefaultSettings": "Nessuna impostazione predefinita configurata per questo modello. Visita Gestione Modelli per aggiungere impostazioni predefinite.",
+        "defaultSettingsOutOfSync": "Alcune impostazioni non corrispondono a quelle predefinite del modello:",
+        "restoreDefaultSettings": "Fare clic per utilizzare le impostazioni predefinite del modello.",
+        "usingDefaultSettings": "Utilizzo delle impostazioni predefinite del modello",
+        "huggingFace": "HuggingFace",
+        "huggingFaceRepoID": "HuggingFace Repository ID",
+        "clipEmbed": "CLIP Embed",
+        "t5Encoder": "T5 Encoder",
+        "hfTokenInvalidErrorMessage": "Gettone HuggingFace non valido o mancante.",
+        "hfTokenRequired": "Stai tentando di scaricare un modello che richiede un gettone HuggingFace valido.",
+        "hfTokenUnableToVerifyErrorMessage": "Impossibile verificare il gettone HuggingFace. Ciò è probabilmente dovuto a un errore di rete. Riprova più tardi.",
+        "hfTokenHelperText": "Per utilizzare alcuni modelli è necessario un gettone HF. Fai clic qui per creare o ottenere il tuo gettone.",
+        "hfTokenInvalid": "Gettone HF non valido o mancante",
+        "hfTokenUnableToVerify": "Impossibile verificare il gettone HF",
+        "hfTokenSaved": "Gettone HF salvato",
+        "hfForbidden": "Non hai accesso a questo modello HF",
+        "hfTokenLabel": "Gettone HuggingFace (richiesto per alcuni modelli)",
+        "hfForbiddenErrorMessage": "Consigliamo di visitare la pagina del repository. Il proprietario potrebbe richiedere l'accettazione dei termini per poter effettuare il download.",
+        "hfTokenInvalidErrorMessage2": "Aggiornalo in ",
+        "controlLora": "Controllo LoRA",
+        "urlUnauthorizedErrorMessage2": "Scopri come qui.",
+        "urlForbidden": "Non hai accesso a questo modello",
+        "urlForbiddenErrorMessage": "Potrebbe essere necessario richiedere l'autorizzazione al sito che distribuisce il modello.",
+        "urlUnauthorizedErrorMessage": "Potrebbe essere necessario configurare un gettone API per accedere a questo modello."
     },
     "parameters": {
         "images": "Immagini",
@@ -483,388 +633,247 @@
         "width": "Larghezza",
         "height": "Altezza",
         "seed": "Seme",
-        "randomizeSeed": "Seme randomizzato",
         "shuffle": "Mescola il seme",
         "noiseThreshold": "Soglia del rumore",
         "perlinNoise": "Rumore Perlin",
-        "variations": "Variazioni",
-        "variationAmount": "Quantità di variazione",
-        "seedWeights": "Pesi dei semi",
-        "faceRestoration": "Restauro volti",
-        "restoreFaces": "Restaura volti",
         "type": "Tipo",
         "strength": "Forza",
-        "upscaling": "Ampliamento",
-        "upscale": "Amplia (Shift + U)",
-        "upscaleImage": "Amplia Immagine",
+        "upscaling": "Amplia",
         "scale": "Scala",
-        "otherOptions": "Altre opzioni",
-        "seamlessTiling": "Piastrella senza cuciture",
-        "hiresOptim": "Ottimizzazione alta risoluzione",
         "imageFit": "Adatta l'immagine iniziale alle dimensioni di output",
-        "codeformerFidelity": "Fedeltà",
         "scaleBeforeProcessing": "Scala prima dell'elaborazione",
-        "scaledWidth": "Larghezza ridimensionata",
-        "scaledHeight": "Altezza ridimensionata",
+        "scaledWidth": "Larghezza scalata",
+        "scaledHeight": "Altezza scalata",
         "infillMethod": "Metodo di riempimento",
         "tileSize": "Dimensione piastrella",
-        "boundingBoxHeader": "Rettangolo di selezione",
-        "seamCorrectionHeader": "Correzione della cucitura",
-        "infillScalingHeader": "Riempimento e ridimensionamento",
-        "img2imgStrength": "Forza da Immagine a Immagine",
-        "toggleLoopback": "Attiva/disattiva elaborazione ricorsiva",
-        "sendTo": "Invia a",
-        "sendToImg2Img": "Invia a Immagine a Immagine",
-        "sendToUnifiedCanvas": "Invia a Tela Unificata",
-        "copyImageToLink": "Copia l'immagine nel collegamento",
         "downloadImage": "Scarica l'immagine",
-        "openInViewer": "Apri nel visualizzatore",
-        "closeViewer": "Chiudi visualizzatore",
         "usePrompt": "Usa Prompt",
         "useSeed": "Usa Seme",
         "useAll": "Usa Tutto",
-        "useInitImg": "Usa l'immagine iniziale",
         "info": "Informazioni",
-        "initialImage": "Immagine iniziale",
         "showOptionsPanel": "Mostra il pannello laterale (O o T)",
         "general": "Generale",
         "denoisingStrength": "Forza di riduzione del rumore",
         "copyImage": "Copia immagine",
-        "hiresStrength": "Forza Alta Risoluzione",
-        "imageToImage": "Immagine a Immagine",
         "cancel": {
-            "schedule": "Annulla dopo l'iterazione corrente",
-            "isScheduled": "Annullamento",
-            "setType": "Imposta il tipo di annullamento",
-            "immediate": "Annulla immediatamente",
             "cancel": "Annulla"
         },
-        "hSymmetryStep": "Passi Simmetria Orizzontale",
-        "vSymmetryStep": "Passi Simmetria Verticale",
         "symmetry": "Simmetria",
-        "hidePreview": "Nascondi l'anteprima",
-        "showPreview": "Mostra l'anteprima",
-        "noiseSettings": "Rumore",
-        "seamlessXAxis": "Asse X",
-        "seamlessYAxis": "Asse Y",
+        "seamlessXAxis": "Asse X senza giunte",
+        "seamlessYAxis": "Asse Y senza giunte",
         "scheduler": "Campionatore",
-        "boundingBoxWidth": "Larghezza riquadro di delimitazione",
-        "boundingBoxHeight": "Altezza riquadro di delimitazione",
         "positivePromptPlaceholder": "Prompt Positivo",
         "negativePromptPlaceholder": "Prompt Negativo",
         "controlNetControlMode": "Modalità di controllo",
         "clipSkip": "CLIP Skip",
-        "aspectRatio": "Proporzioni",
-        "maskAdjustmentsHeader": "Regolazioni della maschera",
-        "maskBlur": "Sfocatura",
-        "maskBlurMethod": "Metodo di sfocatura",
-        "seamLowThreshold": "Basso",
-        "seamHighThreshold": "Alto",
-        "coherencePassHeader": "Passaggio di coerenza",
-        "coherenceSteps": "Passi",
-        "coherenceStrength": "Forza",
-        "compositingSettingsHeader": "Impostazioni di composizione",
+        "maskBlur": "Sfoc. maschera",
         "patchmatchDownScaleSize": "Ridimensiona",
         "coherenceMode": "Modalità",
         "invoke": {
             "noNodesInGraph": "Nessun nodo nel grafico",
             "noModelSelected": "Nessun modello selezionato",
             "noPrompts": "Nessun prompt generato",
-            "noInitialImageSelected": "Nessuna immagine iniziale selezionata",
-            "readyToInvoke": "Pronto per invocare",
             "addingImagesTo": "Aggiungi immagini a",
-            "systemBusy": "Sistema occupato",
-            "unableToInvoke": "Impossibile invocare",
             "systemDisconnected": "Sistema disconnesso",
-            "noControlImageForControlAdapter": "L'adattatore di controllo #{{number}} non ha un'immagine di controllo",
-            "noModelForControlAdapter": "Nessun modello selezionato per l'adattatore di controllo #{{number}}.",
-            "incompatibleBaseModelForControlAdapter": "Il modello dell'adattatore di controllo #{{number}} non è compatibile con il modello principale.",
             "missingNodeTemplate": "Modello di nodo mancante",
-            "missingInputForField": "{{nodeLabel}} -> {{fieldLabel}} ingresso mancante",
-            "missingFieldTemplate": "Modello di campo mancante"
+            "missingInputForField": "ingresso mancante",
+            "missingFieldTemplate": "Modello di campo mancante",
+            "fluxModelIncompatibleBboxHeight": "$t(parameters.invoke.fluxRequiresDimensionsToBeMultipleOf16), altezza riquadro è {{height}}",
+            "fluxModelIncompatibleBboxWidth": "$t(parameters.invoke.fluxRequiresDimensionsToBeMultipleOf16), larghezza riquadro è {{width}}",
+            "fluxModelIncompatibleScaledBboxWidth": "$t(parameters.invoke.fluxRequiresDimensionsToBeMultipleOf16), larghezza del riquadro scalato è {{width}}",
+            "fluxModelIncompatibleScaledBboxHeight": "$t(parameters.invoke.fluxRequiresDimensionsToBeMultipleOf16), altezza del riquadro scalato è {{height}}",
+            "noT5EncoderModelSelected": "Nessun modello di encoder T5 selezionato per la generazione con FLUX",
+            "noCLIPEmbedModelSelected": "Nessun modello CLIP Embed selezionato per la generazione con FLUX",
+            "noFLUXVAEModelSelected": "Nessun modello VAE selezionato per la generazione con FLUX",
+            "canvasIsTransforming": "La tela è occupata (sta trasformando)",
+            "canvasIsRasterizing": "La tela è occupata (sta rasterizzando)",
+            "canvasIsCompositing": "La tela è occupata (in composizione)",
+            "canvasIsFiltering": "La tela è occupata (sta filtrando)",
+            "collectionTooManyItems": "troppi elementi, massimo {{maxItems}}",
+            "canvasIsSelectingObject": "La tela è occupata (selezione dell'oggetto)",
+            "collectionTooFewItems": "troppi pochi elementi, minimo {{minItems}}",
+            "fluxModelMultipleControlLoRAs": "È possibile utilizzare solo 1 Controllo LoRA alla volta",
+            "collectionNumberGTMax": "{{value}} > {{maximum}} (incr max)",
+            "collectionStringTooLong": "troppo lungo, massimo {{maxLength}}",
+            "batchNodeNotConnected": "Nodo Lotto non connesso: {{label}}",
+            "batchNodeEmptyCollection": "Alcuni nodi lotto hanno raccolte vuote",
+            "emptyBatches": "lotti vuoti",
+            "batchNodeCollectionSizeMismatch": "Le dimensioni della raccolta nel Lotto {{batchGroupId}} non corrispondono",
+            "invalidBatchConfigurationCannotCalculate": "Configurazione lotto non valida; impossibile calcolare",
+            "collectionStringTooShort": "troppo corto, minimo {{minLength}}",
+            "collectionNumberNotMultipleOf": "{{value}} non è multiplo di {{multipleOf}}",
+            "collectionNumberLTMin": "{{value}} < {{minimum}} (incr min)",
+            "collectionNumberGTExclusiveMax": "{{value}} >= {{exclusiveMaximum}} (excl max)",
+            "collectionNumberLTExclusiveMin": "{{value}} <= {{exclusiveMinimum}} (excl min)"
         },
-        "enableNoiseSettings": "Abilita le impostazioni del rumore",
-        "cpuNoise": "Rumore CPU",
-        "gpuNoise": "Rumore GPU",
         "useCpuNoise": "Usa la CPU per generare rumore",
-        "manualSeed": "Seme manuale",
-        "randomSeed": "Seme casuale",
         "iterations": "Iterazioni",
-        "iterationsWithCount_one": "{{count}} Iterazione",
-        "iterationsWithCount_many": "{{count}} Iterazioni",
-        "iterationsWithCount_other": "{{count}} Iterazioni",
-        "seamlessX&Y": "Senza cuciture X & Y",
-        "isAllowedToUpscale": {
-            "useX2Model": "L'immagine è troppo grande per l'ampliamento con il modello x4, utilizza il modello x2",
-            "tooLarge": "L'immagine è troppo grande per l'ampliamento, seleziona un'immagine più piccola"
-        },
-        "seamlessX": "Senza cuciture X",
-        "seamlessY": "Senza cuciture Y",
         "imageActions": "Azioni Immagine",
-        "aspectRatioFree": "Libere"
+        "cfgRescaleMultiplier": "Moltiplicatore riscala CFG",
+        "useSize": "Usa Dimensioni",
+        "setToOptimalSize": "Ottimizza le dimensioni per il modello",
+        "setToOptimalSizeTooSmall": "$t(parameters.setToOptimalSize) (potrebbe essere troppo piccolo)",
+        "lockAspectRatio": "Blocca proporzioni",
+        "swapDimensions": "Scambia dimensioni",
+        "aspect": "Aspetto",
+        "setToOptimalSizeTooLarge": "$t(parameters.setToOptimalSize) (potrebbe essere troppo grande)",
+        "remixImage": "Remixa l'immagine",
+        "coherenceEdgeSize": "Dim. bordo",
+        "infillColorValue": "Colore di riempimento",
+        "processImage": "Elabora Immagine",
+        "sendToUpscale": "Invia a Amplia",
+        "postProcessing": "Post-elaborazione (Shift + U)",
+        "guidance": "Guida",
+        "gaussianBlur": "Sfocatura Gaussiana",
+        "boxBlur": "Sfocatura Box",
+        "staged": "Maschera espansa",
+        "optimizedImageToImage": "Immagine-a-immagine ottimizzata",
+        "sendToCanvas": "Invia alla Tela",
+        "coherenceMinDenoise": "Min rid. rumore",
+        "recallMetadata": "Richiama i metadati",
+        "disabledNoRasterContent": "Disabilitato (nessun contenuto Raster)"
     },
     "settings": {
         "models": "Modelli",
         "displayInProgress": "Visualizza le immagini di avanzamento",
-        "saveSteps": "Salva le immagini ogni n passaggi",
         "confirmOnDelete": "Conferma l'eliminazione",
-        "displayHelpIcons": "Visualizza le icone della Guida",
-        "enableImageDebugging": "Abilita il debug dell'immagine",
         "resetWebUI": "Reimposta l'interfaccia utente Web",
         "resetWebUIDesc1": "Il ripristino dell'interfaccia utente Web reimposta solo la cache locale del browser delle immagini e le impostazioni memorizzate. Non cancella alcuna immagine dal disco.",
         "resetWebUIDesc2": "Se le immagini non vengono visualizzate nella galleria o qualcos'altro non funziona, prova a reimpostare prima di segnalare un problema su GitHub.",
         "resetComplete": "L'interfaccia utente Web è stata reimpostata.",
-        "useSlidersForAll": "Usa i cursori per tutte le opzioni",
         "general": "Generale",
-        "consoleLogLevel": "Livello del registro",
-        "shouldLogToConsole": "Registrazione della console",
         "developer": "Sviluppatore",
         "antialiasProgressImages": "Anti aliasing delle immagini di avanzamento",
         "showProgressInViewer": "Mostra le immagini di avanzamento nel visualizzatore",
         "generation": "Generazione",
         "ui": "Interfaccia Utente",
-        "favoriteSchedulersPlaceholder": "Nessun campionatore preferito",
-        "favoriteSchedulers": "Campionatori preferiti",
-        "showAdvancedOptions": "Mostra Opzioni Avanzate",
-        "alternateCanvasLayout": "Layout alternativo della tela",
         "beta": "Beta",
-        "enableNodesEditor": "Abilita l'editor dei nodi",
-        "experimental": "Sperimentale",
-        "autoChangeDimensions": "Aggiorna L/A alle impostazioni predefinite del modello in caso di modifica",
         "clearIntermediates": "Cancella le immagini intermedie",
         "clearIntermediatesDesc3": "Le immagini della galleria non verranno eliminate.",
         "clearIntermediatesDesc2": "Le immagini intermedie sono sottoprodotti della generazione, diversi dalle immagini risultanti nella galleria. La cancellazione degli intermedi libererà spazio su disco.",
         "intermediatesCleared_one": "Cancellata {{count}} immagine intermedia",
         "intermediatesCleared_many": "Cancellate {{count}} immagini intermedie",
         "intermediatesCleared_other": "Cancellate {{count}} immagini intermedie",
-        "clearIntermediatesDesc1": "La cancellazione delle immagini intermedie ripristinerà lo stato di Tela Unificata e ControlNet.",
+        "clearIntermediatesDesc1": "La cancellazione delle immagini intermedie ripristinerà lo stato della Tela e degli Adattatori di Controllo.",
         "intermediatesClearedFailed": "Problema con la cancellazione delle immagini intermedie",
         "clearIntermediatesWithCount_one": "Cancella {{count}} immagine intermedia",
         "clearIntermediatesWithCount_many": "Cancella {{count}} immagini intermedie",
         "clearIntermediatesWithCount_other": "Cancella {{count}} immagini intermedie",
-        "clearIntermediatesDisabled": "La coda deve essere vuota per cancellare le immagini intermedie"
+        "clearIntermediatesDisabled": "La coda deve essere vuota per cancellare le immagini intermedie",
+        "enableNSFWChecker": "Abilita controllo NSFW",
+        "enableInvisibleWatermark": "Abilita filigrana invisibile",
+        "enableInformationalPopovers": "Abilita testo informativo a comparsa",
+        "reloadingIn": "Ricaricando in",
+        "informationalPopoversDisabled": "Testo informativo a comparsa disabilitato",
+        "informationalPopoversDisabledDesc": "I testi informativi a comparsa sono disabilitati. Attivali nelle impostazioni.",
+        "confirmOnNewSession": "Conferma su nuova sessione",
+        "enableModelDescriptions": "Abilita le descrizioni dei modelli nei menu a discesa",
+        "modelDescriptionsDisabled": "Descrizioni dei modelli nei menu a discesa disabilitate",
+        "modelDescriptionsDisabledDesc": "Le descrizioni dei modelli nei menu a discesa sono state disabilitate. Abilitale nelle Impostazioni.",
+        "showDetailedInvocationProgress": "Mostra dettagli avanzamento"
     },
     "toast": {
-        "tempFoldersEmptied": "Cartella temporanea svuotata",
         "uploadFailed": "Caricamento fallito",
-        "uploadFailedUnableToLoadDesc": "Impossibile caricare il file",
-        "downloadImageStarted": "Download dell'immagine avviato",
         "imageCopied": "Immagine copiata",
-        "imageLinkCopied": "Collegamento immagine copiato",
-        "imageNotLoaded": "Nessuna immagine caricata",
-        "imageNotLoadedDesc": "Impossibile trovare l'immagine",
-        "imageSavedToGallery": "Immagine salvata nella Galleria",
-        "canvasMerged": "Tela unita",
-        "sentToImageToImage": "Inviato a Immagine a Immagine",
-        "sentToUnifiedCanvas": "Inviato a Tela Unificata",
-        "parametersSet": "Parametri impostati",
-        "parametersNotSet": "Parametri non impostati",
-        "parametersNotSetDesc": "Nessun metadato trovato per questa immagine.",
-        "parametersFailed": "Problema durante il caricamento dei parametri",
-        "parametersFailedDesc": "Impossibile caricare l'immagine iniziale.",
-        "seedSet": "Seme impostato",
-        "seedNotSet": "Seme non impostato",
-        "seedNotSetDesc": "Impossibile trovare il seme per questa immagine.",
-        "promptSet": "Prompt impostato",
-        "promptNotSet": "Prompt non impostato",
-        "promptNotSetDesc": "Impossibile trovare il prompt per questa immagine.",
-        "upscalingFailed": "Ampliamento non riuscito",
-        "faceRestoreFailed": "Restauro facciale non riuscito",
-        "metadataLoadFailed": "Impossibile caricare i metadati",
-        "initialImageSet": "Immagine iniziale impostata",
-        "initialImageNotSet": "Immagine iniziale non impostata",
-        "initialImageNotSetDesc": "Impossibile caricare l'immagine iniziale",
+        "parametersNotSet": "Parametri non richiamati",
         "serverError": "Errore del Server",
-        "disconnected": "Disconnesso dal Server",
-        "connected": "Connesso al Server",
+        "connected": "Connesso al server",
         "canceled": "Elaborazione annullata",
-        "problemCopyingImageLink": "Impossibile copiare il collegamento dell'immagine",
-        "uploadFailedInvalidUploadDesc": "Deve essere una singola immagine PNG o JPEG",
-        "parameterSet": "Parametro impostato",
-        "parameterNotSet": "Parametro non impostato",
-        "nodesLoadedFailed": "Impossibile caricare i nodi",
-        "nodesSaved": "Nodi salvati",
-        "nodesLoaded": "Nodi caricati",
-        "nodesCleared": "Nodi cancellati",
+        "uploadFailedInvalidUploadDesc": "Devono essere immagini PNG o JPEG.",
+        "parameterSet": "Parametro richiamato",
+        "parameterNotSet": "Parametro non richiamato",
         "problemCopyingImage": "Impossibile copiare l'immagine",
-        "nodesNotValidGraph": "Grafico del nodo InvokeAI non valido",
-        "nodesCorruptedGraph": "Impossibile caricare. Il grafico sembra essere danneggiato.",
-        "nodesUnrecognizedTypes": "Impossibile caricare. Il grafico ha tipi di dati non riconosciuti",
-        "nodesNotValidJSON": "JSON non valido",
-        "nodesBrokenConnections": "Impossibile caricare. Alcune connessioni sono interrotte.",
-        "baseModelChangedCleared_one": "Il modello base è stato modificato, cancellato o disabilitato {{count}} sotto-modello incompatibile",
-        "baseModelChangedCleared_many": "Il modello base è stato modificato, cancellato o disabilitato {{count}} sotto-modelli incompatibili",
-        "baseModelChangedCleared_other": "Il modello base è stato modificato, cancellato o disabilitato {{count}} sotto-modelli incompatibili",
-        "imageSavingFailed": "Salvataggio dell'immagine non riuscito",
-        "canvasSentControlnetAssets": "Tela inviata a ControlNet & Risorse",
-        "problemCopyingCanvasDesc": "Impossibile copiare la tela",
+        "baseModelChangedCleared_one": "Cancellato o disabilitato {{count}} sottomodello incompatibile",
+        "baseModelChangedCleared_many": "Cancellati o disabilitati {{count}} sottomodelli incompatibili",
+        "baseModelChangedCleared_other": "Cancellati o disabilitati {{count}} sottomodelli incompatibili",
         "loadedWithWarnings": "Flusso di lavoro caricato con avvisi",
-        "canvasCopiedClipboard": "Tela copiata negli appunti",
-        "maskSavedAssets": "Maschera salvata nelle risorse",
-        "modelAddFailed": "Aggiunta del modello non riuscita",
-        "problemDownloadingCanvas": "Problema durante il download della tela",
-        "problemMergingCanvas": "Problema nell'unione delle tele",
         "imageUploaded": "Immagine caricata",
-        "addedToBoard": "Aggiunto alla bacheca",
-        "modelAddedSimple": "Modello aggiunto",
-        "problemImportingMaskDesc": "Impossibile importare la maschera",
-        "problemCopyingCanvas": "Problema durante la copia della tela",
-        "problemSavingCanvas": "Problema nel salvataggio della tela",
-        "canvasDownloaded": "Tela scaricata",
-        "problemMergingCanvasDesc": "Impossibile unire le tele",
-        "problemDownloadingCanvasDesc": "Impossibile scaricare la tela",
-        "imageSaved": "Immagine salvata",
-        "maskSentControlnetAssets": "Maschera inviata a ControlNet & Risorse",
-        "canvasSavedGallery": "Tela salvata nella Galleria",
+        "addedToBoard": "Aggiunto alle risorse della bacheca {{name}}",
+        "modelAddedSimple": "Modello aggiunto alla Coda",
         "imageUploadFailed": "Caricamento immagine non riuscito",
-        "modelAdded": "Modello aggiunto: {{modelName}}",
-        "problemImportingMask": "Problema durante l'importazione della maschera",
-        "setInitialImage": "Imposta come immagine iniziale",
         "setControlImage": "Imposta come immagine di controllo",
         "setNodeField": "Imposta come campo nodo",
-        "problemSavingMask": "Problema nel salvataggio della maschera",
-        "problemSavingCanvasDesc": "Impossibile salvare la tela",
-        "setCanvasInitialImage": "Imposta come immagine iniziale della tela",
         "workflowLoaded": "Flusso di lavoro caricato",
-        "setIPAdapterImage": "Imposta come immagine per l'Adattatore IP",
-        "problemSavingMaskDesc": "Impossibile salvare la maschera"
-    },
-    "tooltip": {
-        "feature": {
-            "prompt": "Questo è il campo del prompt. Il prompt include oggetti di generazione e termini stilistici. Puoi anche aggiungere il peso (importanza del token) nel prompt, ma i comandi e i parametri dell'interfaccia a linea di comando non funzioneranno.",
-            "gallery": "Galleria visualizza le generazioni dalla cartella degli output man mano che vengono create. Le impostazioni sono memorizzate all'interno di file e accessibili dal menu contestuale.",
-            "other": "Queste opzioni abiliteranno modalità di elaborazione alternative per Invoke. 'Piastrella senza cuciture' creerà modelli ripetuti nell'output. 'Ottimizzazione Alta risoluzione' è la generazione in due passaggi con 'Immagine a Immagine': usa questa impostazione quando vuoi un'immagine più grande e più coerente senza artefatti. Ci vorrà più tempo del solito 'Testo a Immagine'.",
-            "seed": "Il valore del Seme influenza il rumore iniziale da cui è formata l'immagine. Puoi usare i semi già esistenti dalle immagini precedenti. 'Soglia del rumore' viene utilizzato per mitigare gli artefatti a valori CFG elevati (provare l'intervallo 0-10) e Perlin per aggiungere il rumore Perlin durante la generazione: entrambi servono per aggiungere variazioni ai risultati.",
-            "variations": "Prova una variazione con un valore compreso tra 0.1 e 1.0 per modificare il risultato per un dato seme. Variazioni interessanti del seme sono comprese tra 0.1 e 0.3.",
-            "upscale": "Utilizza ESRGAN per ingrandire l'immagine subito dopo la generazione.",
-            "faceCorrection": "Correzione del volto con GFPGAN o Codeformer: l'algoritmo rileva i volti nell'immagine e corregge eventuali difetti. Un valore alto cambierà maggiormente l'immagine, dando luogo a volti più attraenti. Codeformer con una maggiore fedeltà preserva l'immagine originale a scapito di una correzione facciale più forte.",
-            "imageToImage": "Da Immagine a Immagine carica qualsiasi immagine come iniziale, che viene quindi utilizzata per generarne una nuova in base al prompt. Più alto è il valore, più cambierà l'immagine risultante. Sono possibili valori da 0.0 a 1.0, l'intervallo consigliato è 0.25-0.75",
-            "boundingBox": "Il riquadro di selezione è lo stesso delle impostazioni Larghezza e Altezza per da Testo a Immagine o da Immagine a Immagine. Verrà elaborata solo l'area nella casella.",
-            "seamCorrection": "Controlla la gestione delle giunzioni visibili che si verificano tra le immagini generate sulla tela.",
-            "infillAndScaling": "Gestisce i metodi di riempimento (utilizzati su aree mascherate o cancellate dell'area di disegno) e il ridimensionamento (utile per i riquadri di selezione di piccole dimensioni)."
-        }
-    },
-    "unifiedCanvas": {
-        "layer": "Livello",
-        "base": "Base",
-        "mask": "Maschera",
-        "maskingOptions": "Opzioni di mascheramento",
-        "enableMask": "Abilita maschera",
-        "preserveMaskedArea": "Mantieni area mascherata",
-        "clearMask": "Elimina la maschera",
-        "brush": "Pennello",
-        "eraser": "Cancellino",
-        "fillBoundingBox": "Riempi rettangolo di selezione",
-        "eraseBoundingBox": "Cancella rettangolo di selezione",
-        "colorPicker": "Selettore Colore",
-        "brushOptions": "Opzioni pennello",
-        "brushSize": "Dimensioni",
-        "move": "Sposta",
-        "resetView": "Reimposta vista",
-        "mergeVisible": "Fondi il visibile",
-        "saveToGallery": "Salva nella galleria",
-        "copyToClipboard": "Copia negli appunti",
-        "downloadAsImage": "Scarica come immagine",
-        "undo": "Annulla",
-        "redo": "Ripeti",
-        "clearCanvas": "Cancella la Tela",
-        "canvasSettings": "Impostazioni Tela",
-        "showIntermediates": "Mostra intermedi",
-        "showGrid": "Mostra griglia",
-        "snapToGrid": "Aggancia alla griglia",
-        "darkenOutsideSelection": "Scurisci l'esterno della selezione",
-        "autoSaveToGallery": "Salvataggio automatico nella Galleria",
-        "saveBoxRegionOnly": "Salva solo l'area di selezione",
-        "limitStrokesToBox": "Limita i tratti all'area di selezione",
-        "showCanvasDebugInfo": "Mostra ulteriori informazioni sulla Tela",
-        "clearCanvasHistory": "Cancella cronologia Tela",
-        "clearHistory": "Cancella la cronologia",
-        "clearCanvasHistoryMessage": "La cancellazione della cronologia della tela lascia intatta la tela corrente, ma cancella in modo irreversibile la cronologia degli annullamenti e dei ripristini.",
-        "clearCanvasHistoryConfirm": "Sei sicuro di voler cancellare la cronologia della Tela?",
-        "emptyTempImageFolder": "Svuota la cartella delle immagini temporanee",
-        "emptyFolder": "Svuota la cartella",
-        "emptyTempImagesFolderMessage": "Lo svuotamento della cartella delle immagini temporanee ripristina completamente anche la Tela Unificata. Ciò include tutta la cronologia di annullamento/ripristino, le immagini nell'area di staging e il livello di base della tela.",
-        "emptyTempImagesFolderConfirm": "Sei sicuro di voler svuotare la cartella temporanea?",
-        "activeLayer": "Livello attivo",
-        "canvasScale": "Scala della Tela",
-        "boundingBox": "Rettangolo di selezione",
-        "scaledBoundingBox": "Rettangolo di selezione scalato",
-        "boundingBoxPosition": "Posizione del Rettangolo di selezione",
-        "canvasDimensions": "Dimensioni della Tela",
-        "canvasPosition": "Posizione Tela",
-        "cursorPosition": "Posizione del cursore",
-        "previous": "Precedente",
-        "next": "Successivo",
-        "accept": "Accetta",
-        "showHide": "Mostra/nascondi",
-        "discardAll": "Scarta tutto",
-        "betaClear": "Svuota",
-        "betaDarkenOutside": "Oscura all'esterno",
-        "betaLimitToBox": "Limita al rettangolo",
-        "betaPreserveMasked": "Conserva quanto mascherato",
-        "antialiasing": "Anti aliasing",
-        "showResultsOn": "Mostra i risultati (attivato)",
-        "showResultsOff": "Mostra i risultati (disattivato)"
+        "invalidUpload": "Caricamento non valido",
+        "problemDeletingWorkflow": "Problema durante l'eliminazione del flusso di lavoro",
+        "workflowDeleted": "Flusso di lavoro eliminato",
+        "problemRetrievingWorkflow": "Problema nel recupero del flusso di lavoro",
+        "problemDownloadingImage": "Impossibile scaricare l'immagine",
+        "prunedQueue": "Coda ripulita",
+        "modelImportCanceled": "Importazione del modello annullata",
+        "parameters": "Parametri",
+        "parameterSetDesc": "{{parameter}} richiamato",
+        "parameterNotSetDesc": "Impossibile richiamare {{parameter}}",
+        "parameterNotSetDescWithMessage": "Impossibile richiamare {{parameter}}: {{message}}",
+        "parametersSet": "Parametri richiamati",
+        "errorCopied": "Errore copiato",
+        "outOfMemoryError": "Errore di memoria esaurita",
+        "baseModelChanged": "Modello base modificato",
+        "sessionRef": "Sessione: {{sessionId}}",
+        "somethingWentWrong": "Qualcosa è andato storto",
+        "outOfMemoryErrorDesc": "Le impostazioni della generazione attuale superano la capacità del sistema. Modifica le impostazioni e riprova.",
+        "importFailed": "Importazione non riuscita",
+        "importSuccessful": "Importazione riuscita",
+        "layerSavedToAssets": "Livello salvato nelle risorse",
+        "problemSavingLayer": "Impossibile salvare il livello",
+        "unableToLoadImage": "Impossibile caricare l'immagine",
+        "problemCopyingLayer": "Impossibile copiare il livello",
+        "sentToCanvas": "Inviato alla Tela",
+        "sentToUpscale": "Inviato a Amplia",
+        "unableToLoadStylePreset": "Impossibile caricare lo stile predefinito",
+        "stylePresetLoaded": "Stile predefinito caricato",
+        "unableToLoadImageMetadata": "Impossibile caricare i metadati dell'immagine",
+        "imageSaved": "Immagine salvata",
+        "imageSavingFailed": "Salvataggio dell'immagine non riuscito",
+        "layerCopiedToClipboard": "Livello copiato negli appunti",
+        "imageNotLoadedDesc": "Impossibile trovare l'immagine",
+        "linkCopied": "Collegamento copiato",
+        "addedToUncategorized": "Aggiunto alle risorse della bacheca $t(boards.uncategorized)",
+        "imagesWillBeAddedTo": "Le immagini caricate verranno aggiunte alle risorse della bacheca {{boardName}}.",
+        "uploadFailedInvalidUploadDesc_withCount_one": "Devi caricare al massimo 1 immagine PNG o JPEG.",
+        "uploadFailedInvalidUploadDesc_withCount_many": "Devi caricare al massimo {{count}} immagini PNG o JPEG.",
+        "uploadFailedInvalidUploadDesc_withCount_other": "Devi caricare al massimo {{count}} immagini PNG o JPEG.",
+        "outOfMemoryErrorDescLocal": "Segui la nostra <LinkComponent>guida per bassa VRAM</LinkComponent> per ridurre gli OOM.",
+        "pasteFailed": "Incolla non riuscita",
+        "pasteSuccess": "Incollato su {{destination}}",
+        "unableToCopy": "Impossibile copiare",
+        "unableToCopyDesc": "Il tuo browser non supporta l'accesso agli appunti. Gli utenti di Firefox potrebbero risolvere il problema seguendo ",
+        "unableToCopyDesc_theseSteps": "questi passaggi"
     },
     "accessibility": {
-        "modelSelect": "Seleziona modello",
         "invokeProgressBar": "Barra di avanzamento generazione",
         "uploadImage": "Carica immagine",
         "previousImage": "Immagine precedente",
         "nextImage": "Immagine successiva",
-        "useThisParameter": "Usa questo parametro",
         "reset": "Reimposta",
-        "copyMetadataJson": "Copia i metadati JSON",
-        "exitViewer": "Esci dal visualizzatore",
-        "zoomIn": "Zoom avanti",
-        "zoomOut": "Zoom indietro",
-        "rotateCounterClockwise": "Ruotare in senso antiorario",
-        "rotateClockwise": "Ruotare in senso orario",
-        "flipHorizontally": "Capovolgi orizzontalmente",
-        "toggleLogViewer": "Attiva/disattiva visualizzatore registro",
-        "showOptionsPanel": "Mostra il pannello laterale",
-        "flipVertically": "Capovolgi verticalmente",
-        "toggleAutoscroll": "Attiva/disattiva lo scorrimento automatico",
-        "modifyConfig": "Modifica configurazione",
         "menu": "Menu",
-        "showGalleryPanel": "Mostra il pannello Galleria",
-        "loadMore": "Carica altro"
-    },
-    "ui": {
-        "hideProgressImages": "Nascondi avanzamento immagini",
-        "showProgressImages": "Mostra avanzamento immagini",
-        "swapSizes": "Scambia dimensioni",
-        "lockRatio": "Blocca le proporzioni"
+        "mode": "Modalità",
+        "resetUI": "$t(accessibility.reset) l'Interfaccia Utente",
+        "createIssue": "Segnala un problema",
+        "about": "Informazioni",
+        "submitSupportTicket": "Invia ticket di supporto",
+        "toggleLeftPanel": "Attiva/disattiva il pannello sinistro (T)",
+        "toggleRightPanel": "Attiva/disattiva il pannello destro (G)",
+        "uploadImages": "Carica immagine(i)"
     },
     "nodes": {
         "zoomOutNodes": "Rimpicciolire",
-        "hideGraphNodes": "Nascondi sovrapposizione grafico",
         "hideLegendNodes": "Nascondi la legenda del tipo di campo",
         "showLegendNodes": "Mostra legenda del tipo di campo",
         "hideMinimapnodes": "Nascondi minimappa",
         "showMinimapnodes": "Mostra minimappa",
         "zoomInNodes": "Ingrandire",
         "fitViewportNodes": "Adatta vista",
-        "showGraphNodes": "Mostra sovrapposizione grafico",
-        "resetWorkflowDesc2": "Reimpostare il flusso di lavoro cancellerà tutti i nodi, i bordi e i dettagli del flusso di lavoro.",
         "reloadNodeTemplates": "Ricarica i modelli di nodo",
         "loadWorkflow": "Importa flusso di lavoro JSON",
-        "resetWorkflow": "Reimposta flusso di lavoro",
-        "resetWorkflowDesc": "Sei sicuro di voler reimpostare questo flusso di lavoro?",
         "downloadWorkflow": "Esporta flusso di lavoro JSON",
         "scheduler": "Campionatore",
         "addNode": "Aggiungi nodo",
-        "sDXLMainModelFieldDescription": "Campo del modello SDXL.",
-        "boardField": "Bacheca",
         "animatedEdgesHelp": "Anima i bordi selezionati e i bordi collegati ai nodi selezionati",
-        "sDXLMainModelField": "Modello SDXL",
         "executionStateInProgress": "In corso",
         "executionStateError": "Errore",
         "executionStateCompleted": "Completato",
-        "boardFieldDescription": "Una bacheca della galleria",
         "addNodeToolTip": "Aggiungi nodo (Shift+A, Space)",
-        "sDXLRefinerModelField": "Modello Refiner",
-        "problemReadingMetadata": "Problema durante la lettura dei metadati dall'immagine",
         "colorCodeEdgesHelp": "Bordi con codice colore in base ai campi collegati",
         "animatedEdges": "Bordi animati",
         "snapToGrid": "Aggancia alla griglia",
@@ -875,7 +884,6 @@
         "snapToGridHelp": "Aggancia i nodi alla griglia quando vengono spostati",
         "workflowSettings": "Impostazioni Editor del flusso di lavoro",
         "colorCodeEdges": "Bordi con codice colore",
-        "mainModelField": "Modello",
         "noOutputRecorded": "Nessun output registrato",
         "noFieldsLinearview": "Nessun campo aggiunto alla vista lineare",
         "removeLinearView": "Rimuovi dalla vista lineare",
@@ -889,147 +897,129 @@
         "workflowAuthor": "Autore",
         "workflowName": "Nome",
         "workflowNotes": "Note",
-        "unhandledInputProperty": "Proprietà di input non gestita",
         "versionUnknown": " Versione sconosciuta",
         "unableToValidateWorkflow": "Impossibile convalidare il flusso di lavoro",
-        "updateApp": "Aggiorna App",
-        "problemReadingWorkflow": "Problema durante la lettura del flusso di lavoro dall'immagine",
+        "updateApp": "Aggiorna Applicazione",
         "unableToLoadWorkflow": "Impossibile caricare il flusso di lavoro",
         "updateNode": "Aggiorna nodo",
         "version": "Versione",
         "notes": "Note",
         "problemSettingTitle": "Problema nell'impostazione del titolo",
-        "unkownInvocation": "Tipo di invocazione sconosciuta",
         "unknownTemplate": "Modello sconosciuto",
         "nodeType": "Tipo di nodo",
-        "vaeField": "VAE",
-        "unhandledOutputProperty": "Proprietà di output non gestita",
         "notesDescription": "Aggiunge note sul tuo flusso di lavoro",
         "unknownField": "Campo sconosciuto",
         "unknownNode": "Nodo sconosciuto",
-        "vaeFieldDescription": "Sotto modello VAE.",
-        "booleanPolymorphicDescription": "Una raccolta di booleani.",
-        "missingTemplate": "Modello mancante",
-        "outputSchemaNotFound": "Schema di output non trovato",
-        "colorFieldDescription": "Un colore RGBA.",
-        "maybeIncompatible": "Potrebbe essere incompatibile con quello installato",
+        "missingTemplate": "Nodo non valido: nodo {{node}} di tipo {{type}} modello mancante (non installato?)",
         "noNodeSelected": "Nessun nodo selezionato",
-        "colorPolymorphic": "Colore polimorfico",
-        "booleanCollectionDescription": "Una raccolta di booleani.",
-        "colorField": "Colore",
         "nodeTemplate": "Modello di nodo",
         "nodeOpacity": "Opacità del nodo",
-        "pickOne": "Sceglierne uno",
-        "outputField": "Campo di output",
         "nodeSearch": "Cerca nodi",
         "nodeOutputs": "Uscite del nodo",
-        "collectionItem": "Oggetto della raccolta",
         "noConnectionInProgress": "Nessuna connessione in corso",
-        "noConnectionData": "Nessun dato di connessione",
-        "outputFields": "Campi di output",
         "cannotDuplicateConnection": "Impossibile creare connessioni duplicate",
-        "booleanPolymorphic": "Polimorfico booleano",
-        "colorPolymorphicDescription": "Una collezione di colori polimorfici.",
-        "missingCanvaInitImage": "Immagine iniziale della tela mancante",
-        "clipFieldDescription": "Sottomodelli di tokenizzatore e codificatore di testo.",
-        "noImageFoundState": "Nessuna immagine iniziale trovata nello stato",
-        "clipField": "CLIP",
-        "noMatchingNodes": "Nessun nodo corrispondente",
-        "noFieldType": "Nessun tipo di campo",
-        "colorCollection": "Una collezione di colori.",
-        "noOutputSchemaName": "Nessun nome dello schema di output trovato nell'oggetto di riferimento",
         "boolean": "Booleani",
-        "missingCanvaInitMaskImages": "Immagini di inizializzazione e maschera della tela mancanti",
-        "oNNXModelField": "Modello ONNX",
         "node": "Nodo",
-        "booleanDescription": "I booleani sono veri o falsi.",
         "collection": "Raccolta",
         "cannotConnectInputToInput": "Impossibile collegare Input a Input",
         "cannotConnectOutputToOutput": "Impossibile collegare Output ad Output",
-        "booleanCollection": "Raccolta booleana",
         "cannotConnectToSelf": "Impossibile connettersi a se stesso",
-        "mismatchedVersion": "Ha una versione non corrispondente",
-        "outputNode": "Nodo di Output",
+        "mismatchedVersion": "Nodo non valido: il nodo {{node}} di tipo {{type}} ha una versione non corrispondente (provare ad aggiornare?)",
         "loadingNodes": "Caricamento nodi...",
-        "oNNXModelFieldDescription": "Campo del modello ONNX.",
-        "denoiseMaskFieldDescription": "La maschera di riduzione del rumore può essere passata tra i nodi",
-        "floatCollectionDescription": "Una raccolta di numeri virgola mobile.",
         "enum": "Enumeratore",
         "float": "In virgola mobile",
-        "doesNotExist": "non esiste",
         "currentImageDescription": "Visualizza l'immagine corrente nell'editor dei nodi",
         "fieldTypesMustMatch": "I tipi di campo devono corrispondere",
-        "edge": "Bordo",
-        "enumDescription": "Gli enumeratori sono valori che possono essere una delle diverse opzioni.",
-        "denoiseMaskField": "Maschera riduzione rumore",
+        "edge": "Collegamento",
         "currentImage": "Immagine corrente",
-        "floatCollection": "Raccolta in virgola mobile",
-        "inputField": "Campo di Input",
-        "controlFieldDescription": "Informazioni di controllo passate tra i nodi.",
-        "skippingUnknownOutputType": "Tipo di campo di output sconosciuto saltato",
-        "latentsFieldDescription": "Le immagini latenti possono essere passate tra i nodi.",
-        "ipAdapterPolymorphicDescription": "Una raccolta di adattatori IP.",
-        "latentsPolymorphicDescription": "Le immagini latenti possono essere passate tra i nodi.",
-        "ipAdapterCollection": "Raccolta Adattatori IP",
-        "conditioningCollection": "Raccolta condizionamenti",
-        "ipAdapterPolymorphic": "Adattatore IP Polimorfico",
-        "integerPolymorphicDescription": "Una raccolta di numeri interi.",
-        "conditioningCollectionDescription": "Il condizionamento può essere passato tra i nodi.",
-        "skippingReservedFieldType": "Tipo di campo riservato saltato",
-        "conditioningPolymorphic": "Condizionamento Polimorfico",
         "integer": "Numero Intero",
-        "latentsCollection": "Raccolta Latenti",
-        "sourceNode": "Nodo di origine",
-        "integerDescription": "Gli interi sono numeri senza punto decimale.",
-        "stringPolymorphic": "Stringa polimorfica",
-        "conditioningPolymorphicDescription": "Il condizionamento può essere passato tra i nodi.",
-        "skipped": "Saltato",
-        "imagePolymorphic": "Immagine Polimorfica",
-        "imagePolymorphicDescription": "Una raccolta di immagini.",
-        "floatPolymorphic": "Numeri in virgola mobile Polimorfici",
-        "ipAdapterCollectionDescription": "Una raccolta di adattatori IP.",
-        "stringCollectionDescription": "Una raccolta di stringhe.",
-        "unableToParseNode": "Impossibile analizzare il nodo",
-        "controlCollection": "Raccolta di Controllo",
-        "stringCollection": "Raccolta di stringhe",
         "inputMayOnlyHaveOneConnection": "L'ingresso può avere solo una connessione",
         "ipAdapter": "Adattatore IP",
-        "integerCollection": "Raccolta di numeri interi",
-        "controlCollectionDescription": "Informazioni di controllo passate tra i nodi.",
-        "skippedReservedInput": "Campo di input riservato saltato",
-        "inputNode": "Nodo di Input",
-        "imageField": "Immagine",
-        "skippedReservedOutput": "Campo di output riservato saltato",
-        "integerCollectionDescription": "Una raccolta di numeri interi.",
-        "conditioningFieldDescription": "Il condizionamento può essere passato tra i nodi.",
-        "stringDescription": "Le stringhe sono testo.",
-        "integerPolymorphic": "Numero intero Polimorfico",
-        "ipAdapterModel": "Modello Adattatore IP",
-        "latentsPolymorphic": "Latenti polimorfici",
-        "skippingInputNoTemplate": "Campo di input senza modello saltato",
-        "ipAdapterDescription": "Un adattatore di prompt di immagini (Adattatore IP).",
-        "stringPolymorphicDescription": "Una raccolta di stringhe.",
-        "skippingUnknownInputType": "Tipo di campo di input sconosciuto saltato",
-        "controlField": "Controllo",
-        "ipAdapterModelDescription": "Campo Modello adattatore IP",
-        "invalidOutputSchema": "Schema di output non valido",
-        "floatDescription": "I numeri in virgola mobile sono numeri con un punto decimale.",
-        "floatPolymorphicDescription": "Una raccolta di numeri in virgola mobile.",
-        "conditioningField": "Condizionamento",
         "string": "Stringa",
-        "latentsField": "Latenti",
         "connectionWouldCreateCycle": "La connessione creerebbe un ciclo",
-        "inputFields": "Campi di Input",
-        "uNetFieldDescription": "Sub-modello UNet.",
-        "imageCollectionDescription": "Una raccolta di immagini.",
-        "imageFieldDescription": "Le immagini possono essere passate tra i nodi.",
-        "unableToParseEdge": "Impossibile analizzare il bordo",
-        "latentsCollectionDescription": "Le immagini latenti possono essere passate tra i nodi.",
-        "imageCollection": "Raccolta Immagini"
+        "updateAllNodes": "Aggiorna i nodi",
+        "unableToUpdateNodes_one": "Impossibile aggiornare {{count}} nodo",
+        "unableToUpdateNodes_many": "Impossibile aggiornare {{count}} nodi",
+        "unableToUpdateNodes_other": "Impossibile aggiornare {{count}} nodi",
+        "addLinearView": "Aggiungi alla vista Lineare",
+        "unknownErrorValidatingWorkflow": "Errore sconosciuto durante la convalida del flusso di lavoro",
+        "collectionFieldType": "{{name}} (Raccolta)",
+        "collectionOrScalarFieldType": "{{name}} (Singola o Raccolta)",
+        "nodeVersion": "Versione Nodo",
+        "inputFieldTypeParseError": "Impossibile analizzare il tipo di campo di input {{node}}.{{field}} ({{message}})",
+        "unsupportedArrayItemType": "Tipo di elemento dell'array non supportato \"{{type}}\"",
+        "targetNodeFieldDoesNotExist": "Connessione non valida: il campo di destinazione/input {{node}}.{{field}} non esiste",
+        "unsupportedMismatchedUnion": "tipo CollectionOrScalar non corrispondente con tipi di base {{firstType}} e {{secondType}}",
+        "allNodesUpdated": "Tutti i nodi sono aggiornati",
+        "sourceNodeDoesNotExist": "Connessione non valida: il nodo di origine/output {{node}} non esiste",
+        "unableToExtractEnumOptions": "Impossibile estrarre le opzioni enum",
+        "unableToParseFieldType": "Impossibile analizzare il tipo di campo",
+        "outputFieldTypeParseError": "Impossibile analizzare il tipo di campo di output {{node}}.{{field}} ({{message}})",
+        "sourceNodeFieldDoesNotExist": "Connessione non valida: il campo di origine/output {{node}}.{{field}} non esiste",
+        "unableToGetWorkflowVersion": "Impossibile ottenere la versione dello schema del flusso di lavoro",
+        "nodePack": "Pacchetto di nodi",
+        "unableToExtractSchemaNameFromRef": "Impossibile estrarre il nome dello schema dal riferimento",
+        "unknownOutput": "Output sconosciuto: {{name}}",
+        "unknownNodeType": "Tipo di nodo sconosciuto",
+        "targetNodeDoesNotExist": "Connessione non valida: il nodo di destinazione/input {{node}} non esiste",
+        "unknownFieldType": "$t(nodes.unknownField) tipo: {{type}}",
+        "deletedInvalidEdge": "Eliminata connessione non valida {{source}} -> {{target}}",
+        "unknownInput": "Input sconosciuto: {{name}}",
+        "prototypeDesc": "Questa invocazione è un prototipo. Potrebbe subire modifiche sostanziali durante gli aggiornamenti dell'app e potrebbe essere rimossa in qualsiasi momento.",
+        "betaDesc": "Questa invocazione è in versione beta. Fino a quando non sarà stabile, potrebbe subire modifiche importanti durante gli aggiornamenti dell'app. Abbiamo intenzione di supportare questa invocazione a lungo termine.",
+        "newWorkflow": "Nuovo flusso di lavoro",
+        "newWorkflowDesc": "Creare un nuovo flusso di lavoro?",
+        "newWorkflowDesc2": "Il flusso di lavoro attuale presenta modifiche non salvate.",
+        "unsupportedAnyOfLength": "unione di troppi elementi ({{count}})",
+        "clearWorkflowDesc": "Cancellare questo flusso di lavoro e avviarne uno nuovo?",
+        "clearWorkflow": "Cancella il flusso di lavoro",
+        "clearWorkflowDesc2": "Il tuo flusso di lavoro attuale presenta modifiche non salvate.",
+        "viewMode": "Usa la vista lineare",
+        "reorderLinearView": "Riordina la vista lineare",
+        "editMode": "Modifica nell'editor del flusso di lavoro",
+        "resetToDefaultValue": "Ripristina il valore predefinito",
+        "noFieldsViewMode": "Questo flusso di lavoro non ha campi selezionati da visualizzare. Visualizza il flusso di lavoro completo per configurare i valori.",
+        "edit": "Modifica",
+        "graph": "Grafico",
+        "showEdgeLabelsHelp": "Mostra etichette sui collegamenti, che indicano i nodi collegati",
+        "showEdgeLabels": "Mostra le etichette del collegamento",
+        "cannotMixAndMatchCollectionItemTypes": "Impossibile combinare e abbinare i tipi di elementi della raccolta",
+        "noGraph": "Nessun grafico",
+        "missingNode": "Nodo di invocazione mancante",
+        "missingInvocationTemplate": "Modello di invocazione mancante",
+        "missingFieldTemplate": "Modello di campo mancante",
+        "singleFieldType": "{{name}} (Singola)",
+        "imageAccessError": "Impossibile trovare l'immagine {{image_name}}, ripristino ai valori predefiniti",
+        "boardAccessError": "Impossibile trovare la bacheca {{board_id}}, ripristino ai valori predefiniti",
+        "modelAccessError": "Impossibile trovare il modello {{key}}, ripristino ai valori predefiniti",
+        "saveToGallery": "Salva nella Galleria",
+        "noMatchingWorkflows": "Nessun flusso di lavoro corrispondente",
+        "noWorkflows": "Nessun flusso di lavoro",
+        "workflowHelpText": "Hai bisogno di aiuto? Consulta la nostra guida <LinkComponent>Introduzione ai flussi di lavoro</LinkComponent>.",
+        "specialDesc": "Questa invocazione comporta una gestione speciale nell'applicazione. Ad esempio, i nodi Lotto vengono utilizzati per mettere in coda più grafici da un singolo flusso di lavoro.",
+        "internalDesc": "Questa invocazione è utilizzata internamente da Invoke. Potrebbe subire modifiche significative durante gli aggiornamenti dell'app e potrebbe essere rimossa in qualsiasi momento.",
+        "addItem": "Aggiungi elemento",
+        "generateValues": "Genera valori",
+        "generatorNoValues": "vuoto",
+        "linearDistribution": "Distribuzione lineare",
+        "parseString": "Analizza stringa",
+        "splitOn": "Diviso su",
+        "noBatchGroup": "nessun gruppo",
+        "generatorLoading": "caricamento",
+        "generatorLoadFromFile": "Carica da file",
+        "dynamicPromptsRandom": "Prompt dinamici (casuali)",
+        "dynamicPromptsCombinatorial": "Prompt dinamici (combinatori)",
+        "floatRangeGenerator": "Generatore di intervalli di numeri in virgola mobile",
+        "integerRangeGenerator": "Generatore di intervalli di numeri interi",
+        "uniformRandomDistribution": "Distribuzione casuale uniforme",
+        "generatorNRandomValues_one": "{{count}} valore casuale",
+        "generatorNRandomValues_many": "{{count}} valori casuali",
+        "generatorNRandomValues_other": "{{count}} valori casuali",
+        "arithmeticSequence": "Sequenza aritmetica"
     },
     "boards": {
         "autoAddBoard": "Aggiungi automaticamente bacheca",
-        "menuItemAutoAdd": "Aggiungi automaticamente a questa Bacheca",
+        "menuItemAutoAdd": "Aggiungi automaticamente a questa bacheca",
         "cancel": "Annulla",
         "addBoard": "Aggiungi Bacheca",
         "bottomMessage": "L'eliminazione di questa bacheca e delle sue immagini ripristinerà tutte le funzionalità che le stanno attualmente utilizzando.",
@@ -1041,88 +1031,40 @@
         "myBoard": "Bacheca",
         "searchBoard": "Cerca bacheche ...",
         "noMatching": "Nessuna bacheca corrispondente",
-        "selectBoard": "Seleziona una Bacheca",
+        "selectBoard": "Seleziona una bacheca",
         "uncategorized": "Non categorizzato",
-        "downloadBoard": "Scarica la bacheca"
-    },
-    "controlnet": {
-        "contentShuffleDescription": "Rimescola il contenuto di un'immagine",
-        "contentShuffle": "Rimescola contenuto",
-        "beginEndStepPercent": "Percentuale passi Inizio / Fine",
-        "duplicate": "Duplica",
-        "balanced": "Bilanciato",
-        "depthMidasDescription": "Generazione di mappe di profondità usando Midas",
-        "control": "ControlNet",
-        "crop": "Ritaglia",
-        "depthMidas": "Profondità (Midas)",
-        "enableControlnet": "Abilita ControlNet",
-        "detectResolution": "Rileva risoluzione",
-        "controlMode": "Modalità Controllo",
-        "cannyDescription": "Canny rilevamento bordi",
-        "depthZoe": "Profondità (Zoe)",
-        "autoConfigure": "Configura automaticamente il processore",
-        "delete": "Elimina",
-        "depthZoeDescription": "Generazione di mappe di profondità usando Zoe",
-        "resize": "Ridimensiona",
-        "showAdvanced": "Mostra opzioni Avanzate",
-        "bgth": "Soglia rimozione sfondo",
-        "importImageFromCanvas": "Importa immagine dalla Tela",
-        "lineartDescription": "Converte l'immagine in lineart",
-        "importMaskFromCanvas": "Importa maschera dalla Tela",
-        "hideAdvanced": "Nascondi opzioni avanzate",
-        "ipAdapterModel": "Modello Adattatore",
-        "resetControlImage": "Reimposta immagine di controllo",
-        "f": "F",
-        "h": "H",
-        "prompt": "Prompt",
-        "openPoseDescription": "Stima della posa umana utilizzando Openpose",
-        "resizeMode": "Modalità ridimensionamento",
-        "weight": "Peso",
-        "selectModel": "Seleziona un modello",
-        "w": "W",
-        "processor": "Processore",
-        "none": "Nessuno",
-        "incompatibleBaseModel": "Modello base incompatibile:",
-        "pidiDescription": "Elaborazione immagini PIDI",
-        "fill": "Riempire",
-        "colorMapDescription": "Genera una mappa dei colori dall'immagine",
-        "lineartAnimeDescription": "Elaborazione lineart in stile anime",
-        "imageResolution": "Risoluzione dell'immagine",
-        "colorMap": "Colore",
-        "lowThreshold": "Soglia inferiore",
-        "highThreshold": "Soglia superiore",
-        "normalBaeDescription": "Elaborazione BAE normale",
-        "noneDescription": "Nessuna elaborazione applicata",
-        "saveControlImage": "Salva immagine di controllo",
-        "toggleControlNet": "Attiva/disattiva questo ControlNet",
-        "safe": "Sicuro",
-        "colorMapTileSize": "Dimensione piastrella",
-        "ipAdapterImageFallback": "Nessuna immagine dell'Adattatore IP selezionata",
-        "mediapipeFaceDescription": "Rilevamento dei volti tramite Mediapipe",
-        "hedDescription": "Rilevamento dei bordi nidificati olisticamente",
-        "setControlImageDimensions": "Imposta le dimensioni dell'immagine di controllo su L/A",
-        "resetIPAdapterImage": "Reimposta immagine Adattatore IP",
-        "handAndFace": "Mano e faccia",
-        "enableIPAdapter": "Abilita Adattatore IP",
-        "maxFaces": "Numero massimo di volti",
-        "addT2IAdapter": "Aggiungi $t(common.t2iAdapter)",
-        "controlNetEnabledT2IDisabled": "$t(common.controlNet) abilitato, $t(common.t2iAdapter) disabilitati",
-        "t2iEnabledControlNetDisabled": "$t(common.t2iAdapter) abilitato, $t(common.controlNet) disabilitati",
-        "addControlNet": "Aggiungi $t(common.controlNet)",
-        "controlNetT2IMutexDesc": "$t(common.controlNet) e $t(common.t2iAdapter) contemporaneamente non sono attualmente supportati.",
-        "addIPAdapter": "Aggiungi $t(common.ipAdapter)",
-        "controlAdapter_one": "Adattatore di Controllo",
-        "controlAdapter_many": "Adattatori di Controllo",
-        "controlAdapter_other": "Adattatori di Controllo",
-        "megaControl": "Mega ControlNet",
-        "minConfidence": "Confidenza minima",
-        "scribble": "Scribble",
-        "amult": "Angolo di illuminazione"
+        "downloadBoard": "Scarica la bacheca",
+        "deleteBoardOnly": "solo la Bacheca",
+        "deleteBoard": "Elimina Bacheca",
+        "deleteBoardAndImages": "Bacheca e Immagini",
+        "deletedBoardsCannotbeRestored": "Le bacheche eliminate non possono essere ripristinate. Selezionando \"Elimina solo bacheca\" le immagini verranno spostate nella bacheca \"Non categorizzato\".",
+        "movingImagesToBoard_one": "Spostare {{count}} immagine nella bacheca:",
+        "movingImagesToBoard_many": "Spostare {{count}} immagini nella bacheca:",
+        "movingImagesToBoard_other": "Spostare {{count}} immagini nella bacheca:",
+        "imagesWithCount_one": "{{count}} immagine",
+        "imagesWithCount_many": "{{count}} immagini",
+        "imagesWithCount_other": "{{count}} immagini",
+        "assetsWithCount_one": "{{count}} risorsa",
+        "assetsWithCount_many": "{{count}} risorse",
+        "assetsWithCount_other": "{{count}} risorse",
+        "archiveBoard": "Archivia la bacheca",
+        "archived": "Archiviato",
+        "unarchiveBoard": "Annulla l'archiviazione della bacheca",
+        "selectedForAutoAdd": "Selezionato per l'aggiunta automatica",
+        "addSharedBoard": "Aggiungi una Bacheca Condivisa",
+        "boards": "Bacheche",
+        "private": "Bacheche private",
+        "shared": "Bacheche condivise",
+        "addPrivateBoard": "Aggiungi una Bacheca Privata",
+        "noBoards": "Nessuna bacheca {{boardType}}",
+        "hideBoards": "Nascondi bacheche",
+        "viewBoards": "Visualizza bacheche",
+        "deletedPrivateBoardsCannotbeRestored": "Le bacheche cancellate non possono essere ripristinate. Selezionando 'Cancella solo bacheca', le immagini verranno spostate nella bacheca \"Non categorizzato\" privata dell'autore dell'immagine.",
+        "updateBoardError": "Errore durante l'aggiornamento della bacheca"
     },
     "queue": {
         "queueFront": "Aggiungi all'inizio della coda",
         "queueBack": "Aggiungi alla coda",
-        "queueCountPrediction": "Aggiungi {{predicted}} alla coda",
         "queue": "Coda",
         "status": "Stato",
         "pruneSucceeded": "Rimossi {{item_count}} elementi completati dalla coda",
@@ -1133,12 +1075,10 @@
         "notReady": "Impossibile mettere in coda",
         "batchFailedToQueue": "Impossibile mettere in coda il lotto",
         "completed": "Completati",
-        "batchValues": "Valori del lotto",
         "cancelFailed": "Problema durante l'annullamento dell'elemento",
         "batchQueued": "Lotto aggiunto alla coda",
         "pauseFailed": "Problema durante la sospensione dell'elaborazione",
         "clearFailed": "Problema nella cancellazione della coda",
-        "queuedCount": "{{pending}} In attesa",
         "front": "inizio",
         "clearSucceeded": "Coda cancellata",
         "pause": "Sospendi",
@@ -1149,7 +1089,7 @@
         "batchQueuedDesc_other": "Aggiunte {{count}} sessioni a {{direction}} della coda",
         "graphQueued": "Grafico in coda",
         "batch": "Lotto",
-        "clearQueueAlertDialog": "Lo svuotamento della coda annulla immediatamente tutti gli elementi in elaborazione e cancella completamente la coda.",
+        "clearQueueAlertDialog": "Lo svuotamento della coda annulla immediatamente tutti gli elementi in elaborazione e cancella completamente la coda. I filtri in sospeso verranno annullati.",
         "pending": "In attesa",
         "completedIn": "Completato in",
         "resumeFailed": "Problema nel riavvio dell'elaborazione",
@@ -1161,7 +1101,7 @@
         "cancelBatchSucceeded": "Lotto annullato",
         "clearTooltip": "Annulla e cancella tutti gli elementi",
         "current": "Attuale",
-        "pauseTooltip": "Sospende l'elaborazione",
+        "pauseTooltip": "Sospendi l'elaborazione",
         "failed": "Falliti",
         "cancelItem": "Annulla l'elemento",
         "next": "Prossimo",
@@ -1169,7 +1109,6 @@
         "back": "fine",
         "cancel": "Annulla",
         "session": "Sessione",
-        "queueTotal": "{{total}} Totale",
         "resumeSucceeded": "Elaborazione ripresa",
         "enqueueing": "Lotto in coda",
         "resumeTooltip": "Riprendi l'elaborazione",
@@ -1178,21 +1117,44 @@
         "clearQueueAlertDialog2": "Sei sicuro di voler cancellare la coda?",
         "item": "Elemento",
         "graphFailedToQueue": "Impossibile mettere in coda il grafico",
-        "queueMaxExceeded": "È stato superato il limite massimo di {{max_queue_size}} e {{skip}} elementi verrebbero saltati"
-    },
-    "embedding": {
-        "noMatchingEmbedding": "Nessun Incorporamento corrispondente",
-        "addEmbedding": "Aggiungi Incorporamento",
-        "incompatibleModel": "Modello base incompatibile:"
+        "batchFieldValues": "Valori Campi Lotto",
+        "time": "Tempo",
+        "openQueue": "Apri coda",
+        "iterations_one": "Iterazione",
+        "iterations_many": "Iterazioni",
+        "iterations_other": "Iterazioni",
+        "prompts_one": "Prompt",
+        "prompts_many": "Prompt",
+        "prompts_other": "Prompt",
+        "generations_one": "Generazione",
+        "generations_many": "Generazioni",
+        "generations_other": "Generazioni",
+        "origin": "Origine",
+        "destination": "Destinazione",
+        "upscaling": "Ampliamento",
+        "canvas": "Tela",
+        "workflows": "Flussi di lavoro",
+        "generation": "Generazione",
+        "other": "Altro",
+        "gallery": "Galleria",
+        "batchSize": "Dimensione del lotto",
+        "cancelAllExceptCurrentQueueItemAlertDialog2": "Vuoi davvero annullare tutti gli elementi in coda in sospeso?",
+        "confirm": "Conferma",
+        "cancelAllExceptCurrentQueueItemAlertDialog": "L'annullamento di tutti gli elementi della coda, eccetto quello corrente, interromperà gli elementi in sospeso ma consentirà il completamento di quello in corso.",
+        "cancelAllExceptCurrentTooltip": "Annulla tutto tranne l'elemento corrente"
     },
     "models": {
         "noMatchingModels": "Nessun modello corrispondente",
         "loading": "caricamento",
         "noMatchingLoRAs": "Nessun LoRA corrispondente",
-        "noLoRAsAvailable": "Nessun LoRA disponibile",
         "noModelsAvailable": "Nessun modello disponibile",
         "selectModel": "Seleziona un modello",
-        "selectLoRA": "Seleziona un LoRA"
+        "noRefinerModelsInstalled": "Nessun modello affinatore SDXL installato",
+        "noLoRAsInstalled": "Nessun LoRA installato",
+        "addLora": "Aggiungi LoRA",
+        "defaultVAE": "VAE predefinito",
+        "concepts": "Concetti",
+        "lora": "LoRA"
     },
     "invocationCache": {
         "disable": "Disabilita",
@@ -1208,7 +1170,8 @@
         "enable": "Abilita",
         "clear": "Svuota",
         "maxCacheSize": "Dimensione max cache",
-        "cacheSize": "Dimensione cache"
+        "cacheSize": "Dimensione cache",
+        "useCache": "Usa Cache"
     },
     "dynamicPrompts": {
         "seedBehaviour": {
@@ -1218,18 +1181,18 @@
             "perPromptLabel": "Per immagine",
             "label": "Comportamento del seme"
         },
-        "enableDynamicPrompts": "Abilita prompt dinamici",
-        "combinatorial": "Generazione combinatoria",
         "maxPrompts": "Numero massimo di prompt",
-        "promptsWithCount_one": "{{count}} Prompt",
-        "promptsWithCount_many": "{{count}} Prompt",
-        "promptsWithCount_other": "{{count}} Prompt",
-        "dynamicPrompts": "Prompt dinamici"
+        "dynamicPrompts": "Prompt dinamici",
+        "promptsPreview": "Anteprima dei prompt",
+        "showDynamicPrompts": "Mostra prompt dinamici",
+        "loading": "Generazione prompt dinamici...",
+        "promptsToGenerate": "Prompt da generare"
     },
     "popovers": {
         "paramScheduler": {
             "paragraphs": [
-                "Il campionatore definisce come aggiungere in modo iterativo il rumore a un'immagine o come aggiornare un campione in base all'output di un modello."
+                "Il campionatore utilizzato durante il processo di generazione.",
+                "Ciascun campionatore definisce come aggiungere in modo iterativo il rumore a un'immagine o come aggiornare un campione in base all'output di un modello."
             ],
             "heading": "Campionatore"
         },
@@ -1239,43 +1202,23 @@
                 "Regola la maschera."
             ]
         },
-        "compositingCoherenceSteps": {
-            "heading": "Passi",
-            "paragraphs": [
-                "Numero di passi di riduzione del rumore utilizzati nel Passaggio di Coerenza.",
-                "Uguale al parametro principale Passi."
-            ]
-        },
-        "compositingBlur": {
-            "heading": "Sfocatura",
-            "paragraphs": [
-                "Il raggio di sfocatura della maschera."
-            ]
-        },
         "compositingCoherenceMode": {
             "heading": "Modalità",
             "paragraphs": [
-                "La modalità del Passaggio di Coerenza."
+                "Metodo utilizzato per creare un'immagine coerente con l'area mascherata appena generata."
             ]
         },
         "clipSkip": {
             "paragraphs": [
                 "Scegli quanti livelli del modello CLIP saltare.",
-                "Alcuni modelli funzionano meglio con determinate impostazioni di CLIP Skip.",
-                "Un valore più alto in genere produce un'immagine meno dettagliata."
-            ]
+                "Alcuni modelli funzionano meglio con determinate impostazioni di CLIP Skip."
+            ],
+            "heading": "CLIP Skip"
         },
         "compositingCoherencePass": {
             "heading": "Passaggio di Coerenza",
             "paragraphs": [
                 "Un secondo ciclo di riduzione del rumore aiuta a comporre l'immagine Inpaint/Outpaint."
-            ]
-        },
-        "compositingStrength": {
-            "heading": "Forza",
-            "paragraphs": [
-                "Intensità di riduzione del rumore per il passaggio di coerenza.",
-                "Uguale al parametro intensità di riduzione del rumore da immagine a immagine."
             ]
         },
         "paramNegativeConditioning": {
@@ -1301,8 +1244,9 @@
         "controlNetBeginEnd": {
             "heading": "Percentuale passi Inizio / Fine",
             "paragraphs": [
-                "A quali passi del processo di rimozione del rumore verrà applicato ControlNet.",
-                "I ControlNet applicati all'inizio del processo guidano la composizione, mentre i ControlNet applicati alla fine guidano i dettagli."
+                "Questa impostazione determina quale parte del processo di rimozione del rumore (generazione) incorpora la guida da questo livello.",
+                "• Passo iniziale (%): specifica quando iniziare ad applicare la guida da questo livello durante il processo di generazione.",
+                "• Passo finale (%): specifica quando interrompere l'applicazione della guida di questo livello e ripristinare la guida generale dal modello e altre impostazioni."
             ]
         },
         "noiseUseCPU": {
@@ -1315,7 +1259,8 @@
         },
         "scaleBeforeProcessing": {
             "paragraphs": [
-                "Ridimensiona l'area selezionata alla dimensione più adatta al modello prima del processo di generazione dell'immagine."
+                "\"Auto\" scala l'area selezionata alla dimensione più adatta al modello prima del processo di generazione dell'immagine.",
+                "\"Manuale\" consente di scegliere la larghezza e l'altezza a cui verrà ridimensionata l'area selezionata prima del processo di generazione dell'immagine."
             ],
             "heading": "Scala prima dell'elaborazione"
         },
@@ -1350,20 +1295,21 @@
         "paramVAEPrecision": {
             "heading": "Precisione VAE",
             "paragraphs": [
-                "La precisione utilizzata durante la codifica e decodifica VAE. FP16/mezza precisione è più efficiente, a scapito di minori variazioni dell'immagine."
+                "La precisione utilizzata durante la codifica e decodifica VAE.",
+                "Fp16/Mezza precisione è più efficiente, a scapito di minori variazioni dell'immagine."
             ]
         },
         "paramSeed": {
             "paragraphs": [
                 "Controlla il rumore iniziale utilizzato per la generazione.",
-                "Disabilita seme \"Casuale\" per produrre risultati identici con le stesse impostazioni di generazione."
+                "Disabilita l'opzione \"Casuale\" per produrre risultati identici con le stesse impostazioni di generazione."
             ],
             "heading": "Seme"
         },
         "controlNetResizeMode": {
             "heading": "Modalità ridimensionamento",
             "paragraphs": [
-                "Come l'immagine ControlNet verrà adattata alle dimensioni di output dell'immagine."
+                "Metodo per adattare le dimensioni dell'immagine di controllo dell'adattatore alle dimensioni di generazione."
             ]
         },
         "dynamicPromptsSeedBehaviour": {
@@ -1378,14 +1324,14 @@
         "paramModel": {
             "heading": "Modello",
             "paragraphs": [
-                "Modello utilizzato per i passaggi di riduzione del rumore.",
-                "Diversi modelli sono generalmente addestrati per specializzarsi nella produzione di particolari risultati e contenuti estetici."
+                "Modello utilizzato per la generazione. Diversi modelli vengono addestrati per specializzarsi nella produzione di risultati e contenuti estetici diversi."
             ]
         },
         "paramDenoisingStrength": {
             "paragraphs": [
-                "Quanto rumore viene aggiunto all'immagine in ingresso.",
-                "0 risulterà in un'immagine identica, mentre 1 risulterà in un'immagine completamente nuova."
+                "Controlla la differenza tra l'immagine generata e il/i livello/i raster.",
+                "Una forza inferiore rimane più vicina ai livelli raster visibili combinati. Una forza superiore si basa maggiormente sul prompt globale.",
+                "Se non sono presenti livelli raster con contenuto visibile, questa impostazione viene ignorata."
             ],
             "heading": "Forza di riduzione del rumore"
         },
@@ -1397,25 +1343,28 @@
         },
         "infillMethod": {
             "paragraphs": [
-                "Metodo per riempire l'area selezionata."
+                "Metodo di riempimento durante il processo di Outpaint o Inpaint."
             ],
             "heading": "Metodo di riempimento"
         },
         "controlNetWeight": {
             "heading": "Peso",
             "paragraphs": [
-                "Quanto forte sarà l'impatto di ControlNet sull'immagine generata."
+                "Regola la forza con cui il livello influenza il processo di generazione",
+                "• Peso maggiore (0.75-2): crea un impatto più significativo sul risultato finale.",
+                "• Peso inferiore (0-0.75): crea un impatto minore sul risultato finale."
             ]
         },
         "paramCFGScale": {
             "heading": "Scala CFG",
             "paragraphs": [
-                "Controlla quanto il tuo prompt influenza il processo di generazione."
+                "Controlla quanto il prompt influenza il processo di generazione.",
+                "Valori elevati della scala CFG possono provocare una saturazione eccessiva e distorsioni nei risultati della generazione. "
             ]
         },
         "controlNetControlMode": {
             "paragraphs": [
-                "Attribuisce più peso al prompt o a ControlNet."
+                "Attribuisce più peso al prompt oppure a ControlNet."
             ],
             "heading": "Modalità di controllo"
         },
@@ -1427,9 +1376,9 @@
             ]
         },
         "lora": {
-            "heading": "Peso LoRA",
+            "heading": "LoRA",
             "paragraphs": [
-                "Un peso LoRA più elevato porterà a impatti maggiori sull'immagine finale."
+                "Modelli concettuali utilizzati insieme ai modelli di base."
             ]
         },
         "controlNet": {
@@ -1437,14 +1386,239 @@
                 "ControlNet fornisce una guida al processo di generazione, aiutando a creare immagini con composizione, struttura o stile controllati, a seconda del modello selezionato."
             ],
             "heading": "ControlNet"
+        },
+        "paramCFGRescaleMultiplier": {
+            "heading": "Moltiplicatore di riscala CFG",
+            "paragraphs": [
+                "Moltiplicatore di riscala per la guida CFG, utilizzato per modelli addestrati utilizzando SNR a terminale zero (ztsnr).",
+                "Valore suggerito di 0.7 per questi modelli."
+            ]
+        },
+        "controlNetProcessor": {
+            "heading": "Processore",
+            "paragraphs": [
+                "Metodo di elaborazione dell'immagine di input per guidare il processo di generazione. Processori diversi forniranno effetti o stili diversi nelle immagini generate."
+            ]
+        },
+        "imageFit": {
+            "heading": "Adatta l'immagine iniziale alle dimensioni di output",
+            "paragraphs": [
+                "Ridimensiona l'immagine iniziale in base alla larghezza e all'altezza dell'immagine di output. Si consiglia di abilitarlo."
+            ]
+        },
+        "loraWeight": {
+            "heading": "Peso",
+            "paragraphs": [
+                "Peso del LoRA. Un peso maggiore comporterà un impatto maggiore sull'immagine finale."
+            ]
+        },
+        "paramAspect": {
+            "heading": "Aspetto",
+            "paragraphs": [
+                "Proporzioni dell'immagine generata. La modifica del rapporto aggiornerà di conseguenza la larghezza e l'altezza.",
+                "\"Ottimizza\" imposterà la larghezza e l'altezza alle dimensioni ottimali per il modello scelto."
+            ]
+        },
+        "paramHeight": {
+            "heading": "Altezza",
+            "paragraphs": [
+                "Altezza dell'immagine generata. Deve essere un multiplo di 8."
+            ]
+        },
+        "paramHrf": {
+            "heading": "Abilita correzione alta risoluzione",
+            "paragraphs": [
+                "Genera immagini di alta qualità con una risoluzione maggiore di quella ottimale per il modello. Generalmente utilizzato per impedire la duplicazione nell'immagine generata."
+            ]
+        },
+        "paramUpscaleMethod": {
+            "heading": "Metodo di ampliamento",
+            "paragraphs": [
+                "Metodo utilizzato per ampliare l'immagine per la correzione ad alta risoluzione."
+            ]
+        },
+        "patchmatchDownScaleSize": {
+            "heading": "Ridimensiona",
+            "paragraphs": [
+                "Quanto ridimensionamento avviene prima del riempimento.",
+                "Un ridimensionamento più elevato migliorerà le prestazioni e ridurrà la qualità."
+            ]
+        },
+        "paramWidth": {
+            "paragraphs": [
+                "Larghezza dell'immagine generata. Deve essere un multiplo di 8."
+            ],
+            "heading": "Larghezza"
+        },
+        "refinerModel": {
+            "heading": "Modello Affinatore",
+            "paragraphs": [
+                "Modello utilizzato durante la parte di affinamento del processo di generazione.",
+                "Simile al modello di generazione."
+            ]
+        },
+        "refinerNegativeAestheticScore": {
+            "paragraphs": [
+                "Valuta le generazioni in modo che siano più simili alle immagini con un punteggio estetico basso, in base ai dati di addestramento."
+            ],
+            "heading": "Punteggio estetico negativo"
+        },
+        "refinerScheduler": {
+            "paragraphs": [
+                "Campionatore utilizzato durante la parte di affinamento del processo di generazione.",
+                "Simile al campionatore di generazione."
+            ],
+            "heading": "Campionatore"
+        },
+        "refinerStart": {
+            "heading": "Inizio affinamento",
+            "paragraphs": [
+                "A che punto nel processo di generazione inizierà ad essere utilizzato l'affinatore.",
+                "0 significa che l'affinatore verrà utilizzato per l'intero processo di generazione, 0.8 significa che l'affinatore verrà utilizzato per l'ultimo 20% del processo di generazione."
+            ]
+        },
+        "refinerSteps": {
+            "heading": "Passi",
+            "paragraphs": [
+                "Numero di passi che verranno eseguiti durante la parte di affinamento del processo di generazione.",
+                "Simile ai passi di generazione."
+            ]
+        },
+        "refinerCfgScale": {
+            "heading": "Scala CFG",
+            "paragraphs": [
+                "Controlla quanto il prompt influenza il processo di generazione.",
+                "Simile alla scala CFG di generazione."
+            ]
+        },
+        "seamlessTilingXAxis": {
+            "heading": "Piastrella senza giunte sull'asse X",
+            "paragraphs": [
+                "Affianca senza soluzione di continuità un'immagine lungo l'asse orizzontale."
+            ]
+        },
+        "seamlessTilingYAxis": {
+            "heading": "Piastrella senza giunte sull'asse Y",
+            "paragraphs": [
+                "Affianca senza soluzione di continuità un'immagine lungo l'asse verticale."
+            ]
+        },
+        "refinerPositiveAestheticScore": {
+            "heading": "Punteggio estetico positivo",
+            "paragraphs": [
+                "Valuta le generazioni in modo che siano più simili alle immagini con un punteggio estetico elevato, in base ai dati di addestramento."
+            ]
+        },
+        "compositingCoherenceMinDenoise": {
+            "heading": "Livello minimo di riduzione del rumore",
+            "paragraphs": [
+                "Intensità minima di riduzione rumore per la modalità di Coerenza",
+                "L'intensità minima di riduzione del rumore per la regione di coerenza durante l'inpaint o l'outpaint"
+            ]
+        },
+        "compositingMaskBlur": {
+            "paragraphs": [
+                "Il raggio di sfocatura della maschera."
+            ],
+            "heading": "Sfocatura maschera"
+        },
+        "compositingCoherenceEdgeSize": {
+            "heading": "Dimensione del bordo",
+            "paragraphs": [
+                "La dimensione del bordo del passaggio di coerenza."
+            ]
+        },
+        "ipAdapterMethod": {
+            "heading": "Modalità",
+            "paragraphs": [
+                "La modalità definisce il modo in cui l'immagine di riferimento guiderà il processo di generazione."
+            ]
+        },
+        "scale": {
+            "heading": "Scala",
+            "paragraphs": [
+                "La scala controlla la dimensione dell'immagine di uscita e si basa su un multiplo della risoluzione dell'immagine di ingresso. Ad esempio, un ampliamento 2x su un'immagine 1024x1024 produrrebbe in uscita a 2048x2048."
+            ]
+        },
+        "upscaleModel": {
+            "paragraphs": [
+                "Il modello di ampliamento, scala l'immagine alle dimensioni di uscita prima di aggiungere i dettagli. È possibile utilizzare qualsiasi modello di ampliamento supportato, ma alcuni sono specializzati per diversi tipi di immagini, come foto o disegni al tratto."
+            ],
+            "heading": "Modello di ampliamento"
+        },
+        "creativity": {
+            "heading": "Creatività",
+            "paragraphs": [
+                "La creatività controlla quanta libertà è concessa al modello quando si aggiungono dettagli. Una creatività bassa rimane vicina all'immagine originale, mentre una creatività alta consente più cambiamenti. Quando si usa un prompt, una creatività alta aumenta l'influenza del prompt."
+            ]
+        },
+        "structure": {
+            "heading": "Struttura",
+            "paragraphs": [
+                "La struttura determina quanto l'immagine finale rispecchierà il layout dell'originale. Una struttura bassa permette cambiamenti significativi, mentre una struttura alta conserva la composizione e il layout originali."
+            ]
+        },
+        "fluxDevLicense": {
+            "heading": "Licenza non commerciale",
+            "paragraphs": [
+                "I modelli FLUX.1 [dev] sono concessi in licenza con la licenza non commerciale FLUX [dev]. Per utilizzare questo tipo di modello per scopi commerciali in Invoke, visita il nostro sito Web per saperne di più."
+            ]
+        },
+        "optimizedDenoising": {
+            "heading": "Immagine-a-immagine ottimizzata",
+            "paragraphs": [
+                "Abilita 'Immagine-a-immagine ottimizzata' per una scala di riduzione del rumore più graduale per le trasformazioni da immagine a immagine e di inpaint con modelli Flux. Questa impostazione migliora la capacità di controllare la quantità di modifica applicata a un'immagine, ma può essere disattivata se preferisci usare la scala di riduzione rumore standard. Questa impostazione è ancora in fase di messa a punto ed è in stato beta."
+            ]
+        },
+        "paramGuidance": {
+            "heading": "Guida",
+            "paragraphs": [
+                "Controlla quanto il prompt influenza il processo di generazione.",
+                "Valori di guida elevati possono causare sovrasaturazione e una guida elevata o bassa può causare risultati di generazione distorti. La guida si applica solo ai modelli FLUX DEV."
+            ]
+        },
+        "regionalReferenceImage": {
+            "paragraphs": [
+                "Pennello per applicare un'immagine di riferimento ad aree specifiche."
+            ],
+            "heading": "Immagine di riferimento Regionale"
+        },
+        "rasterLayer": {
+            "paragraphs": [
+                "Contenuto basato sui pixel della tua tela, utilizzato durante la generazione dell'immagine."
+            ],
+            "heading": "Livello Raster"
+        },
+        "regionalGuidance": {
+            "heading": "Guida Regionale",
+            "paragraphs": [
+                "Pennello per guidare la posizione in cui devono apparire gli elementi dei prompt globali."
+            ]
+        },
+        "regionalGuidanceAndReferenceImage": {
+            "heading": "Guida regionale e immagine di riferimento regionale",
+            "paragraphs": [
+                "Per la Guida Regionale, utilizzare il pennello per indicare dove devono apparire gli elementi dei prompt globali.",
+                "Per l'immagine di riferimento regionale, utilizzare il pennello per applicare un'immagine di riferimento ad aree specifiche."
+            ]
+        },
+        "globalReferenceImage": {
+            "heading": "Immagine di riferimento Globale",
+            "paragraphs": [
+                "Applica un'immagine di riferimento per influenzare l'intera generazione."
+            ]
+        },
+        "inpainting": {
+            "paragraphs": [
+                "Controlla quale area viene modificata, in base all'intensità di riduzione del rumore."
+            ]
         }
     },
     "sdxl": {
-        "selectAModel": "Seleziona un modello",
         "scheduler": "Campionatore",
         "noModelsAvailable": "Nessun modello disponibile",
         "denoisingStrength": "Forza di riduzione del rumore",
-        "concatPromptStyle": "Concatena Prompt & Stile",
+        "concatPromptStyle": "Collega Prompt & Stile",
         "loading": "Caricamento...",
         "steps": "Passi",
         "refinerStart": "Inizio Affinamento",
@@ -1452,14 +1626,13 @@
         "negStylePrompt": "Prompt Stile negativo",
         "refiner": "Affinatore",
         "negAestheticScore": "Punteggio estetico negativo",
-        "useRefiner": "Utilizza l'affinatore",
         "refinermodel": "Modello Affinatore",
         "posAestheticScore": "Punteggio estetico positivo",
-        "posStylePrompt": "Prompt Stile positivo"
+        "posStylePrompt": "Prompt Stile positivo",
+        "freePromptStyle": "Prompt di stile manuale",
+        "refinerSteps": "Passi Affinamento"
     },
     "metadata": {
-        "initImage": "Immagine iniziale",
-        "seamless": "Senza giunture",
         "positivePrompt": "Prompt positivo",
         "negativePrompt": "Prompt negativo",
         "generationMode": "Modalità generazione",
@@ -1468,14 +1641,10 @@
         "strength": "Forza Immagine a Immagine",
         "seed": "Seme",
         "imageDetails": "Dettagli dell'immagine",
-        "perlin": "Rumore Perlin",
         "model": "Modello",
         "noImageDetails": "Nessun dettaglio dell'immagine trovato",
-        "hiresFix": "Ottimizzazione Alta Risoluzione",
         "cfgScale": "Scala CFG",
-        "fit": "Adatta Immagine a Immagine",
         "height": "Altezza",
-        "variations": "Coppie Peso-Seme",
         "noMetaData": "Nessun metadato trovato",
         "width": "Larghezza",
         "createdBy": "Creato da",
@@ -1483,6 +1652,726 @@
         "steps": "Passi",
         "scheduler": "Campionatore",
         "recallParameters": "Richiama i parametri",
-        "noRecallParameters": "Nessun parametro da richiamare trovato"
+        "noRecallParameters": "Nessun parametro da richiamare trovato",
+        "cfgRescaleMultiplier": "$t(parameters.cfgRescaleMultiplier)",
+        "allPrompts": "Tutti i prompt",
+        "imageDimensions": "Dimensioni dell'immagine",
+        "parameterSet": "Parametro {{parameter}} impostato",
+        "parsingFailed": "Analisi non riuscita",
+        "recallParameter": "Richiama {{label}}",
+        "canvasV2Metadata": "Tela",
+        "guidance": "Guida",
+        "seamlessXAxis": "Asse X senza giunte",
+        "seamlessYAxis": "Asse Y senza giunte",
+        "vae": "VAE"
+    },
+    "hrf": {
+        "enableHrf": "Abilita Correzione Alta Risoluzione",
+        "upscaleMethod": "Metodo di ampliamento",
+        "metadata": {
+            "strength": "Forza della Correzione Alta Risoluzione",
+            "enabled": "Correzione Alta Risoluzione Abilitata",
+            "method": "Metodo della Correzione Alta Risoluzione"
+        },
+        "hrf": "Correzione Alta Risoluzione"
+    },
+    "workflows": {
+        "saveWorkflowAs": "Salva flusso di lavoro come",
+        "workflowEditorMenu": "Menu dell'editor del flusso di lavoro",
+        "workflowName": "Nome del flusso di lavoro",
+        "saveWorkflow": "Salva flusso di lavoro",
+        "openWorkflow": "Apri flusso di lavoro",
+        "clearWorkflowSearchFilter": "Cancella il filtro di ricerca del flusso di lavoro",
+        "workflowLibrary": "Libreria",
+        "workflowSaved": "Flusso di lavoro salvato",
+        "unnamedWorkflow": "Flusso di lavoro senza nome",
+        "savingWorkflow": "Salvataggio del flusso di lavoro...",
+        "problemLoading": "Problema durante il caricamento dei flussi di lavoro",
+        "loading": "Caricamento dei flussi di lavoro",
+        "searchWorkflows": "Cerca flussi di lavoro",
+        "problemSavingWorkflow": "Problema durante il salvataggio del flusso di lavoro",
+        "deleteWorkflow": "Elimina flusso di lavoro",
+        "workflows": "Flussi di lavoro",
+        "noDescription": "Nessuna descrizione",
+        "newWorkflowCreated": "Nuovo flusso di lavoro creato",
+        "downloadWorkflow": "Salva su file",
+        "uploadWorkflow": "Carica da file",
+        "noWorkflows": "Nessun flusso di lavoro",
+        "workflowCleared": "Flusso di lavoro cancellato",
+        "saveWorkflowToProject": "Salva flusso di lavoro nel progetto",
+        "descending": "Discendente",
+        "created": "Creato",
+        "ascending": "Ascendente",
+        "name": "Nome",
+        "updated": "Aggiornato",
+        "opened": "Aperto",
+        "convertGraph": "Converti grafico",
+        "loadWorkflow": "$t(common.load) Flusso di lavoro",
+        "autoLayout": "Disposizione automatica",
+        "loadFromGraph": "Carica il flusso di lavoro dal grafico",
+        "userWorkflows": "Flussi di lavoro utente",
+        "projectWorkflows": "Flussi di lavoro del progetto",
+        "defaultWorkflows": "Flussi di lavoro predefiniti",
+        "uploadAndSaveWorkflow": "Carica nella libreria",
+        "chooseWorkflowFromLibrary": "Scegli il flusso di lavoro dalla libreria",
+        "deleteWorkflow2": "Vuoi davvero eliminare questo flusso di lavoro? Questa operazione non può essere annullata.",
+        "edit": "Modifica",
+        "download": "Scarica",
+        "copyShareLink": "Copia Condividi Link",
+        "copyShareLinkForWorkflow": "Copia Condividi Link del Flusso di lavoro",
+        "delete": "Elimina"
+    },
+    "accordions": {
+        "compositing": {
+            "infillTab": "Riempimento",
+            "coherenceTab": "Passaggio di coerenza",
+            "title": "Composizione"
+        },
+        "control": {
+            "title": "Controllo"
+        },
+        "generation": {
+            "title": "Generazione"
+        },
+        "advanced": {
+            "title": "Avanzate",
+            "options": "Opzioni $t(accordions.advanced.title)"
+        },
+        "image": {
+            "title": "Immagine"
+        }
+    },
+    "prompt": {
+        "compatibleEmbeddings": "Incorporamenti compatibili",
+        "addPromptTrigger": "Aggiungi Trigger nel prompt",
+        "noMatchingTriggers": "Nessun Trigger corrispondente"
+    },
+    "controlLayers": {
+        "addLayer": "Aggiungi Livello",
+        "moveToFront": "Sposta in primo piano",
+        "moveToBack": "Sposta in fondo",
+        "moveForward": "Sposta avanti",
+        "moveBackward": "Sposta indietro",
+        "autoNegative": "Auto Negativo",
+        "deletePrompt": "Cancella il prompt",
+        "rectangle": "Rettangolo",
+        "addPositivePrompt": "Aggiungi $t(controlLayers.prompt)",
+        "addNegativePrompt": "Aggiungi $t(controlLayers.negativePrompt)",
+        "regionalGuidance": "Guida regionale",
+        "opacity": "Opacità",
+        "mergeVisible": "Fondi il visibile",
+        "mergeVisibleOk": "Livelli uniti",
+        "deleteReferenceImage": "Elimina l'immagine di riferimento",
+        "referenceImage": "Immagine di riferimento",
+        "fitBboxToLayers": "Adatta il riquadro di delimitazione ai livelli",
+        "mergeVisibleError": "Errore durante l'unione dei livelli",
+        "regionalReferenceImage": "Immagine di riferimento Regionale",
+        "newLayerFromImage": "Nuovo livello da immagine",
+        "newCanvasFromImage": "Nuova tela da immagine",
+        "globalReferenceImage": "Immagine di riferimento Globale",
+        "copyToClipboard": "Copia negli appunti",
+        "sendingToCanvas": "Effettua le generazioni nella Tela",
+        "clearHistory": "Cancella la cronologia",
+        "inpaintMask": "Maschera Inpaint",
+        "sendToGallery": "Invia alla Galleria",
+        "controlLayer": "Livello di Controllo",
+        "rasterLayer_withCount_one": "$t(controlLayers.rasterLayer)",
+        "rasterLayer_withCount_many": "Livelli Raster",
+        "rasterLayer_withCount_other": "Livelli Raster",
+        "controlLayer_withCount_one": "$t(controlLayers.controlLayer)",
+        "controlLayer_withCount_many": "Livelli di controllo",
+        "controlLayer_withCount_other": "Livelli di controllo",
+        "clipToBbox": "Ritaglia i tratti al riquadro",
+        "duplicate": "Duplica",
+        "width": "Larghezza",
+        "addControlLayer": "Aggiungi $t(controlLayers.controlLayer)",
+        "addInpaintMask": "Aggiungi $t(controlLayers.inpaintMask)",
+        "addRegionalGuidance": "Aggiungi $t(controlLayers.regionalGuidance)",
+        "sendToCanvasDesc": "Premendo Invoke il lavoro in corso viene visualizzato sulla tela.",
+        "addRasterLayer": "Aggiungi $t(controlLayers.rasterLayer)",
+        "clearCaches": "Svuota le cache",
+        "regionIsEmpty": "La regione selezionata è vuota",
+        "recalculateRects": "Ricalcola rettangoli",
+        "removeBookmark": "Rimuovi segnalibro",
+        "saveCanvasToGallery": "Salva la tela nella Galleria",
+        "regional": "Regionale",
+        "global": "Globale",
+        "canvas": "Tela",
+        "bookmark": "Segnalibro per cambio rapido",
+        "newRegionalReferenceImageOk": "Immagine di riferimento regionale creata",
+        "newRegionalReferenceImageError": "Problema nella creazione dell'immagine di riferimento regionale",
+        "newControlLayerOk": "Livello di controllo creato",
+        "bboxOverlay": "Mostra sovrapposizione riquadro",
+        "outputOnlyMaskedRegions": "In uscita solo le regioni generate",
+        "enableAutoNegative": "Abilita Auto Negativo",
+        "disableAutoNegative": "Disabilita Auto Negativo",
+        "showHUD": "Mostra HUD",
+        "maskFill": "Riempimento maschera",
+        "addReferenceImage": "Aggiungi $t(controlLayers.referenceImage)",
+        "addGlobalReferenceImage": "Aggiungi $t(controlLayers.globalReferenceImage)",
+        "sendingToGallery": "Inviare generazioni alla Galleria",
+        "sendToGalleryDesc": "Premendo Invoke viene generata e salvata un'immagine unica nella tua galleria.",
+        "sendToCanvas": "Invia alla Tela",
+        "viewProgressInViewer": "Visualizza i progressi e i risultati nel <Btn>Visualizzatore immagini</Btn>.",
+        "viewProgressOnCanvas": "Visualizza i progressi e i risultati nella <Btn>Tela</Btn>.",
+        "saveBboxToGallery": "Salva il riquadro di delimitazione nella Galleria",
+        "cropLayerToBbox": "Ritaglia il livello al riquadro di delimitazione",
+        "savedToGalleryError": "Errore durante il salvataggio nella galleria",
+        "rasterLayer": "Livello Raster",
+        "regionalGuidance_withCount_one": "$t(controlLayers.regionalGuidance)",
+        "regionalGuidance_withCount_many": "Guide regionali",
+        "regionalGuidance_withCount_other": "Guide regionali",
+        "inpaintMask_withCount_one": "$t(controlLayers.inpaintMask)",
+        "inpaintMask_withCount_many": "Maschere Inpaint",
+        "inpaintMask_withCount_other": "Maschere Inpaint",
+        "savedToGalleryOk": "Salvato nella Galleria",
+        "newGlobalReferenceImageOk": "Immagine di riferimento globale creata",
+        "newGlobalReferenceImageError": "Problema nella creazione dell'immagine di riferimento globale",
+        "newControlLayerError": "Problema nella creazione del livello di controllo",
+        "newRasterLayerOk": "Livello raster creato",
+        "newRasterLayerError": "Problema nella creazione del livello raster",
+        "saveLayerToAssets": "Salva il livello nelle Risorse",
+        "pullBboxIntoLayerError": "Problema nel caricare il riquadro nel livello",
+        "pullBboxIntoReferenceImageOk": "Contenuto del riquadro inserito nell'immagine di riferimento",
+        "pullBboxIntoLayerOk": "Riquadro caricato nel livello",
+        "pullBboxIntoReferenceImageError": "Problema nell'inserimento del contenuto del riquadro nell'immagine di riferimento",
+        "globalReferenceImage_withCount_one": "$t(controlLayers.globalReferenceImage)",
+        "globalReferenceImage_withCount_many": "Immagini di riferimento Globali",
+        "globalReferenceImage_withCount_other": "Immagini di riferimento Globali",
+        "controlMode": {
+            "balanced": "Bilanciato (consigliato)",
+            "controlMode": "Modalità di controllo",
+            "prompt": "Prompt",
+            "control": "Controllo",
+            "megaControl": "Mega Controllo"
+        },
+        "negativePrompt": "Prompt Negativo",
+        "prompt": "Prompt Positivo",
+        "beginEndStepPercentShort": "Inizio/Fine %",
+        "stagingOnCanvas": "Genera immagini nella",
+        "ipAdapterMethod": {
+            "full": "Stile e Composizione",
+            "style": "Solo Stile",
+            "composition": "Solo Composizione",
+            "ipAdapterMethod": "Modalità",
+            "fullDesc": "Applica lo stile visivo (colori, texture) e la composizione (disposizione, struttura).",
+            "styleDesc": "Applica lo stile visivo (colori, texture) senza considerare la disposizione.",
+            "compositionDesc": "Replica disposizione e struttura ignorando lo stile di riferimento."
+        },
+        "showingType": "Mostra {{type}}",
+        "dynamicGrid": "Griglia dinamica",
+        "tool": {
+            "view": "Muovi",
+            "colorPicker": "Selettore Colore",
+            "rectangle": "Rettangolo",
+            "bbox": "Riquadro di delimitazione",
+            "move": "Sposta",
+            "brush": "Pennello",
+            "eraser": "Cancellino"
+        },
+        "filter": {
+            "apply": "Applica",
+            "reset": "Reimposta",
+            "process": "Elabora",
+            "cancel": "Annulla",
+            "autoProcess": "Processo automatico",
+            "filterType": "Tipo Filtro",
+            "filter": "Filtro",
+            "filters": "Filtri",
+            "mlsd_detection": {
+                "score_threshold": "Soglia di punteggio",
+                "distance_threshold": "Soglia di distanza",
+                "description": "Genera una mappa dei segmenti di linea dal livello selezionato utilizzando il modello di rilevamento dei segmenti di linea MLSD.",
+                "label": "Rilevamento segmenti di linea"
+            },
+            "content_shuffle": {
+                "label": "Mescola contenuto",
+                "scale_factor": "Fattore di scala",
+                "description": "Mescola il contenuto del livello selezionato, in modo simile all'effetto \"liquefa\"."
+            },
+            "mediapipe_face_detection": {
+                "min_confidence": "Confidenza minima",
+                "label": "Rilevamento del volto MediaPipe",
+                "max_faces": "Max volti",
+                "description": "Rileva i volti nel livello selezionato utilizzando il modello di rilevamento dei volti MediaPipe."
+            },
+            "dw_openpose_detection": {
+                "draw_face": "Disegna il volto",
+                "description": "Rileva le pose umane nel livello selezionato utilizzando il modello DW Openpose.",
+                "label": "Rilevamento DW Openpose",
+                "draw_hands": "Disegna le mani",
+                "draw_body": "Disegna il corpo"
+            },
+            "normal_map": {
+                "description": "Genera una mappa delle normali dal livello selezionato.",
+                "label": "Mappa delle normali"
+            },
+            "lineart_edge_detection": {
+                "label": "Rilevamento bordi Lineart",
+                "coarse": "Grossolano",
+                "description": "Genera una mappa dei bordi dal livello selezionato utilizzando il modello di rilevamento dei bordi Lineart."
+            },
+            "depth_anything_depth_estimation": {
+                "model_size_small": "Piccolo",
+                "model_size_small_v2": "Piccolo v2",
+                "model_size": "Dimensioni modello",
+                "model_size_large": "Grande",
+                "model_size_base": "Base",
+                "description": "Genera una mappa di profondità dal livello selezionato utilizzando un modello Depth Anything."
+            },
+            "color_map": {
+                "label": "Mappa colore",
+                "description": "Crea una mappa dei colori dal livello selezionato.",
+                "tile_size": "Dimens. Piastrella"
+            },
+            "canny_edge_detection": {
+                "high_threshold": "Soglia superiore",
+                "low_threshold": "Soglia inferiore",
+                "description": "Genera una mappa dei bordi dal livello selezionato utilizzando l'algoritmo di rilevamento dei bordi Canny.",
+                "label": "Rilevamento bordi Canny"
+            },
+            "spandrel_filter": {
+                "scale": "Scala di destinazione",
+                "autoScaleDesc": "Il modello selezionato verrà eseguito fino al raggiungimento della scala di destinazione.",
+                "description": "Esegue un modello immagine-a-immagine sul livello selezionato.",
+                "label": "Modello Immagine-a-Immagine",
+                "model": "Modello",
+                "autoScale": "Auto Scala"
+            },
+            "pidi_edge_detection": {
+                "quantize_edges": "Quantizza i bordi",
+                "scribble": "Scarabocchio",
+                "description": "Genera una mappa dei bordi dal livello selezionato utilizzando il modello di rilevamento dei bordi PiDiNet.",
+                "label": "Rilevamento bordi PiDiNet"
+            },
+            "hed_edge_detection": {
+                "label": "Rilevamento bordi HED",
+                "description": "Genera una mappa dei bordi dal livello selezionato utilizzando il modello di rilevamento dei bordi HED.",
+                "scribble": "Scarabocchio"
+            },
+            "lineart_anime_edge_detection": {
+                "description": "Genera una mappa dei bordi dal livello selezionato utilizzando il modello di rilevamento dei bordi Lineart Anime.",
+                "label": "Rilevamento bordi Lineart Anime"
+            },
+            "forMoreControl": "Per un maggiore controllo, fare clic su Avanzate qui sotto.",
+            "advanced": "Avanzate",
+            "processingLayerWith": "Elaborazione del livello con il filtro {{type}}.",
+            "img_blur": {
+                "label": "Sfoca immagine",
+                "description": "Sfoca il livello selezionato.",
+                "blur_type": "Tipo di sfocatura",
+                "blur_radius": "Raggio",
+                "gaussian_type": "Gaussiana"
+            },
+            "img_noise": {
+                "size": "Dimensione del rumore",
+                "salt_and_pepper_type": "Sale e pepe",
+                "gaussian_type": "Gaussiano",
+                "noise_color": "Rumore colorato",
+                "description": "Aggiunge rumore al livello selezionato.",
+                "noise_type": "Tipo di rumore",
+                "label": "Aggiungi rumore",
+                "noise_amount": "Quantità"
+            },
+            "adjust_image": {
+                "description": "Regola il canale selezionato di un'immagine.",
+                "alpha": "Alfa (RGBA)",
+                "label": "Regola l'immagine",
+                "blue": "Blu (RGBA)",
+                "luminosity": "Luminosità (LAB)",
+                "channel": "Canale",
+                "value_setting": "Valore",
+                "scale_values": "Scala i valori",
+                "red": "Rosso (RGBA)",
+                "green": "Verde (RGBA)",
+                "cyan": "Ciano (CMYK)",
+                "magenta": "Magenta (CMYK)",
+                "yellow": "Giallo (CMYK)",
+                "black": "Nero (CMYK)",
+                "hue": "Tonalità (HSV)",
+                "saturation": "Saturazione (HSV)",
+                "value": "Valore (HSV)"
+            }
+        },
+        "controlLayers_withCount_hidden": "Livelli di controllo ({{count}} nascosti)",
+        "regionalGuidance_withCount_hidden": "Guida regionale ({{count}} nascosti)",
+        "fill": {
+            "grid": "Griglia",
+            "crosshatch": "Tratteggio incrociato",
+            "fillColor": "Colore di riempimento",
+            "fillStyle": "Stile riempimento",
+            "solid": "Solido",
+            "vertical": "Verticale",
+            "horizontal": "Orizzontale",
+            "diagonal": "Diagonale"
+        },
+        "rasterLayers_withCount_hidden": "Livelli raster ({{count}} nascosti)",
+        "inpaintMasks_withCount_hidden": "Maschere Inpaint ({{count}} nascoste)",
+        "regionalGuidance_withCount_visible": "Guide regionali ({{count}})",
+        "locked": "Bloccato",
+        "hidingType": "Nascondere {{type}}",
+        "logDebugInfo": "Registro Info Debug",
+        "inpaintMasks_withCount_visible": "Maschere Inpaint ({{count}})",
+        "layer_one": "Livello",
+        "layer_many": "Livelli",
+        "layer_other": "Livelli",
+        "disableTransparencyEffect": "Disabilita l'effetto trasparenza",
+        "controlLayers_withCount_visible": "Livelli di controllo ({{count}})",
+        "transparency": "Trasparenza",
+        "newCanvasSessionDesc": "Questo cancellerà la tela e tutte le impostazioni, eccetto la selezione del modello. Le generazioni saranno effettuate sulla tela.",
+        "rasterLayers_withCount_visible": "Livelli raster ({{count}})",
+        "globalReferenceImages_withCount_visible": "Immagini di riferimento Globali ({{count}})",
+        "globalReferenceImages_withCount_hidden": "Immagini di riferimento globali ({{count}} nascoste)",
+        "layer_withCount_one": "Livello ({{count}})",
+        "layer_withCount_many": "Livelli ({{count}})",
+        "layer_withCount_other": "Livelli ({{count}})",
+        "unlocked": "Sbloccato",
+        "enableTransparencyEffect": "Abilita l'effetto trasparenza",
+        "replaceLayer": "Sostituisci livello",
+        "pullBboxIntoLayer": "Carica l'immagine delimitata nel riquadro",
+        "pullBboxIntoReferenceImage": "Carica l'immagine delimitata nel riquadro",
+        "showProgressOnCanvas": "Mostra i progressi sulla Tela",
+        "weight": "Peso",
+        "newGallerySession": "Nuova sessione Galleria",
+        "newGallerySessionDesc": "Questo cancellerà la tela e tutte le impostazioni, eccetto la selezione del modello. Le generazioni saranno inviate alla galleria.",
+        "newCanvasSession": "Nuova sessione Tela",
+        "deleteSelected": "Elimina selezione",
+        "settings": {
+            "isolatedStagingPreview": "Anteprima di generazione isolata",
+            "isolatedPreview": "Anteprima isolata",
+            "invertBrushSizeScrollDirection": "Inverti scorrimento per dimensione pennello",
+            "snapToGrid": {
+                "label": "Aggancia alla griglia",
+                "on": "Acceso",
+                "off": "Spento"
+            },
+            "pressureSensitivity": "Sensibilità alla pressione",
+            "preserveMask": {
+                "alert": "Preservare la regione mascherata",
+                "label": "Preserva la regione mascherata"
+            },
+            "isolatedLayerPreview": "Anteprima livello isolato",
+            "isolatedLayerPreviewDesc": "Se visualizzare solo questo livello quando si eseguono operazioni come il filtraggio o la trasformazione."
+        },
+        "transform": {
+            "reset": "Reimposta",
+            "fitToBbox": "Adatta al Riquadro",
+            "transform": "Trasforma",
+            "apply": "Applica",
+            "cancel": "Annulla",
+            "fitMode": "Adattamento",
+            "fitModeContain": "Contieni",
+            "fitModeFill": "Riempi",
+            "fitModeCover": "Copri"
+        },
+        "stagingArea": {
+            "next": "Successiva",
+            "discard": "Scarta",
+            "discardAll": "Scarta tutto",
+            "accept": "Accetta",
+            "saveToGallery": "Salva nella Galleria",
+            "previous": "Precedente",
+            "showResultsOn": "Risultati visualizzati",
+            "showResultsOff": "Risultati nascosti"
+        },
+        "HUD": {
+            "bbox": "Riquadro di delimitazione",
+            "entityStatus": {
+                "isHidden": "{{title}} è nascosto",
+                "isLocked": "{{title}} è bloccato",
+                "isTransforming": "{{title}} sta trasformando",
+                "isFiltering": "{{title}} sta filtrando",
+                "isEmpty": "{{title}} è vuoto",
+                "isDisabled": "{{title}} è disabilitato"
+            },
+            "scaledBbox": "Riquadro scalato"
+        },
+        "canvasContextMenu": {
+            "newControlLayer": "Nuovo Livello di Controllo",
+            "newRegionalReferenceImage": "Nuova immagine di riferimento Regionale",
+            "newGlobalReferenceImage": "Nuova immagine di riferimento Globale",
+            "bboxGroup": "Crea dal riquadro di delimitazione",
+            "saveBboxToGallery": "Salva il riquadro nella Galleria",
+            "cropCanvasToBbox": "Ritaglia la Tela al riquadro",
+            "canvasGroup": "Tela",
+            "newRasterLayer": "Nuovo Livello Raster",
+            "saveCanvasToGallery": "Salva la Tela nella Galleria",
+            "saveToGalleryGroup": "Salva nella Galleria",
+            "newInpaintMask": "Nuova maschera Inpaint",
+            "newRegionalGuidance": "Nuova Guida Regionale",
+            "copyToClipboard": "Copia negli appunti",
+            "copyCanvasToClipboard": "Copia la tela negli appunti",
+            "copyBboxToClipboard": "Copia il riquadro di delimitazione negli appunti"
+        },
+        "newImg2ImgCanvasFromImage": "Nuova Immagine da immagine",
+        "copyRasterLayerTo": "Copia $t(controlLayers.rasterLayer) in",
+        "copyControlLayerTo": "Copia $t(controlLayers.controlLayer) in",
+        "copyInpaintMaskTo": "Copia $t(controlLayers.inpaintMask) in",
+        "selectObject": {
+            "dragToMove": "Trascina un punto per spostarlo",
+            "clickToAdd": "Fare clic sul livello per aggiungere un punto",
+            "clickToRemove": "Clicca su un punto per rimuoverlo",
+            "help3": "Inverte la selezione per selezionare tutto tranne l'oggetto di destinazione.",
+            "pointType": "Tipo punto",
+            "apply": "Applica",
+            "reset": "Reimposta",
+            "cancel": "Annulla",
+            "selectObject": "Seleziona oggetto",
+            "invertSelection": "Inverti selezione",
+            "exclude": "Escludi",
+            "include": "Includi",
+            "neutral": "Neutro",
+            "saveAs": "Salva come",
+            "process": "Elabora",
+            "help1": "Seleziona un singolo oggetto di destinazione. Aggiungi i punti <Bold>Includi</Bold> e <Bold>Escludi</Bold> per indicare quali parti del livello fanno parte dell'oggetto di destinazione.",
+            "help2": "Inizia con un punto <Bold>Include</Bold> all'interno dell'oggetto di destinazione. Aggiungi altri punti per perfezionare la selezione. Meno punti in genere producono risultati migliori."
+        },
+        "convertControlLayerTo": "Converti $t(controlLayers.controlLayer) in",
+        "newRasterLayer": "Nuovo $t(controlLayers.rasterLayer)",
+        "newRegionalGuidance": "Nuova $t(controlLayers.regionalGuidance)",
+        "convertInpaintMaskTo": "Converti $t(controlLayers.inpaintMask) in",
+        "copyRegionalGuidanceTo": "Copia $t(controlLayers.regionalGuidance) in",
+        "convertRasterLayerTo": "Converti $t(controlLayers.rasterLayer) in",
+        "convertRegionalGuidanceTo": "Converti $t(controlLayers.regionalGuidance) in",
+        "newControlLayer": "Nuovo $t(controlLayers.controlLayer)",
+        "newInpaintMask": "Nuova $t(controlLayers.inpaintMask)",
+        "replaceCurrent": "Sostituisci corrente",
+        "mergeDown": "Unire in basso",
+        "mergingLayers": "Unione dei livelli",
+        "controlLayerEmptyState": "<UploadButton>Carica un'immagine</UploadButton>, trascina un'immagine dalla <GalleryButton>galleria</GalleryButton> su questo livello oppure disegna sulla tela per iniziare.",
+        "useImage": "Usa immagine",
+        "resetGenerationSettings": "Ripristina impostazioni di generazione",
+        "referenceImageEmptyState": "Per iniziare, <UploadButton>carica un'immagine</UploadButton> oppure trascina un'immagine dalla <GalleryButton>galleria</GalleryButton> su questo livello.",
+        "asRasterLayer": "Come $t(controlLayers.rasterLayer)",
+        "asRasterLayerResize": "Come $t(controlLayers.rasterLayer) (Ridimensiona)",
+        "asControlLayer": "Come $t(controlLayers.controlLayer)",
+        "asControlLayerResize": "Come $t(controlLayers.controlLayer) (Ridimensiona)",
+        "newSession": "Nuova sessione",
+        "resetCanvasLayers": "Ripristina livelli Tela",
+        "referenceImageRegional": "Immagine di riferimento (regionale)",
+        "referenceImageGlobal": "Immagine di riferimento (globale)",
+        "warnings": {
+            "controlAdapterNoModelSelected": "nessun modello selezionato per il livello di controllo",
+            "controlAdapterNoControl": "nessun controllo selezionato/disegnato",
+            "ipAdapterNoModelSelected": "nessun modello di immagine di riferimento selezionato",
+            "rgNoPromptsOrIPAdapters": "nessun prompt testuale o immagini di riferimento",
+            "rgReferenceImagesNotSupported": "Immagini di riferimento regionali non supportate per il modello base selezionato",
+            "rgNoRegion": "nessuna regione disegnata",
+            "problemsFound": "Problemi riscontrati",
+            "unsupportedModel": "livello non supportato per il modello base selezionato",
+            "controlAdapterIncompatibleBaseModel": "modello di base del livello di controllo incompatibile",
+            "rgNegativePromptNotSupported": "Prompt negativo non supportato per il modello base selezionato",
+            "ipAdapterIncompatibleBaseModel": "modello base dell'immagine di riferimento incompatibile",
+            "ipAdapterNoImageSelected": "nessuna immagine di riferimento selezionata",
+            "rgAutoNegativeNotSupported": "Auto-Negativo non supportato per il modello base selezionato"
+        },
+        "pasteTo": "Incolla su",
+        "pasteToBboxDesc": "Nuovo livello (nel riquadro di delimitazione)",
+        "pasteToAssets": "Risorse",
+        "copyRegionError": "Errore durante la copia di {{region}}",
+        "pasteToAssetsDesc": "Incolla in Risorse",
+        "pasteToBbox": "Riquadro di delimitazione",
+        "pasteToCanvas": "Tela",
+        "pasteToCanvasDesc": "Nuovo livello (nella Tela)",
+        "pastedTo": "Incollato su {{destination}}",
+        "regionCopiedToClipboard": "{{region}} Copiato negli appunti"
+    },
+    "ui": {
+        "tabs": {
+            "generation": "Generazione",
+            "canvas": "Tela",
+            "workflows": "Flussi di lavoro",
+            "workflowsTab": "$t(ui.tabs.workflows) $t(common.tab)",
+            "models": "Modelli",
+            "modelsTab": "$t(ui.tabs.models) $t(common.tab)",
+            "queue": "Coda",
+            "upscaling": "Amplia",
+            "upscalingTab": "$t(ui.tabs.upscaling) $t(common.tab)",
+            "gallery": "Galleria"
+        }
+    },
+    "upscaling": {
+        "creativity": "Creatività",
+        "structure": "Struttura",
+        "upscaleModel": "Modello di ampliamento",
+        "scale": "Scala",
+        "missingModelsWarning": "Visita <LinkComponent>Gestione modelli</LinkComponent> per installare i modelli richiesti:",
+        "mainModelDesc": "Modello principale (architettura SD1.5 o SDXL)",
+        "tileControlNetModelDesc": "Modello Tile ControlNet per l'architettura del modello principale scelto",
+        "upscaleModelDesc": "Modello per l'ampliamento (immagine a immagine)",
+        "missingUpscaleInitialImage": "Immagine iniziale mancante per l'ampliamento",
+        "missingUpscaleModel": "Modello per l’ampliamento mancante",
+        "missingTileControlNetModel": "Nessun modello ControlNet Tile valido installato",
+        "postProcessingModel": "Modello di post-elaborazione",
+        "postProcessingMissingModelWarning": "Visita <LinkComponent>Gestione modelli</LinkComponent> per installare un modello di post-elaborazione (da immagine a immagine).",
+        "exceedsMaxSize": "Le impostazioni di ampliamento superano il limite massimo delle dimensioni",
+        "exceedsMaxSizeDetails": "Il limite massimo di ampliamento è {{maxUpscaleDimension}}x{{maxUpscaleDimension}} pixel. Prova un'immagine più piccola o diminuisci la scala selezionata.",
+        "upscale": "Amplia",
+        "incompatibleBaseModel": "Architettura del modello principale non supportata per l'ampliamento",
+        "incompatibleBaseModelDesc": "L'ampliamento è supportato solo per i modelli di architettura SD1.5 e SDXL. Cambia il modello principale per abilitare l'ampliamento."
+    },
+    "upsell": {
+        "inviteTeammates": "Invita collaboratori",
+        "shareAccess": "Condividi l'accesso",
+        "professional": "Professionale",
+        "professionalUpsell": "Disponibile nell'edizione Professional di Invoke. Fai clic qui o visita invoke.com/pricing per ulteriori dettagli."
+    },
+    "stylePresets": {
+        "active": "Attivo",
+        "choosePromptTemplate": "Scegli un modello di prompt",
+        "clearTemplateSelection": "Cancella selezione modello",
+        "copyTemplate": "Copia modello",
+        "createPromptTemplate": "Crea modello di prompt",
+        "defaultTemplates": "Modelli predefiniti",
+        "deleteImage": "Elimina immagine",
+        "deleteTemplate": "Elimina modello",
+        "editTemplate": "Modifica modello",
+        "flatten": "Unisci il modello selezionato al prompt corrente",
+        "insertPlaceholder": "Inserisci segnaposto",
+        "myTemplates": "I miei modelli",
+        "name": "Nome",
+        "negativePrompt": "Prompt Negativo",
+        "noMatchingTemplates": "Nessun modello corrispondente",
+        "promptTemplatesDesc1": "I modelli di prompt aggiungono testo ai prompt che scrivi nelle caselle dei prompt.",
+        "promptTemplatesDesc3": "Se si omette il segnaposto, il modello verrà aggiunto alla fine del prompt.",
+        "positivePrompt": "Prompt Positivo",
+        "preview": "Anteprima",
+        "private": "Privato",
+        "searchByName": "Cerca per nome",
+        "shared": "Condiviso",
+        "sharedTemplates": "Modelli condivisi",
+        "templateDeleted": "Modello di prompt eliminato",
+        "toggleViewMode": "Attiva/disattiva visualizzazione",
+        "uploadImage": "Carica immagine",
+        "useForTemplate": "Usa per modello di prompt",
+        "viewList": "Visualizza l'elenco dei modelli",
+        "viewModeTooltip": "Ecco come apparirà il tuo prompt con il modello attualmente selezionato. Per modificare il tuo prompt, clicca in un punto qualsiasi della casella di testo.",
+        "deleteTemplate2": "Vuoi davvero eliminare questo modello? Questa operazione non può essere annullata.",
+        "unableToDeleteTemplate": "Impossibile eliminare il modello di prompt",
+        "updatePromptTemplate": "Aggiorna il modello di prompt",
+        "type": "Tipo",
+        "promptTemplatesDesc2": "Utilizza la stringa segnaposto <Pre>{{placeholder}}</Pre> per specificare dove inserire il tuo prompt nel modello.",
+        "importTemplates": "Importa modelli di prompt (CSV/JSON)",
+        "exportDownloaded": "Esportazione completata",
+        "exportFailed": "Impossibile generare e scaricare il file CSV",
+        "exportPromptTemplates": "Esporta i miei modelli di prompt (CSV)",
+        "positivePromptColumn": "'prompt' o 'positive_prompt'",
+        "noTemplates": "Nessun modello",
+        "acceptedColumnsKeys": "Colonne/chiavi accettate:",
+        "promptTemplateCleared": "Modello di prompt cancellato"
+    },
+    "newUserExperience": {
+        "gettingStartedSeries": "Desideri maggiori informazioni? Consulta la nostra <LinkComponent>Getting Started Series</LinkComponent> per suggerimenti su come sfruttare appieno il potenziale di Invoke Studio.",
+        "toGetStarted": "Per iniziare, inserisci un prompt nella casella e fai clic su <StrongComponent>Invoke</StrongComponent> per generare la tua prima immagine. Seleziona un modello di prompt per migliorare i risultati. Puoi scegliere di salvare le tue immagini direttamente nella <StrongComponent>Galleria</StrongComponent> o modificarle nella <StrongComponent>Tela</StrongComponent>.",
+        "noModelsInstalled": "Sembra che non hai installato alcun modello! Puoi <DownloadStarterModelsButton>scaricare un pacchetto di modelli di avvio</DownloadStarterModelsButton> o <ImportModelsButton>importare modelli</ImportModelsButton>.",
+        "toGetStartedLocal": "Per iniziare, assicurati di scaricare o importare i modelli necessari per eseguire Invoke. Quindi, inserisci un prompt nella casella e fai clic su <StrongComponent>Invoke</StrongComponent> per generare la tua prima immagine. Seleziona un modello di prompt per migliorare i risultati. Puoi scegliere di salvare le tue immagini direttamente nella <StrongComponent>Galleria</StrongComponent> o modificarle nella <StrongComponent>Tela</StrongComponent>.",
+        "lowVRAMMode": "Per prestazioni ottimali, segui la nostra <LinkComponent>guida per bassa VRAM</LinkComponent>."
+    },
+    "whatsNew": {
+        "whatsNewInInvoke": "Novità in Invoke",
+        "readReleaseNotes": "Leggi le note di rilascio",
+        "watchRecentReleaseVideos": "Guarda i video su questa versione",
+        "watchUiUpdatesOverview": "Guarda le novità dell'interfaccia",
+        "items": [
+            "Impostazioni predefinite VRAM migliorate",
+            "Cancellazione della cache del modello su richiesta",
+            "Compatibilità estesa FLUX LoRA",
+            "Filtro Regola Immagine su Tela",
+            "Annulla tutto tranne l'elemento della coda corrente",
+            "Copia da e incolla sulla Tela"
+        ]
+    },
+    "system": {
+        "logLevel": {
+            "info": "Info",
+            "warn": "Avviso",
+            "fatal": "Fatale",
+            "error": "Errore",
+            "debug": "Debug",
+            "trace": "Traccia",
+            "logLevel": "Livello di registro"
+        },
+        "logNamespaces": {
+            "workflows": "Flussi di lavoro",
+            "generation": "Generazione",
+            "canvas": "Tela",
+            "config": "Configurazione",
+            "models": "Modelli",
+            "gallery": "Galleria",
+            "queue": "Coda",
+            "events": "Eventi",
+            "system": "Sistema",
+            "metadata": "Metadati",
+            "logNamespaces": "Elementi del registro",
+            "dnd": "Trascina e rilascia"
+        },
+        "enableLogging": "Abilita la registrazione"
+    },
+    "supportVideos": {
+        "gettingStarted": "Iniziare",
+        "supportVideos": "Video di supporto",
+        "videos": {
+            "usingControlLayersAndReferenceGuides": {
+                "title": "Utilizzo di livelli di controllo e guide di riferimento",
+                "description": "Scopri come guidare la creazione delle tue immagini con livelli di controllo e immagini di riferimento."
+            },
+            "creatingYourFirstImage": {
+                "description": "Introduzione alla creazione di un'immagine da zero utilizzando gli strumenti di Invoke.",
+                "title": "Creazione della tua prima immagine"
+            },
+            "understandingImageToImageAndDenoising": {
+                "description": "Panoramica delle trasformazioni immagine-a-immagine e della riduzione del rumore in Invoke.",
+                "title": "Comprendere immagine-a-immagine e riduzione del rumore"
+            },
+            "howDoIDoImageToImageTransformation": {
+                "description": "Tutorial su come eseguire trasformazioni da immagine a immagine in Invoke.",
+                "title": "Come si esegue la trasformazione da immagine-a-immagine?"
+            },
+            "howDoIUseInpaintMasks": {
+                "title": "Come si usano le maschere Inpaint?",
+                "description": "Come applicare maschere inpaint per la correzione e la variazione delle immagini."
+            },
+            "howDoIOutpaint": {
+                "description": "Guida all'outpainting oltre i confini dell'immagine originale.",
+                "title": "Come posso eseguire l'outpainting?"
+            },
+            "exploringAIModelsAndConceptAdapters": {
+                "description": "Approfondisci i modelli di intelligenza artificiale e scopri come utilizzare gli adattatori concettuali per il controllo creativo.",
+                "title": "Esplorazione dei modelli di IA e degli adattatori concettuali"
+            },
+            "upscaling": {
+                "title": "Ampliamento",
+                "description": "Come ampliare le immagini con gli strumenti di Invoke per migliorarne la risoluzione."
+            },
+            "creatingAndComposingOnInvokesControlCanvas": {
+                "description": "Impara a comporre immagini utilizzando la tela di controllo di Invoke.",
+                "title": "Creare e comporre sulla tela di controllo di Invoke"
+            },
+            "howDoIGenerateAndSaveToTheGallery": {
+                "description": "Passaggi per generare e salvare le immagini nella galleria.",
+                "title": "Come posso generare e salvare nella Galleria?"
+            },
+            "howDoIEditOnTheCanvas": {
+                "title": "Come posso apportare modifiche sulla tela?",
+                "description": "Guida alla modifica delle immagini direttamente sulla tela."
+            },
+            "howDoIUseControlNetsAndControlLayers": {
+                "title": "Come posso utilizzare le Reti di Controllo e i Livelli di Controllo?",
+                "description": "Impara ad applicare livelli di controllo e reti di controllo alle tue immagini."
+            },
+            "howDoIUseGlobalIPAdaptersAndReferenceImages": {
+                "title": "Come si utilizzano gli adattatori IP globali e le immagini di riferimento?",
+                "description": "Introduzione all'aggiunta di immagini di riferimento e adattatori IP globali."
+            }
+        },
+        "controlCanvas": "Tela di Controllo",
+        "watch": "Guarda",
+        "studioSessionsDesc1": "Dai un'occhiata a <StudioSessionsPlaylistLink /> per approfondimenti su Invoke.",
+        "studioSessionsDesc2": "Unisciti al nostro <DiscordLink /> per partecipare alle sessioni live e fare domande. Le sessioni vengono caricate sulla playlist la settimana successiva."
+    },
+    "modelCache": {
+        "clear": "Cancella la cache del modello",
+        "clearSucceeded": "Cache del modello cancellata",
+        "clearFailed": "Problema durante la cancellazione della cache del modello"
     }
 }

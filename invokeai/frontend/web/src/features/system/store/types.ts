@@ -1,65 +1,46 @@
-import { UseToastOptions } from '@chakra-ui/react';
-import { InvokeLogLevel } from 'app/logging/logger';
-import i18n from 'i18n';
-import { ProgressImage } from 'services/events/types';
+import type { LogLevel, LogNamespace } from 'app/logging/logger';
+import { z } from 'zod';
 
-export type SystemStatus =
-  | 'CONNECTED'
-  | 'DISCONNECTED'
-  | 'PROCESSING'
-  | 'ERROR'
-  | 'LOADING_MODEL';
-
-export type DenoiseProgress = {
-  session_id: string;
-  batch_id: string;
-  progress_image: ProgressImage | null | undefined;
-  step: number;
-  total_steps: number;
-  order: number;
-  percentage: number;
-};
+const zLanguage = z.enum([
+  'ar',
+  'az',
+  'de',
+  'en',
+  'es',
+  'fi',
+  'fr',
+  'he',
+  'hu',
+  'it',
+  'ja',
+  'ko',
+  'nl',
+  'pl',
+  'pt',
+  'pt_BR',
+  'ru',
+  'sv',
+  'tr',
+  'ua',
+  'vi',
+  'zh_CN',
+  'zh_Hant',
+]);
+export type Language = z.infer<typeof zLanguage>;
+export const isLanguage = (v: unknown): v is Language => zLanguage.safeParse(v).success;
 
 export interface SystemState {
-  isInitialized: boolean;
-  isConnected: boolean;
+  _version: 1;
   shouldConfirmOnDelete: boolean;
-  enableImageDebugging: boolean;
-  toastQueue: UseToastOptions[];
-  denoiseProgress: DenoiseProgress | null;
-  consoleLogLevel: InvokeLogLevel;
-  shouldLogToConsole: boolean;
   shouldAntialiasProgressImage: boolean;
-  language: keyof typeof LANGUAGES;
+  shouldConfirmOnNewSession: boolean;
+  language: Language;
   shouldUseNSFWChecker: boolean;
   shouldUseWatermarker: boolean;
-  status: SystemStatus;
   shouldEnableInformationalPopovers: boolean;
+  shouldEnableModelDescriptions: boolean;
+  logIsEnabled: boolean;
+  logLevel: LogLevel;
+  logNamespaces: LogNamespace[];
+  shouldShowInvocationProgressDetail: boolean;
 }
-
-export const LANGUAGES = {
-  ar: i18n.t('common.langArabic', { lng: 'ar' }),
-  nl: i18n.t('common.langDutch', { lng: 'nl' }),
-  en: i18n.t('common.langEnglish', { lng: 'en' }),
-  fr: i18n.t('common.langFrench', { lng: 'fr' }),
-  de: i18n.t('common.langGerman', { lng: 'de' }),
-  he: i18n.t('common.langHebrew', { lng: 'he' }),
-  it: i18n.t('common.langItalian', { lng: 'it' }),
-  ja: i18n.t('common.langJapanese', { lng: 'ja' }),
-  ko: i18n.t('common.langKorean', { lng: 'ko' }),
-  pl: i18n.t('common.langPolish', { lng: 'pl' }),
-  pt_BR: i18n.t('common.langBrPortuguese', { lng: 'pt_BR' }),
-  pt: i18n.t('common.langPortuguese', { lng: 'pt' }),
-  ru: i18n.t('common.langRussian', { lng: 'ru' }),
-  zh_CN: i18n.t('common.langSimplifiedChinese', { lng: 'zh_CN' }),
-  es: i18n.t('common.langSpanish', { lng: 'es' }),
-  uk: i18n.t('common.langUkranian', { lng: 'ua' }),
-};
-
-export const STATUS_TRANSLATION_KEYS: Record<SystemStatus, string> = {
-  CONNECTED: 'common.statusConnected',
-  DISCONNECTED: 'common.statusDisconnected',
-  PROCESSING: 'common.statusProcessing',
-  ERROR: 'common.statusError',
-  LOADING_MODEL: 'common.statusLoadingModel',
-};

@@ -1,12 +1,12 @@
+import type { AppStartListening } from 'app/store/middleware/listenerMiddleware';
+import { selectionChanged } from 'features/gallery/store/gallerySlice';
 import { imagesApi } from 'services/api/endpoints/images';
-import { startAppListening } from '..';
-import { selectionChanged } from '../../../../../features/gallery/store/gallerySlice';
-import { ImageDTO } from '../../../../../services/api/types';
+import type { ImageDTO } from 'services/api/types';
 
-export const addImagesUnstarredListener = () => {
+export const addImagesUnstarredListener = (startAppListening: AppStartListening) => {
   startAppListening({
     matcher: imagesApi.endpoints.unstarImages.matchFulfilled,
-    effect: async (action, { dispatch, getState }) => {
+    effect: (action, { dispatch, getState }) => {
       const { updated_image_names: unstarredImages } = action.payload;
 
       const state = getState();

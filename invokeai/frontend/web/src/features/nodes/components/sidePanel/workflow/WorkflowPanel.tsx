@@ -1,42 +1,25 @@
-import {
-  Flex,
-  Tab,
-  TabList,
-  TabPanel,
-  TabPanels,
-  Tabs,
-} from '@chakra-ui/react';
+import { Flex, Tab, TabList, TabPanel, TabPanels, Tabs } from '@invoke-ai/ui-library';
+import { WorkflowBuilder } from 'features/nodes/components/sidePanel/builder/WorkflowBuilder';
 import { memo } from 'react';
+import { useTranslation } from 'react-i18next';
+
 import WorkflowGeneralTab from './WorkflowGeneralTab';
 import WorkflowJSONTab from './WorkflowJSONTab';
-import WorkflowLinearTab from './WorkflowLinearTab';
 
-const WorkflowPanel = () => {
+const WorkflowFieldsLinearViewPanel = () => {
+  const { t } = useTranslation();
   return (
-    <Flex
-      layerStyle="first"
-      sx={{
-        flexDir: 'column',
-        w: 'full',
-        h: 'full',
-        borderRadius: 'base',
-        p: 2,
-        gap: 2,
-      }}
-    >
-      <Tabs
-        variant="line"
-        sx={{ display: 'flex', flexDir: 'column', w: 'full', h: 'full' }}
-      >
+    <Flex layerStyle="first" flexDir="column" w="full" h="full" borderRadius="base" p={2} gap={2}>
+      <Tabs variant="line" display="flex" w="full" h="full" flexDir="column">
         <TabList>
-          <Tab>Linear</Tab>
-          <Tab>Details</Tab>
+          <Tab>{t('workflows.builder.builder')}</Tab>
+          <Tab>{t('common.details')}</Tab>
           <Tab>JSON</Tab>
         </TabList>
 
         <TabPanels>
           <TabPanel>
-            <WorkflowLinearTab />
+            <WorkflowBuilder />
           </TabPanel>
           <TabPanel>
             <WorkflowGeneralTab />
@@ -50,4 +33,4 @@ const WorkflowPanel = () => {
   );
 };
 
-export default memo(WorkflowPanel);
+export default memo(WorkflowFieldsLinearViewPanel);

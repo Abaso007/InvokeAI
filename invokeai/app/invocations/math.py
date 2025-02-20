@@ -5,12 +5,13 @@ from typing import Literal
 import numpy as np
 from pydantic import ValidationInfo, field_validator
 
+from invokeai.app.invocations.baseinvocation import BaseInvocation, invocation
+from invokeai.app.invocations.fields import FieldDescriptions, InputField
 from invokeai.app.invocations.primitives import FloatOutput, IntegerOutput
+from invokeai.app.services.shared.invocation_context import InvocationContext
 
-from .baseinvocation import BaseInvocation, FieldDescriptions, InputField, InvocationContext, invocation
 
-
-@invocation("add", title="Add Integers", tags=["math", "add"], category="math", version="1.0.0")
+@invocation("add", title="Add Integers", tags=["math", "add"], category="math", version="1.0.1")
 class AddInvocation(BaseInvocation):
     """Adds two numbers"""
 
@@ -21,7 +22,7 @@ class AddInvocation(BaseInvocation):
         return IntegerOutput(value=self.a + self.b)
 
 
-@invocation("sub", title="Subtract Integers", tags=["math", "subtract"], category="math", version="1.0.0")
+@invocation("sub", title="Subtract Integers", tags=["math", "subtract"], category="math", version="1.0.1")
 class SubtractInvocation(BaseInvocation):
     """Subtracts two numbers"""
 
@@ -32,7 +33,7 @@ class SubtractInvocation(BaseInvocation):
         return IntegerOutput(value=self.a - self.b)
 
 
-@invocation("mul", title="Multiply Integers", tags=["math", "multiply"], category="math", version="1.0.0")
+@invocation("mul", title="Multiply Integers", tags=["math", "multiply"], category="math", version="1.0.1")
 class MultiplyInvocation(BaseInvocation):
     """Multiplies two numbers"""
 
@@ -43,7 +44,7 @@ class MultiplyInvocation(BaseInvocation):
         return IntegerOutput(value=self.a * self.b)
 
 
-@invocation("div", title="Divide Integers", tags=["math", "divide"], category="math", version="1.0.0")
+@invocation("div", title="Divide Integers", tags=["math", "divide"], category="math", version="1.0.1")
 class DivideInvocation(BaseInvocation):
     """Divides two numbers"""
 
@@ -59,7 +60,7 @@ class DivideInvocation(BaseInvocation):
     title="Random Integer",
     tags=["math", "random"],
     category="math",
-    version="1.0.0",
+    version="1.0.1",
     use_cache=False,
 )
 class RandomIntInvocation(BaseInvocation):
@@ -98,7 +99,7 @@ class RandomFloatInvocation(BaseInvocation):
     title="Float To Integer",
     tags=["math", "round", "integer", "float", "convert"],
     category="math",
-    version="1.0.0",
+    version="1.0.1",
 )
 class FloatToIntegerInvocation(BaseInvocation):
     """Rounds a float number to (a multiple of) an integer."""
@@ -120,7 +121,7 @@ class FloatToIntegerInvocation(BaseInvocation):
             return IntegerOutput(value=int(self.value / self.multiple) * self.multiple)
 
 
-@invocation("round_float", title="Round Float", tags=["math", "round"], category="math", version="1.0.0")
+@invocation("round_float", title="Round Float", tags=["math", "round"], category="math", version="1.0.1")
 class RoundInvocation(BaseInvocation):
     """Rounds a float to a specified number of decimal places."""
 
@@ -144,17 +145,17 @@ INTEGER_OPERATIONS = Literal[
 ]
 
 
-INTEGER_OPERATIONS_LABELS = dict(
-    ADD="Add A+B",
-    SUB="Subtract A-B",
-    MUL="Multiply A*B",
-    DIV="Divide A/B",
-    EXP="Exponentiate A^B",
-    MOD="Modulus A%B",
-    ABS="Absolute Value of A",
-    MIN="Minimum(A,B)",
-    MAX="Maximum(A,B)",
-)
+INTEGER_OPERATIONS_LABELS = {
+    "ADD": "Add A+B",
+    "SUB": "Subtract A-B",
+    "MUL": "Multiply A*B",
+    "DIV": "Divide A/B",
+    "EXP": "Exponentiate A^B",
+    "MOD": "Modulus A%B",
+    "ABS": "Absolute Value of A",
+    "MIN": "Minimum(A,B)",
+    "MAX": "Maximum(A,B)",
+}
 
 
 @invocation(
@@ -174,7 +175,7 @@ INTEGER_OPERATIONS_LABELS = dict(
         "max",
     ],
     category="math",
-    version="1.0.0",
+    version="1.0.1",
 )
 class IntegerMathInvocation(BaseInvocation):
     """Performs integer math."""
@@ -182,8 +183,8 @@ class IntegerMathInvocation(BaseInvocation):
     operation: INTEGER_OPERATIONS = InputField(
         default="ADD", description="The operation to perform", ui_choice_labels=INTEGER_OPERATIONS_LABELS
     )
-    a: int = InputField(default=0, description=FieldDescriptions.num_1)
-    b: int = InputField(default=0, description=FieldDescriptions.num_2)
+    a: int = InputField(default=1, description=FieldDescriptions.num_1)
+    b: int = InputField(default=1, description=FieldDescriptions.num_2)
 
     @field_validator("b")
     def no_unrepresentable_results(cls, v: int, info: ValidationInfo):
@@ -230,17 +231,17 @@ FLOAT_OPERATIONS = Literal[
 ]
 
 
-FLOAT_OPERATIONS_LABELS = dict(
-    ADD="Add A+B",
-    SUB="Subtract A-B",
-    MUL="Multiply A*B",
-    DIV="Divide A/B",
-    EXP="Exponentiate A^B",
-    ABS="Absolute Value of A",
-    SQRT="Square Root of A",
-    MIN="Minimum(A,B)",
-    MAX="Maximum(A,B)",
-)
+FLOAT_OPERATIONS_LABELS = {
+    "ADD": "Add A+B",
+    "SUB": "Subtract A-B",
+    "MUL": "Multiply A*B",
+    "DIV": "Divide A/B",
+    "EXP": "Exponentiate A^B",
+    "ABS": "Absolute Value of A",
+    "SQRT": "Square Root of A",
+    "MIN": "Minimum(A,B)",
+    "MAX": "Maximum(A,B)",
+}
 
 
 @invocation(
@@ -248,7 +249,7 @@ FLOAT_OPERATIONS_LABELS = dict(
     title="Float Math",
     tags=["math", "float", "add", "subtract", "multiply", "divide", "power", "root", "absolute value", "min", "max"],
     category="math",
-    version="1.0.0",
+    version="1.0.1",
 )
 class FloatMathInvocation(BaseInvocation):
     """Performs floating point math."""
@@ -256,8 +257,8 @@ class FloatMathInvocation(BaseInvocation):
     operation: FLOAT_OPERATIONS = InputField(
         default="ADD", description="The operation to perform", ui_choice_labels=FLOAT_OPERATIONS_LABELS
     )
-    a: float = InputField(default=0, description=FieldDescriptions.num_1)
-    b: float = InputField(default=0, description=FieldDescriptions.num_2)
+    a: float = InputField(default=1, description=FieldDescriptions.num_1)
+    b: float = InputField(default=1, description=FieldDescriptions.num_2)
 
     @field_validator("b")
     def no_unrepresentable_results(cls, v: float, info: ValidationInfo):
@@ -265,7 +266,7 @@ class FloatMathInvocation(BaseInvocation):
             raise ValueError("Cannot divide by zero")
         elif info.data["operation"] == "EXP" and info.data["a"] == 0 and v < 0:
             raise ValueError("Cannot raise zero to a negative power")
-        elif info.data["operation"] == "EXP" and type(info.data["a"] ** v) is complex:
+        elif info.data["operation"] == "EXP" and isinstance(info.data["a"] ** v, complex):
             raise ValueError("Root operation resulted in a complex number")
         return v
 

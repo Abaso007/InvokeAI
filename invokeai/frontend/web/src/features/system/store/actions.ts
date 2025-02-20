@@ -1,3 +1,4 @@
 import { createAction } from '@reduxjs/toolkit';
 
-export const sessionReadyToInvoke = createAction('system/sessionReadyToInvoke');
+export const videoModalLinkClicked = createAction<string>('system/videoModalLinkClicked');
+export const videoModalOpened = createAction('system/videoModalOpened');

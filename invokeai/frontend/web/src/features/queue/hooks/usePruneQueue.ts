@@ -1,17 +1,16 @@
-import { useAppDispatch, useAppSelector } from 'app/store/storeHooks';
-import { addToast } from 'features/system/store/systemSlice';
+import { useStore } from '@nanostores/react';
+import { useAppDispatch } from 'app/store/storeHooks';
+import { listCursorChanged, listPriorityChanged } from 'features/queue/store/queueSlice';
+import { toast } from 'features/toast/toast';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  useGetQueueStatusQuery,
-  usePruneQueueMutation,
-} from 'services/api/endpoints/queue';
-import { listCursorChanged, listPriorityChanged } from '../store/queueSlice';
+import { useGetQueueStatusQuery, usePruneQueueMutation } from 'services/api/endpoints/queue';
+import { $isConnected } from 'services/events/stores';
 
 export const usePruneQueue = () => {
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
-  const isConnected = useAppSelector((state) => state.system.isConnected);
+  const isConnected = useStore($isConnected);
   const [trigger, { isLoading }] = usePruneQueueMutation({
     fixedCacheKey: 'pruneQueue',
   });
@@ -22,8 +21,7 @@ export const usePruneQueue = () => {
       }
 
       return {
-        finishedCount:
-          data.queue.completed + data.queue.canceled + data.queue.failed,
+        finishedCount: data.queue.completed + data.queue.canceled + data.queue.failed,
       };
     },
   });
@@ -34,28 +32,23 @@ export const usePruneQueue = () => {
     }
     try {
       const data = await trigger().unwrap();
-      dispatch(
-        addToast({
-          title: t('queue.pruneSucceeded', { item_count: data.deleted }),
-          status: 'success',
-        })
-      );
+      toast({
+        id: 'PRUNE_SUCCEEDED',
+        title: t('queue.pruneSucceeded', { item_count: data.deleted }),
+        status: 'success',
+      });
       dispatch(listCursorChanged(undefined));
       dispatch(listPriorityChanged(undefined));
     } catch {
-      dispatch(
-        addToast({
-          title: t('queue.pruneFailed'),
-          status: 'error',
-        })
-      );
+      toast({
+        id: 'PRUNE_FAILED',
+        title: t('queue.pruneFailed'),
+        status: 'error',
+      });
     }
   }, [finishedCount, trigger, dispatch, t]);
 
-  const isDisabled = useMemo(
-    () => !isConnected || !finishedCount,
-    [finishedCount, isConnected]
-  );
+  const isDisabled = useMemo(() => !isConnected || !finishedCount, [finishedCount, isConnected]);
 
   return { pruneQueue, isLoading, finishedCount, isDisabled };
 };

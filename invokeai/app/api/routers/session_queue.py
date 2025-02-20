@@ -4,22 +4,25 @@ from fastapi import Body, Path, Query
 from fastapi.routing import APIRouter
 from pydantic import BaseModel
 
+from invokeai.app.api.dependencies import ApiDependencies
 from invokeai.app.services.session_processor.session_processor_common import SessionProcessorStatus
 from invokeai.app.services.session_queue.session_queue_common import (
     QUEUE_ITEM_STATUS,
     Batch,
     BatchStatus,
+    CancelAllExceptCurrentResult,
     CancelByBatchIDsResult,
+    CancelByDestinationResult,
     ClearResult,
     EnqueueBatchResult,
     PruneResult,
+    RetryItemsResult,
+    SessionQueueCountsByDestination,
     SessionQueueItem,
     SessionQueueItemDTO,
     SessionQueueStatus,
 )
 from invokeai.app.services.shared.pagination import CursorPaginatedResults
-
-from ..dependencies import ApiDependencies
 
 session_queue_router = APIRouter(prefix="/v1/queue", tags=["queue"])
 
@@ -94,6 +97,18 @@ async def Pause(
 
 
 @session_queue_router.put(
+    "/{queue_id}/cancel_all_except_current",
+    operation_id="cancel_all_except_current",
+    responses={200: {"model": CancelAllExceptCurrentResult}},
+)
+async def cancel_all_except_current(
+    queue_id: str = Path(description="The queue id to perform this operation on"),
+) -> CancelAllExceptCurrentResult:
+    """Immediately cancels all queue items except in-processing items"""
+    return ApiDependencies.invoker.services.session_queue.cancel_all_except_current(queue_id=queue_id)
+
+
+@session_queue_router.put(
     "/{queue_id}/cancel_by_batch_ids",
     operation_id="cancel_by_batch_ids",
     responses={200: {"model": CancelByBatchIDsResult}},
@@ -104,6 +119,34 @@ async def cancel_by_batch_ids(
 ) -> CancelByBatchIDsResult:
     """Immediately cancels all queue items from the given batch ids"""
     return ApiDependencies.invoker.services.session_queue.cancel_by_batch_ids(queue_id=queue_id, batch_ids=batch_ids)
+
+
+@session_queue_router.put(
+    "/{queue_id}/cancel_by_destination",
+    operation_id="cancel_by_destination",
+    responses={200: {"model": CancelByDestinationResult}},
+)
+async def cancel_by_destination(
+    queue_id: str = Path(description="The queue id to perform this operation on"),
+    destination: str = Query(description="The destination to cancel all queue items for"),
+) -> CancelByDestinationResult:
+    """Immediately cancels all queue items with the given origin"""
+    return ApiDependencies.invoker.services.session_queue.cancel_by_destination(
+        queue_id=queue_id, destination=destination
+    )
+
+
+@session_queue_router.put(
+    "/{queue_id}/retry_items_by_id",
+    operation_id="retry_items_by_id",
+    responses={200: {"model": RetryItemsResult}},
+)
+async def retry_items_by_id(
+    queue_id: str = Path(description="The queue id to perform this operation on"),
+    item_ids: list[int] = Body(description="The queue item ids to retry"),
+) -> RetryItemsResult:
+    """Immediately cancels all queue items with the given origin"""
+    return ApiDependencies.invoker.services.session_queue.retry_items_by_id(queue_id=queue_id, item_ids=item_ids)
 
 
 @session_queue_router.put(
@@ -203,6 +246,7 @@ async def get_batch_status(
     responses={
         200: {"model": SessionQueueItem},
     },
+    response_model_exclude_none=True,
 )
 async def get_queue_item(
     queue_id: str = Path(description="The queue id to perform this operation on"),
@@ -226,3 +270,18 @@ async def cancel_queue_item(
     """Deletes a queue item"""
 
     return ApiDependencies.invoker.services.session_queue.cancel_queue_item(item_id)
+
+
+@session_queue_router.get(
+    "/{queue_id}/counts_by_destination",
+    operation_id="counts_by_destination",
+    responses={200: {"model": SessionQueueCountsByDestination}},
+)
+async def counts_by_destination(
+    queue_id: str = Path(description="The queue id to query"),
+    destination: str = Query(description="The destination to query"),
+) -> SessionQueueCountsByDestination:
+    """Gets the counts of queue items by destination"""
+    return ApiDependencies.invoker.services.session_queue.get_counts_by_destination(
+        queue_id=queue_id, destination=destination
+    )

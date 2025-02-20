@@ -1,70 +1,60 @@
-import { ButtonGroup } from '@chakra-ui/react';
+import { ButtonGroup, IconButton } from '@invoke-ai/ui-library';
+import { useReactFlow } from '@xyflow/react';
 import { useAppDispatch, useAppSelector } from 'app/store/storeHooks';
-import IAIIconButton from 'common/components/IAIIconButton';
 import {
-  // shouldShowFieldTypeLegendChanged,
+  selectShouldShowMinimapPanel,
   shouldShowMinimapPanelChanged,
-} from 'features/nodes/store/nodesSlice';
+} from 'features/nodes/store/workflowSettingsSlice';
 import { memo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  FaExpand,
-  // FaInfo,
-  FaMapMarkerAlt,
-} from 'react-icons/fa';
-import { FaMagnifyingGlassMinus, FaMagnifyingGlassPlus } from 'react-icons/fa6';
-import { useReactFlow } from 'reactflow';
+  PiFrameCornersBold,
+  PiMagnifyingGlassMinusBold,
+  PiMagnifyingGlassPlusBold,
+  PiMapPinBold,
+} from 'react-icons/pi';
 
 const ViewportControls = () => {
   const { t } = useTranslation();
   const { zoomIn, zoomOut, fitView } = useReactFlow();
   const dispatch = useAppDispatch();
-  // const shouldShowFieldTypeLegend = useAppSelector(
-  //   (state) => state.nodes.shouldShowFieldTypeLegend
-  // );
-  const shouldShowMinimapPanel = useAppSelector(
-    (state) => state.nodes.shouldShowMinimapPanel
-  );
+  const shouldShowMinimapPanel = useAppSelector(selectShouldShowMinimapPanel);
 
   const handleClickedZoomIn = useCallback(() => {
-    zoomIn();
+    zoomIn({ duration: 300 });
   }, [zoomIn]);
 
   const handleClickedZoomOut = useCallback(() => {
-    zoomOut();
+    zoomOut({ duration: 300 });
   }, [zoomOut]);
 
   const handleClickedFitView = useCallback(() => {
-    fitView();
+    fitView({ duration: 300 });
   }, [fitView]);
-
-  // const handleClickedToggleFieldTypeLegend = useCallback(() => {
-  //   dispatch(shouldShowFieldTypeLegendChanged(!shouldShowFieldTypeLegend));
-  // }, [shouldShowFieldTypeLegend, dispatch]);
 
   const handleClickedToggleMiniMapPanel = useCallback(() => {
     dispatch(shouldShowMinimapPanelChanged(!shouldShowMinimapPanel));
   }, [shouldShowMinimapPanel, dispatch]);
 
   return (
-    <ButtonGroup isAttached orientation="vertical">
-      <IAIIconButton
+    <ButtonGroup orientation="vertical">
+      <IconButton
         tooltip={t('nodes.zoomInNodes')}
         aria-label={t('nodes.zoomInNodes')}
         onClick={handleClickedZoomIn}
-        icon={<FaMagnifyingGlassPlus />}
+        icon={<PiMagnifyingGlassPlusBold />}
       />
-      <IAIIconButton
+      <IconButton
         tooltip={t('nodes.zoomOutNodes')}
         aria-label={t('nodes.zoomOutNodes')}
         onClick={handleClickedZoomOut}
-        icon={<FaMagnifyingGlassMinus />}
+        icon={<PiMagnifyingGlassMinusBold />}
       />
-      <IAIIconButton
+      <IconButton
         tooltip={t('nodes.fitViewportNodes')}
         aria-label={t('nodes.fitViewportNodes')}
         onClick={handleClickedFitView}
-        icon={<FaExpand />}
+        icon={<PiFrameCornersBold />}
       />
       {/* <Tooltip
         label={
@@ -73,27 +63,19 @@ const ViewportControls = () => {
             : t('nodes.showLegendNodes')
         }
       >
-        <IAIIconButton
+        <IconButton
           aria-label="Toggle field type legend"
           isChecked={shouldShowFieldTypeLegend}
           onClick={handleClickedToggleFieldTypeLegend}
           icon={<FaInfo />}
         />
       </Tooltip> */}
-      <IAIIconButton
-        tooltip={
-          shouldShowMinimapPanel
-            ? t('nodes.hideMinimapnodes')
-            : t('nodes.showMinimapnodes')
-        }
-        aria-label={
-          shouldShowMinimapPanel
-            ? t('nodes.hideMinimapnodes')
-            : t('nodes.showMinimapnodes')
-        }
+      <IconButton
+        tooltip={shouldShowMinimapPanel ? t('nodes.hideMinimapnodes') : t('nodes.showMinimapnodes')}
+        aria-label={shouldShowMinimapPanel ? t('nodes.hideMinimapnodes') : t('nodes.showMinimapnodes')}
         isChecked={shouldShowMinimapPanel}
         onClick={handleClickedToggleMiniMapPanel}
-        icon={<FaMapMarkerAlt />}
+        icon={<PiMapPinBold />}
       />
     </ButtonGroup>
   );

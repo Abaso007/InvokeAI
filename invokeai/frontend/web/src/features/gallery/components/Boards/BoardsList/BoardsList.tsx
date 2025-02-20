@@ -1,106 +1,121 @@
-import { Collapse, Flex, Grid, GridItem } from '@chakra-ui/react';
-import { createSelector } from '@reduxjs/toolkit';
-import { stateSelector } from 'app/store/store';
+import { Button, Collapse, Flex, Icon, Text, useDisclosure } from '@invoke-ai/ui-library';
+import { EMPTY_ARRAY } from 'app/store/constants';
 import { useAppSelector } from 'app/store/storeHooks';
-import { defaultSelectorOptions } from 'app/store/util/defaultMemoizeOptions';
-import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
-import { memo, useState } from 'react';
+import { fixTooltipCloseOnScrollStyles } from 'common/util/fixTooltipCloseOnScrollStyles';
+import {
+  selectBoardSearchText,
+  selectListBoardsQueryArgs,
+  selectSelectedBoardId,
+} from 'features/gallery/store/gallerySelectors';
+import { selectAllowPrivateBoards } from 'features/system/store/configSelectors';
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { PiCaretDownBold } from 'react-icons/pi';
 import { useListAllBoardsQuery } from 'services/api/endpoints/boards';
-import { BoardDTO } from 'services/api/types';
-import DeleteBoardModal from '../DeleteBoardModal';
+
 import AddBoardButton from './AddBoardButton';
-import BoardsSearch from './BoardsSearch';
 import GalleryBoard from './GalleryBoard';
 import NoBoardBoard from './NoBoardBoard';
 
-const selector = createSelector(
-  [stateSelector],
-  ({ gallery }) => {
-    const { selectedBoardId, boardSearchText } = gallery;
-    return { selectedBoardId, boardSearchText };
-  },
-  defaultSelectorOptions
-);
-
 type Props = {
-  isOpen: boolean;
+  isPrivate: boolean;
 };
 
-const BoardsList = (props: Props) => {
-  const { isOpen } = props;
-  const { selectedBoardId, boardSearchText } = useAppSelector(selector);
-  const { data: boards } = useListAllBoardsQuery();
-  const filteredBoards = boardSearchText
-    ? boards?.filter((board) =>
-        board.board_name.toLowerCase().includes(boardSearchText.toLowerCase())
-      )
-    : boards;
-  const [boardToDelete, setBoardToDelete] = useState<BoardDTO>();
+export const BoardsList = ({ isPrivate }: Props) => {
+  const { t } = useTranslation();
+  const selectedBoardId = useAppSelector(selectSelectedBoardId);
+  const boardSearchText = useAppSelector(selectBoardSearchText);
+  const queryArgs = useAppSelector(selectListBoardsQueryArgs);
+  const { data: boards } = useListAllBoardsQuery(queryArgs);
+  const allowPrivateBoards = useAppSelector(selectAllowPrivateBoards);
+  const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true });
+
+  const filteredBoards = useMemo(() => {
+    if (!boards) {
+      return EMPTY_ARRAY;
+    }
+
+    return boards.filter((board) => {
+      if (boardSearchText.length) {
+        return board.is_private === isPrivate && board.board_name.toLowerCase().includes(boardSearchText.toLowerCase());
+      } else {
+        return board.is_private === isPrivate;
+      }
+    });
+  }, [boardSearchText, boards, isPrivate]);
+
+  const boardElements = useMemo(() => {
+    const elements = [];
+    if (allowPrivateBoards && isPrivate && !boardSearchText.length) {
+      elements.push(<NoBoardBoard key="none" isSelected={selectedBoardId === 'none'} />);
+    }
+
+    if (!allowPrivateBoards && !boardSearchText.length) {
+      elements.push(<NoBoardBoard key="none" isSelected={selectedBoardId === 'none'} />);
+    }
+
+    filteredBoards.forEach((board) => {
+      elements.push(
+        <GalleryBoard board={board} isSelected={selectedBoardId === board.board_id} key={board.board_id} />
+      );
+    });
+
+    return elements;
+  }, [allowPrivateBoards, isPrivate, boardSearchText.length, filteredBoards, selectedBoardId]);
+
+  const boardListTitle = useMemo(() => {
+    if (allowPrivateBoards) {
+      return isPrivate ? t('boards.private') : t('boards.shared');
+    } else {
+      return t('boards.boards');
+    }
+  }, [isPrivate, allowPrivateBoards, t]);
 
   return (
-    <>
-      <Collapse in={isOpen} animateOpacity>
-        <Flex
-          layerStyle="first"
-          sx={{
-            flexDir: 'column',
-            gap: 2,
-            p: 2,
-            mt: 2,
-            borderRadius: 'base',
-          }}
-        >
-          <Flex sx={{ gap: 2, alignItems: 'center' }}>
-            <BoardsSearch />
-            <AddBoardButton />
-          </Flex>
-          <OverlayScrollbarsComponent
-            defer
-            style={{ height: '100%', width: '100%' }}
-            options={{
-              scrollbars: {
-                visibility: 'auto',
-                autoHide: 'move',
-                autoHideDelay: 1300,
-                theme: 'os-theme-dark',
-              },
-            }}
-          >
-            <Grid
-              className="list-container"
-              data-testid="boards-list"
-              sx={{
-                gridTemplateColumns: `repeat(auto-fill, minmax(108px, 1fr));`,
-                maxH: 346,
-              }}
-            >
-              <GridItem sx={{ p: 1.5 }} data-testid="no-board">
-                <NoBoardBoard isSelected={selectedBoardId === 'none'} />
-              </GridItem>
-              {filteredBoards &&
-                filteredBoards.map((board, index) => (
-                  <GridItem
-                    key={board.board_id}
-                    sx={{ p: 1.5 }}
-                    data-testid={`board-${index}`}
-                  >
-                    <GalleryBoard
-                      board={board}
-                      isSelected={selectedBoardId === board.board_id}
-                      setBoardToDelete={setBoardToDelete}
-                    />
-                  </GridItem>
-                ))}
-            </Grid>
-          </OverlayScrollbarsComponent>
+    <Flex direction="column">
+      <Flex
+        position="sticky"
+        w="full"
+        justifyContent="space-between"
+        alignItems="center"
+        ps={2}
+        py={1}
+        zIndex={1}
+        top={0}
+        bg="base.900"
+      >
+        {allowPrivateBoards ? (
+          <Button variant="unstyled" onClick={onToggle}>
+            <Flex gap="2" alignItems="center">
+              <Icon
+                boxSize={4}
+                as={PiCaretDownBold}
+                transform={isOpen ? undefined : 'rotate(-90deg)'}
+                fill="base.500"
+              />
+              <Text fontSize="sm" fontWeight="semibold" userSelect="none" color="base.500">
+                {boardListTitle}
+              </Text>
+            </Flex>
+          </Button>
+        ) : (
+          <Text fontSize="sm" fontWeight="semibold" userSelect="none" color="base.500">
+            {boardListTitle}
+          </Text>
+        )}
+        <AddBoardButton isPrivateBoard={isPrivate} />
+      </Flex>
+      <Collapse in={isOpen} style={fixTooltipCloseOnScrollStyles}>
+        <Flex direction="column" gap={1}>
+          {boardElements.length ? (
+            boardElements
+          ) : (
+            <Text variant="subtext" textAlign="center">
+              {t('boards.noBoards', { boardType: boardSearchText.length ? 'Matching' : '' })}
+            </Text>
+          )}
         </Flex>
       </Collapse>
-      <DeleteBoardModal
-        boardToDelete={boardToDelete}
-        setBoardToDelete={setBoardToDelete}
-      />
-    </>
+    </Flex>
   );
 };
-
-export default memo(BoardsList);

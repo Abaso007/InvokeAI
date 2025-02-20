@@ -1,10 +1,7 @@
 import { createAction } from '@reduxjs/toolkit';
-import { InvokeTabName } from 'features/ui/store/tabMap';
-import { BatchConfig } from 'services/api/types';
+import type { TabName } from 'features/ui/store/uiTypes';
 
 export const enqueueRequested = createAction<{
-  tabName: InvokeTabName;
+  tabName: TabName;
   prepend: boolean;
 }>('app/enqueueRequested');
-
-export const batchEnqueued = createAction<BatchConfig>('app/batchEnqueued');

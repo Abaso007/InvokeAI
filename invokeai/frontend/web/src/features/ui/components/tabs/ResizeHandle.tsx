@@ -1,104 +1,60 @@
-import { Box, Flex, FlexProps, useColorModeValue } from '@chakra-ui/react';
+import type { SystemStyleObject } from '@invoke-ai/ui-library';
+import { chakra } from '@invoke-ai/ui-library';
 import { memo } from 'react';
+import type { PanelResizeHandleProps } from 'react-resizable-panels';
 import { PanelResizeHandle } from 'react-resizable-panels';
 
-type ResizeHandleProps = Omit<FlexProps, 'direction'> & {
-  direction?: 'horizontal' | 'vertical';
-  collapsedDirection?: 'top' | 'bottom' | 'left' | 'right';
-  isCollapsed?: boolean;
-};
+const ChakraPanelResizeHandle = chakra(PanelResizeHandle);
 
-const ResizeHandle = (props: ResizeHandleProps) => {
-  const {
-    direction = 'horizontal',
-    collapsedDirection,
-    isCollapsed = false,
-    ...rest
-  } = props;
-  const bg = useColorModeValue('base.100', 'base.850');
-  const hoverBg = useColorModeValue('base.300', 'base.700');
-
-  if (direction === 'horizontal') {
-    return (
-      <PanelResizeHandle
-        style={{
-          visibility: isCollapsed ? 'hidden' : 'visible',
-          width: isCollapsed ? 0 : 'auto',
-        }}
-      >
-        <Flex
-          className="resize-handle-horizontal"
-          sx={{
-            w: collapsedDirection ? 2.5 : 4,
-            h: 'full',
-            justifyContent: collapsedDirection
-              ? collapsedDirection === 'left'
-                ? 'flex-start'
-                : 'flex-end'
-              : 'center',
-            alignItems: 'center',
-            div: {
-              bg,
-            },
-            _hover: {
-              div: { bg: hoverBg },
-            },
-          }}
-          {...rest}
-        >
-          <Box
-            sx={{
-              w: 1,
-              h: 'calc(100% - 1rem)',
-              borderRadius: 'base',
-              transitionProperty: 'common',
-              transitionDuration: 'normal',
-            }}
-          />
-        </Flex>
-      </PanelResizeHandle>
-    );
-  }
-
-  return (
-    <PanelResizeHandle
-      style={{
-        visibility: isCollapsed ? 'hidden' : 'visible',
-        width: isCollapsed ? 0 : 'auto',
-      }}
-    >
-      <Flex
-        className="resize-handle-vertical"
-        sx={{
-          w: 'full',
-          h: collapsedDirection ? 2.5 : 4,
-          alignItems: collapsedDirection
-            ? collapsedDirection === 'top'
-              ? 'flex-start'
-              : 'flex-end'
-            : 'center',
-          justifyContent: 'center',
-          div: {
-            bg,
-          },
-          _hover: {
-            div: { bg: hoverBg },
-          },
-        }}
-        {...rest}
-      >
-        <Box
-          sx={{
-            h: 1,
-            w: 'calc(100% - 1rem)',
-            borderRadius: 'base',
-            transitionProperty: 'common',
-            transitionDuration: 'normal',
-          }}
-        />
-      </Flex>
-    </PanelResizeHandle>
-  );
+const ResizeHandle = (props: Omit<PanelResizeHandleProps, 'style'>) => {
+  return <ChakraPanelResizeHandle {...props} sx={sx} />;
 };
 
 export default memo(ResizeHandle);
+
+const sx: SystemStyleObject = {
+  '&[data-resize-handle-state="hover"]': {
+    _before: {
+      background: 'base.600 !important',
+    },
+  },
+  '&[data-resize-handle-state="drag"]': {
+    _before: {
+      background: 'base.500 !important',
+    },
+  },
+  '&[data-panel-group-direction="horizontal"]': {
+    w: 4,
+    h: 'full',
+    position: 'relative',
+    _before: {
+      transitionProperty: 'background',
+      transitionDuration: 'normal',
+      content: '""',
+      w: '2px',
+      h: 'full',
+      background: 'base.800',
+      position: 'absolute',
+      left: '50%',
+      top: 0,
+      transform: 'translateX(-50%)',
+    },
+  },
+  '&[data-panel-group-direction="vertical"]': {
+    h: 4,
+    w: 'full',
+    position: 'relative',
+    _before: {
+      transitionProperty: 'background',
+      transitionDuration: 'normal',
+      content: '""',
+      w: 'full',
+      h: '2px',
+      background: 'base.800',
+      position: 'absolute',
+      top: '50%',
+      left: 0,
+      transform: 'translateY(-50%)',
+    },
+  },
+};

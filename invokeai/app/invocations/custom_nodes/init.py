@@ -3,6 +3,7 @@ Invoke-managed custom node loader. See README.md for more information.
 """
 
 import sys
+import traceback
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 
@@ -32,20 +33,26 @@ for d in Path(__file__).parent.iterdir():
     if module_name in globals():
         continue
 
-    # we have a legit module to import
+    # load the module, appending adding a suffix to identify it as a custom node pack
     spec = spec_from_file_location(module_name, init.absolute())
 
     if spec is None or spec.loader is None:
         logger.warn(f"Could not load {init}")
         continue
 
-    module = module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
+    logger.info(f"Loading node pack {module_name}")
 
-    loaded_count += 1
+    try:
+        module = module_from_spec(spec)
+        sys.modules[spec.name] = module
+        spec.loader.exec_module(module)
+
+        loaded_count += 1
+    except Exception:
+        full_error = traceback.format_exc()
+        logger.error(f"Failed to load node pack {module_name}:\n{full_error}")
 
     del init, module_name
 
-
-logger.info(f"Loaded {loaded_count} modules from {Path(__file__).parent}")
+if loaded_count > 0:
+    logger.info(f"Loaded {loaded_count} node packs from {Path(__file__).parent}")

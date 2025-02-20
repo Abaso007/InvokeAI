@@ -1,72 +1,127 @@
-from typing import Any
+import asyncio
+import logging
+import mimetypes
+import socket
+from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi.responses import HTMLResponse
+import torch
+import uvicorn
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi_events.handlers.local import local_handler
+from fastapi_events.middleware import EventHandlerASGIMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+from torch.backends.mps import is_available as is_mps_available
 
-from .services.config import InvokeAIAppConfig
+# for PyCharm:
+# noinspection PyUnresolvedReferences
+import invokeai.backend.util.hotfixes  # noqa: F401 (monkeypatching on import)
+import invokeai.frontend.web as web_dir
+from invokeai.app.api.dependencies import ApiDependencies
+from invokeai.app.api.no_cache_staticfiles import NoCacheStaticFiles
+from invokeai.app.api.routers import (
+    app_info,
+    board_images,
+    boards,
+    download_queue,
+    images,
+    model_manager,
+    session_queue,
+    style_presets,
+    utilities,
+    workflows,
+)
+from invokeai.app.api.sockets import SocketIO
+from invokeai.app.services.config.config_default import get_config
+from invokeai.app.util.custom_openapi import get_openapi_func
+from invokeai.backend.util.devices import TorchDevice
+from invokeai.backend.util.logging import InvokeAILogger
 
-# parse_args() must be called before any other imports. if it is not called first, consumers of the config
-# which are imported/used before parse_args() is called will get the default config values instead of the
-# values from the command line or config file.
-app_config = InvokeAIAppConfig.get_config()
-app_config.parse_args()
-
-if True:  # hack to make flake8 happy with imports coming after setting up the config
-    import asyncio
-    import mimetypes
-    import socket
-    from inspect import signature
-    from pathlib import Path
-
-    import uvicorn
-    from fastapi import FastAPI
-    from fastapi.middleware.cors import CORSMiddleware
-    from fastapi.middleware.gzip import GZipMiddleware
-    from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
-    from fastapi.openapi.utils import get_openapi
-    from fastapi.responses import FileResponse
-    from fastapi.staticfiles import StaticFiles
-    from fastapi_events.handlers.local import local_handler
-    from fastapi_events.middleware import EventHandlerASGIMiddleware
-    from pydantic.json_schema import models_json_schema
-    from torch.backends.mps import is_available as is_mps_available
-
-    # for PyCharm:
-    # noinspection PyUnresolvedReferences
-    import invokeai.backend.util.hotfixes  # noqa: F401 (monkeypatching on import)
-    import invokeai.frontend.web as web_dir
-    from invokeai.version.invokeai_version import __version__
-
-    from ..backend.util.logging import InvokeAILogger
-    from .api.dependencies import ApiDependencies
-    from .api.routers import (
-        app_info,
-        board_images,
-        boards,
-        images,
-        models,
-        session_queue,
-        sessions,
-        utilities,
-        workflows,
-    )
-    from .api.sockets import SocketIO
-    from .invocations.baseinvocation import BaseInvocation, UIConfigBase, _InputField, _OutputField
-
-    if is_mps_available():
-        import invokeai.backend.util.mps_fixes  # noqa: F401 (monkeypatching on import)
+app_config = get_config()
 
 
-app_config = InvokeAIAppConfig.get_config()
-app_config.parse_args()
+if is_mps_available():
+    import invokeai.backend.util.mps_fixes  # noqa: F401 (monkeypatching on import)
+
+
 logger = InvokeAILogger.get_logger(config=app_config)
 # fix for windows mimetypes registry entries being borked
 # see https://github.com/invoke-ai/InvokeAI/discussions/3684#discussioncomment-6391352
 mimetypes.add_type("application/javascript", ".js")
 mimetypes.add_type("text/css", ".css")
 
+torch_device_name = TorchDevice.get_torch_device_name()
+logger.info(f"Using torch device: {torch_device_name}")
+
+loop = asyncio.new_event_loop()
+
+# We may change the port if the default is in use, this global variable is used to store the port so that we can log
+# the correct port when the server starts in the lifespan handler.
+port = app_config.port
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Add startup event to load dependencies
+    ApiDependencies.initialize(config=app_config, event_handler_id=event_handler_id, loop=loop, logger=logger)
+
+    # Log the server address when it starts - in case the network log level is not high enough to see the startup log
+    proto = "https" if app_config.ssl_certfile else "http"
+    msg = f"Invoke running on {proto}://{app_config.host}:{port} (Press CTRL+C to quit)"
+
+    # Logging this way ignores the logger's log level and _always_ logs the message
+    record = logger.makeRecord(
+        name=logger.name,
+        level=logging.INFO,
+        fn="",
+        lno=0,
+        msg=msg,
+        args=(),
+        exc_info=None,
+    )
+    logger.handle(record)
+
+    yield
+    # Shut down threads
+    ApiDependencies.shutdown()
+
+
 # Create the app
 # TODO: create this all in a method so configuration/etc. can be passed in?
-app = FastAPI(title="Invoke AI", docs_url=None, redoc_url=None, separate_input_output_schemas=False)
+app = FastAPI(
+    title="Invoke - Community Edition",
+    docs_url=None,
+    redoc_url=None,
+    separate_input_output_schemas=False,
+    lifespan=lifespan,
+)
+
+
+class RedirectRootWithQueryStringMiddleware(BaseHTTPMiddleware):
+    """When a request is made to the root path with a query string, redirect to the root path without the query string.
+
+    For example, to force a Gradio app to use dark mode, users may append `?__theme=dark` to the URL. Their browser may
+    have this query string saved in history or a bookmark, so when the user navigates to `http://127.0.0.1:9090/`, the
+    browser takes them to `http://127.0.0.1:9090/?__theme=dark`.
+
+    This breaks the static file serving in the UI, so we redirect the user to the root path without the query string.
+    """
+
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint):
+        if request.url.path == "/" and request.url.query:
+            return RedirectResponse(url="/")
+
+        response = await call_next(request)
+        return response
+
+
+# Add the middleware
+app.add_middleware(RedirectRootWithQueryStringMiddleware)
+
 
 # Add event handler
 event_handler_id: int = id(app)
@@ -89,108 +144,27 @@ app.add_middleware(
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 
-# Add startup event to load dependencies
-@app.on_event("startup")
-async def startup_event() -> None:
-    ApiDependencies.initialize(config=app_config, event_handler_id=event_handler_id, logger=logger)
-
-
-# Shut down threads
-@app.on_event("shutdown")
-async def shutdown_event() -> None:
-    ApiDependencies.shutdown()
-
-
 # Include all routers
-app.include_router(sessions.session_router, prefix="/api")
-
 app.include_router(utilities.utilities_router, prefix="/api")
-app.include_router(models.models_router, prefix="/api")
+app.include_router(model_manager.model_manager_router, prefix="/api")
+app.include_router(download_queue.download_queue_router, prefix="/api")
 app.include_router(images.images_router, prefix="/api")
 app.include_router(boards.boards_router, prefix="/api")
 app.include_router(board_images.board_images_router, prefix="/api")
 app.include_router(app_info.app_router, prefix="/api")
 app.include_router(session_queue.session_queue_router, prefix="/api")
 app.include_router(workflows.workflows_router, prefix="/api")
+app.include_router(style_presets.style_presets_router, prefix="/api")
 
-
-# Build a custom OpenAPI to include all outputs
-# TODO: can outputs be included on metadata of invocation schemas somehow?
-def custom_openapi() -> dict[str, Any]:
-    if app.openapi_schema:
-        return app.openapi_schema
-    openapi_schema = get_openapi(
-        title=app.title,
-        description="An API for invoking AI image operations",
-        version="1.0.0",
-        routes=app.routes,
-        separate_input_output_schemas=False,  # https://fastapi.tiangolo.com/how-to/separate-openapi-schemas/
-    )
-
-    # Add all outputs
-    all_invocations = BaseInvocation.get_invocations()
-    output_types = set()
-    output_type_titles = dict()
-    for invoker in all_invocations:
-        output_type = signature(invoker.invoke).return_annotation
-        output_types.add(output_type)
-
-    output_schemas = models_json_schema(
-        models=[(o, "serialization") for o in output_types], ref_template="#/components/schemas/{model}"
-    )
-    for schema_key, output_schema in output_schemas[1]["$defs"].items():
-        # TODO: note that we assume the schema_key here is the TYPE.__name__
-        # This could break in some cases, figure out a better way to do it
-        output_type_titles[schema_key] = output_schema["title"]
-
-    # Add Node Editor UI helper schemas
-    ui_config_schemas = models_json_schema(
-        [(UIConfigBase, "serialization"), (_InputField, "serialization"), (_OutputField, "serialization")],
-        ref_template="#/components/schemas/{model}",
-    )
-    for schema_key, ui_config_schema in ui_config_schemas[1]["$defs"].items():
-        openapi_schema["components"]["schemas"][schema_key] = ui_config_schema
-
-    # Add a reference to the output type to additionalProperties of the invoker schema
-    for invoker in all_invocations:
-        invoker_name = invoker.__name__
-        output_type = signature(obj=invoker.invoke).return_annotation
-        output_type_title = output_type_titles[output_type.__name__]
-        invoker_schema = openapi_schema["components"]["schemas"][f"{invoker_name}"]
-        outputs_ref = {"$ref": f"#/components/schemas/{output_type_title}"}
-        invoker_schema["output"] = outputs_ref
-        invoker_schema["class"] = "invocation"
-        openapi_schema["components"]["schemas"][f"{output_type_title}"]["class"] = "output"
-
-    from invokeai.backend.model_management.models import get_model_config_enums
-
-    for model_config_format_enum in set(get_model_config_enums()):
-        name = model_config_format_enum.__qualname__
-
-        if name in openapi_schema["components"]["schemas"]:
-            # print(f"Config with name {name} already defined")
-            continue
-
-        openapi_schema["components"]["schemas"][name] = dict(
-            title=name,
-            description="An enumeration.",
-            type="string",
-            enum=list(v.value for v in model_config_format_enum),
-        )
-
-    app.openapi_schema = openapi_schema
-    return app.openapi_schema
-
-
-app.openapi = custom_openapi  # type: ignore [method-assign] # this is a valid assignment
+app.openapi = get_openapi_func(app)
 
 
 @app.get("/docs", include_in_schema=False)
 def overridden_swagger() -> HTMLResponse:
     return get_swagger_ui_html(
         openapi_url=app.openapi_url,  # type: ignore [arg-type] # this is always a string
-        title=app.title,
-        swagger_favicon_url="/static/docs/favicon.ico",
+        title=f"{app.title} - Swagger UI",
+        swagger_favicon_url="static/docs/invoke-favicon-docs.svg",
     )
 
 
@@ -198,25 +172,36 @@ def overridden_swagger() -> HTMLResponse:
 def overridden_redoc() -> HTMLResponse:
     return get_redoc_html(
         openapi_url=app.openapi_url,  # type: ignore [arg-type] # this is always a string
-        title=app.title,
-        redoc_favicon_url="/static/docs/favicon.ico",
+        title=f"{app.title} - Redoc",
+        redoc_favicon_url="static/docs/invoke-favicon-docs.svg",
     )
 
 
 web_root_path = Path(list(web_dir.__path__)[0])
 
+try:
+    app.mount("/", NoCacheStaticFiles(directory=Path(web_root_path, "dist"), html=True), name="ui")
+except RuntimeError:
+    logger.warn(f"No UI found at {web_root_path}/dist, skipping UI mount")
+app.mount(
+    "/static", NoCacheStaticFiles(directory=Path(web_root_path, "static/")), name="static"
+)  # docs favicon is in here
 
-# Cannot add headers to StaticFiles, so we must serve index.html with a custom route
-# Add cache-control: no-store header to prevent caching of index.html, which leads to broken UIs at release
-@app.get("/", include_in_schema=False, name="ui_root")
-def get_index() -> FileResponse:
-    return FileResponse(Path(web_root_path, "dist/index.html"), headers={"Cache-Control": "no-store"})
 
-
-# # Must mount *after* the other routes else it borks em
-app.mount("/static", StaticFiles(directory=Path(web_root_path, "static/")), name="static")  # docs favicon is in here
-app.mount("/assets", StaticFiles(directory=Path(web_root_path, "dist/assets/")), name="assets")
-app.mount("/locales", StaticFiles(directory=Path(web_root_path, "dist/locales/")), name="locales")
+def check_cudnn(logger: logging.Logger) -> None:
+    """Check for cuDNN issues that could be causing degraded performance."""
+    if torch.backends.cudnn.is_available():
+        try:
+            # Note: At the time of writing (torch 2.2.1), torch.backends.cudnn.version() only raises an error the first
+            # time it is called. Subsequent calls will return the version number without complaining about a mismatch.
+            cudnn_version = torch.backends.cudnn.version()
+            logger.info(f"cuDNN version: {cudnn_version}")
+        except RuntimeError as e:
+            logger.warning(
+                "Encountered a cuDNN version issue. This may result in degraded performance. This issue is usually "
+                "caused by an incompatible cuDNN version installed in your python environment, or on the host "
+                f"system. Full error message:\n{e}"
+            )
 
 
 def invoke_api() -> None:
@@ -225,14 +210,11 @@ def invoke_api() -> None:
         # Taken from https://waylonwalker.com/python-find-available-port/, thanks Waylon!
         # https://github.com/WaylonWalker
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(1)
             if s.connect_ex(("localhost", port)) == 0:
                 return find_port(port=port + 1)
             else:
                 return port
-
-    from invokeai.backend.install.check_root import check_invokeai_root
-
-    check_invokeai_root(app_config)  # note, may exit with an exception if root not set up
 
     if app_config.dev_reload:
         try:
@@ -245,33 +227,32 @@ def invoke_api() -> None:
         else:
             jurigged.watch(logger=InvokeAILogger.get_logger(name="jurigged").info)
 
+    global port
     port = find_port(app_config.port)
     if port != app_config.port:
         logger.warn(f"Port {app_config.port} in use, using port {port}")
 
-    # Start our own event loop for eventing usage
-    loop = asyncio.new_event_loop()
+    check_cudnn(logger)
+
     config = uvicorn.Config(
         app=app,
         host=app_config.host,
         port=port,
         loop="asyncio",
-        log_level=app_config.log_level,
+        log_level=app_config.log_level_network,
+        ssl_certfile=app_config.ssl_certfile,
+        ssl_keyfile=app_config.ssl_keyfile,
     )
     server = uvicorn.Server(config)
 
     # replace uvicorn's loggers with InvokeAI's for consistent appearance
-    for logname in ["uvicorn.access", "uvicorn"]:
-        log = InvokeAILogger.get_logger(logname)
-        log.handlers.clear()
-        for ch in logger.handlers:
-            log.addHandler(ch)
+    uvicorn_logger = InvokeAILogger.get_logger("uvicorn")
+    uvicorn_logger.handlers.clear()
+    for hdlr in logger.handlers:
+        uvicorn_logger.addHandler(hdlr)
 
     loop.run_until_complete(server.serve())
 
 
 if __name__ == "__main__":
-    if app_config.version:
-        print(f"InvokeAI version {__version__}")
-    else:
-        invoke_api()
+    invoke_api()

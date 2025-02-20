@@ -1,232 +1,37 @@
-import { components } from 'services/api/schema';
-import { O } from 'ts-toolbelt';
-import {
-  BaseModelType,
-  Graph,
-  GraphExecutionState,
-  ModelType,
-  SubModelType,
-} from '../api/types';
+import type { S } from 'services/api/types';
+import type { Socket } from 'socket.io-client';
 
-/**
- * A progress image, we get one for each step in the generation
- */
-export type ProgressImage = {
-  dataURL: string;
-  width: number;
-  height: number;
-};
-
-export type AnyInvocationType = O.Required<
-  NonNullable<NonNullable<Graph['nodes']>[string]>,
-  'type'
->['type'];
-
-export type AnyInvocation = NonNullable<NonNullable<Graph['nodes']>[string]>;
-
-export type AnyResult = NonNullable<GraphExecutionState['results'][string]>;
-
-export type BaseNode = {
-  id: string;
-  type: string;
-  [key: string]: AnyInvocation[keyof AnyInvocation];
-};
-
-export type ModelLoadStartedEvent = {
-  queue_id: string;
-  queue_item_id: number;
-  queue_batch_id: string;
-  graph_execution_state_id: string;
-  model_name: string;
-  base_model: BaseModelType;
-  model_type: ModelType;
-  submodel: SubModelType;
-};
-
-export type ModelLoadCompletedEvent = {
-  queue_id: string;
-  queue_item_id: number;
-  queue_batch_id: string;
-  graph_execution_state_id: string;
-  model_name: string;
-  base_model: BaseModelType;
-  model_type: ModelType;
-  submodel: SubModelType;
-  hash?: string;
-  location: string;
-  precision: string;
-};
-
-/**
- * A `generator_progress` socket.io event.
- *
- * @example socket.on('generator_progress', (data: GeneratorProgressEvent) => { ... }
- */
-export type GeneratorProgressEvent = {
-  queue_id: string;
-  queue_item_id: number;
-  queue_batch_id: string;
-  graph_execution_state_id: string;
-  node_id: string;
-  source_node_id: string;
-  progress_image?: ProgressImage;
-  step: number;
-  order: number;
-  total_steps: number;
-};
-
-/**
- * A `invocation_complete` socket.io event.
- *
- * `result` is a discriminated union with a `type` property as the discriminant.
- *
- * @example socket.on('invocation_complete', (data: InvocationCompleteEvent) => { ... }
- */
-export type InvocationCompleteEvent = {
-  queue_id: string;
-  queue_item_id: number;
-  queue_batch_id: string;
-  graph_execution_state_id: string;
-  node: BaseNode;
-  source_node_id: string;
-  result: AnyResult;
-};
-
-/**
- * A `invocation_error` socket.io event.
- *
- * @example socket.on('invocation_error', (data: InvocationErrorEvent) => { ... }
- */
-export type InvocationErrorEvent = {
-  queue_id: string;
-  queue_item_id: number;
-  queue_batch_id: string;
-  graph_execution_state_id: string;
-  node: BaseNode;
-  source_node_id: string;
-  error_type: string;
-  error: string;
-};
-
-/**
- * A `invocation_started` socket.io event.
- *
- * @example socket.on('invocation_started', (data: InvocationStartedEvent) => { ... }
- */
-export type InvocationStartedEvent = {
-  queue_id: string;
-  queue_item_id: number;
-  queue_batch_id: string;
-  graph_execution_state_id: string;
-  node: BaseNode;
-  source_node_id: string;
-};
-
-/**
- * A `graph_execution_state_complete` socket.io event.
- *
- * @example socket.on('graph_execution_state_complete', (data: GraphExecutionStateCompleteEvent) => { ... }
- */
-export type GraphExecutionStateCompleteEvent = {
-  queue_id: string;
-  queue_item_id: number;
-  queue_batch_id: string;
-  graph_execution_state_id: string;
-};
-
-/**
- * A `session_retrieval_error` socket.io event.
- *
- * @example socket.on('session_retrieval_error', (data: SessionRetrievalErrorEvent) => { ... }
- */
-export type SessionRetrievalErrorEvent = {
-  queue_id: string;
-  queue_item_id: number;
-  queue_batch_id: string;
-  graph_execution_state_id: string;
-  error_type: string;
-  error: string;
-};
-
-/**
- * A `invocation_retrieval_error` socket.io event.
- *
- * @example socket.on('invocation_retrieval_error', (data: InvocationRetrievalErrorEvent) => { ... }
- */
-export type InvocationRetrievalErrorEvent = {
-  queue_id: string;
-  queue_item_id: number;
-  queue_batch_id: string;
-  graph_execution_state_id: string;
-  node_id: string;
-  error_type: string;
-  error: string;
-};
-
-/**
- * A `queue_item_status_changed` socket.io event.
- *
- * @example socket.on('queue_item_status_changed', (data: QueueItemStatusChangedEvent) => { ... }
- */
-export type QueueItemStatusChangedEvent = {
-  queue_id: string;
-  queue_item: {
-    queue_id: string;
-    item_id: number;
-    batch_id: string;
-    session_id: string;
-    status: components['schemas']['SessionQueueItemDTO']['status'];
-    error: string | undefined;
-    created_at: string;
-    updated_at: string;
-    started_at: string | undefined;
-    completed_at: string | undefined;
-  };
-  batch_status: {
-    queue_id: string;
-    batch_id: string;
-    pending: number;
-    in_progress: number;
-    completed: number;
-    failed: number;
-    canceled: number;
-    total: number;
-  };
-  queue_status: {
-    queue_id: string;
-    item_id?: number;
-    batch_id?: string;
-    session_id?: string;
-    pending: number;
-    in_progress: number;
-    completed: number;
-    failed: number;
-    canceled: number;
-    total: number;
-  };
-};
-
-export type ClientEmitSubscribeQueue = {
-  queue_id: string;
-};
-
-export type ClientEmitUnsubscribeQueue = {
-  queue_id: string;
-};
+type ClientEmitSubscribeQueue = { queue_id: string };
+type ClientEmitUnsubscribeQueue = ClientEmitSubscribeQueue;
+type ClientEmitSubscribeBulkDownload = { bulk_download_id: string };
+type ClientEmitUnsubscribeBulkDownload = ClientEmitSubscribeBulkDownload;
 
 export type ServerToClientEvents = {
-  generator_progress: (payload: GeneratorProgressEvent) => void;
-  invocation_complete: (payload: InvocationCompleteEvent) => void;
-  invocation_error: (payload: InvocationErrorEvent) => void;
-  invocation_started: (payload: InvocationStartedEvent) => void;
-  graph_execution_state_complete: (
-    payload: GraphExecutionStateCompleteEvent
-  ) => void;
-  model_load_started: (payload: ModelLoadStartedEvent) => void;
-  model_load_completed: (payload: ModelLoadCompletedEvent) => void;
-  session_retrieval_error: (payload: SessionRetrievalErrorEvent) => void;
-  invocation_retrieval_error: (payload: InvocationRetrievalErrorEvent) => void;
-  queue_item_status_changed: (payload: QueueItemStatusChangedEvent) => void;
+  invocation_progress: (payload: S['InvocationProgressEvent']) => void;
+  invocation_complete: (payload: S['InvocationCompleteEvent']) => void;
+  invocation_error: (payload: S['InvocationErrorEvent']) => void;
+  invocation_started: (payload: S['InvocationStartedEvent']) => void;
+  download_started: (payload: S['DownloadStartedEvent']) => void;
+  download_progress: (payload: S['DownloadProgressEvent']) => void;
+  download_complete: (payload: S['DownloadCompleteEvent']) => void;
+  download_cancelled: (payload: S['DownloadCancelledEvent']) => void;
+  download_error: (payload: S['DownloadErrorEvent']) => void;
+  model_load_started: (payload: S['ModelLoadStartedEvent']) => void;
+  model_install_started: (payload: S['ModelInstallStartedEvent']) => void;
+  model_install_download_started: (payload: S['ModelInstallDownloadStartedEvent']) => void;
+  model_install_download_progress: (payload: S['ModelInstallDownloadProgressEvent']) => void;
+  model_install_downloads_complete: (payload: S['ModelInstallDownloadsCompleteEvent']) => void;
+  model_install_complete: (payload: S['ModelInstallCompleteEvent']) => void;
+  model_install_error: (payload: S['ModelInstallErrorEvent']) => void;
+  model_install_cancelled: (payload: S['ModelInstallCancelledEvent']) => void;
+  model_load_complete: (payload: S['ModelLoadCompleteEvent']) => void;
+  queue_item_status_changed: (payload: S['QueueItemStatusChangedEvent']) => void;
+  queue_cleared: (payload: S['QueueClearedEvent']) => void;
+  batch_enqueued: (payload: S['BatchEnqueuedEvent']) => void;
+  queue_items_retried: (payload: S['QueueItemsRetriedEvent']) => void;
+  bulk_download_started: (payload: S['BulkDownloadStartedEvent']) => void;
+  bulk_download_complete: (payload: S['BulkDownloadCompleteEvent']) => void;
+  bulk_download_error: (payload: S['BulkDownloadErrorEvent']) => void;
 };
 
 export type ClientToServerEvents = {
@@ -234,4 +39,8 @@ export type ClientToServerEvents = {
   disconnect: () => void;
   subscribe_queue: (payload: ClientEmitSubscribeQueue) => void;
   unsubscribe_queue: (payload: ClientEmitUnsubscribeQueue) => void;
+  subscribe_bulk_download: (payload: ClientEmitSubscribeBulkDownload) => void;
+  unsubscribe_bulk_download: (payload: ClientEmitUnsubscribeBulkDownload) => void;
 };
+
+export type AppSocket = Socket<ServerToClientEvents, ClientToServerEvents>;

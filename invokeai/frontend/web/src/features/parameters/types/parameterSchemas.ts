@@ -1,495 +1,213 @@
 import { NUMPY_RAND_MAX } from 'app/constants';
+import { roundToMultiple } from 'common/util/roundDownToMultiple';
+import { zModelIdentifierField, zSchedulerField } from 'features/nodes/types/common';
 import { z } from 'zod';
 
 /**
- * These zod schemas should match the pydantic node schemas.
+ * Schemas, types and type guards for parameters.
  *
- * Parameters only need schemas if we want to recall them from metadata.
+ * Parameters need schemas if we want to recall them from metadata or some untrusted source.
  *
  * Each parameter needs:
  * - a zod schema
  * - a type alias, inferred from the zod schema
- * - a combo validation/type guard function, which returns true if the value is valid
+ * - a combo validation/type guard function, which returns true if the value is valid, should
+ * simply be the zod schema's safeParse function
  */
 
 /**
- * Zod schema for positive prompt parameter
+ * Helper to create a type guard from a zod schema. The type guard will infer the schema's TS type.
+ * @param schema The zod schema to create a type guard from.
+ * @returns A type guard function for the schema.
  */
-export const zPositivePrompt = z.string();
-/**
- * Type alias for positive prompt parameter, inferred from its zod schema
- */
-export type PositivePromptParam = z.infer<typeof zPositivePrompt>;
-/**
- * Validates/type-guards a value as a positive prompt parameter
- */
-export const isValidPositivePrompt = (
-  val: unknown
-): val is PositivePromptParam => zPositivePrompt.safeParse(val).success;
-
-/**
- * Zod schema for negative prompt parameter
- */
-export const zNegativePrompt = z.string();
-/**
- * Type alias for negative prompt parameter, inferred from its zod schema
- */
-export type NegativePromptParam = z.infer<typeof zNegativePrompt>;
-/**
- * Validates/type-guards a value as a negative prompt parameter
- */
-export const isValidNegativePrompt = (
-  val: unknown
-): val is NegativePromptParam => zNegativePrompt.safeParse(val).success;
-
-/**
- * Zod schema for SDXL positive style prompt parameter
- */
-export const zPositiveStylePromptSDXL = z.string();
-/**
- * Type alias for SDXL positive style prompt parameter, inferred from its zod schema
- */
-export type PositiveStylePromptSDXLParam = z.infer<
-  typeof zPositiveStylePromptSDXL
->;
-/**
- * Validates/type-guards a value as a SDXL positive style prompt parameter
- */
-export const isValidSDXLPositiveStylePrompt = (
-  val: unknown
-): val is PositiveStylePromptSDXLParam =>
-  zPositiveStylePromptSDXL.safeParse(val).success;
-
-/**
- * Zod schema for SDXL negative style prompt parameter
- */
-export const zNegativeStylePromptSDXL = z.string();
-/**
- * Type alias for SDXL negative style prompt parameter, inferred from its zod schema
- */
-export type NegativeStylePromptSDXLParam = z.infer<
-  typeof zNegativeStylePromptSDXL
->;
-/**
- * Validates/type-guards a value as a SDXL negative style prompt parameter
- */
-export const isValidSDXLNegativeStylePrompt = (
-  val: unknown
-): val is NegativeStylePromptSDXLParam =>
-  zNegativeStylePromptSDXL.safeParse(val).success;
-
-/**
- * Zod schema for steps parameter
- */
-export const zSteps = z.number().int().min(1);
-/**
- * Type alias for steps parameter, inferred from its zod schema
- */
-export type StepsParam = z.infer<typeof zSteps>;
-/**
- * Validates/type-guards a value as a steps parameter
- */
-export const isValidSteps = (val: unknown): val is StepsParam =>
-  zSteps.safeParse(val).success;
-
-/**
- * Zod schema for CFG scale parameter
- */
-export const zCfgScale = z.number().min(1);
-/**
- * Type alias for CFG scale parameter, inferred from its zod schema
- */
-export type CfgScaleParam = z.infer<typeof zCfgScale>;
-/**
- * Validates/type-guards a value as a CFG scale parameter
- */
-export const isValidCfgScale = (val: unknown): val is CfgScaleParam =>
-  zCfgScale.safeParse(val).success;
-
-/**
- * Zod schema for scheduler parameter
- */
-export const zScheduler = z.enum([
-  'euler',
-  'deis',
-  'ddim',
-  'ddpm',
-  'dpmpp_2s',
-  'dpmpp_2m',
-  'dpmpp_2m_sde',
-  'dpmpp_sde',
-  'heun',
-  'kdpm_2',
-  'lms',
-  'pndm',
-  'unipc',
-  'euler_k',
-  'dpmpp_2s_k',
-  'dpmpp_2m_k',
-  'dpmpp_2m_sde_k',
-  'dpmpp_sde_k',
-  'heun_k',
-  'lms_k',
-  'euler_a',
-  'kdpm_2_a',
-]);
-/**
- * Type alias for scheduler parameter, inferred from its zod schema
- */
-export type SchedulerParam = z.infer<typeof zScheduler>;
-/**
- * Validates/type-guards a value as a scheduler parameter
- */
-export const isValidScheduler = (val: unknown): val is SchedulerParam =>
-  zScheduler.safeParse(val).success;
-
-export const SCHEDULER_LABEL_MAP: Record<SchedulerParam, string> = {
-  euler: 'Euler',
-  deis: 'DEIS',
-  ddim: 'DDIM',
-  ddpm: 'DDPM',
-  dpmpp_sde: 'DPM++ SDE',
-  dpmpp_2s: 'DPM++ 2S',
-  dpmpp_2m: 'DPM++ 2M',
-  dpmpp_2m_sde: 'DPM++ 2M SDE',
-  heun: 'Heun',
-  kdpm_2: 'KDPM 2',
-  lms: 'LMS',
-  pndm: 'PNDM',
-  unipc: 'UniPC',
-  euler_k: 'Euler Karras',
-  dpmpp_sde_k: 'DPM++ SDE Karras',
-  dpmpp_2s_k: 'DPM++ 2S Karras',
-  dpmpp_2m_k: 'DPM++ 2M Karras',
-  dpmpp_2m_sde_k: 'DPM++ 2M SDE Karras',
-  heun_k: 'Heun Karras',
-  lms_k: 'LMS Karras',
-  euler_a: 'Euler Ancestral',
-  kdpm_2_a: 'KDPM 2 Ancestral',
+export const buildTypeGuard = <T extends z.ZodTypeAny>(schema: T) => {
+  return (val: unknown): val is z.infer<T> => schema.safeParse(val).success;
 };
 
 /**
- * Zod schema for seed parameter
+ * Helper to create a zod schema and a type guard from it.
+ * @param schema The zod schema to create a type guard from.
+ * @returns A tuple containing the zod schema and the type guard function.
  */
-export const zSeed = z.number().int().min(0).max(NUMPY_RAND_MAX);
-/**
- * Type alias for seed parameter, inferred from its zod schema
- */
-export type SeedParam = z.infer<typeof zSeed>;
-/**
- * Validates/type-guards a value as a seed parameter
- */
-export const isValidSeed = (val: unknown): val is SeedParam =>
-  zSeed.safeParse(val).success;
+const buildParameter = <T extends z.ZodTypeAny>(schema: T) => [schema, buildTypeGuard(schema)] as const;
 
-/**
- * Zod schema for width parameter
- */
-export const zWidth = z.number().multipleOf(8).min(64);
-/**
- * Type alias for width parameter, inferred from its zod schema
- */
-export type WidthParam = z.infer<typeof zWidth>;
-/**
- * Validates/type-guards a value as a width parameter
- */
-export const isValidWidth = (val: unknown): val is WidthParam =>
-  zWidth.safeParse(val).success;
+// #region Positive prompt
+export const [zParameterPositivePrompt, isParameterPositivePrompt] = buildParameter(z.string());
+export type ParameterPositivePrompt = z.infer<typeof zParameterPositivePrompt>;
+// #endregion
 
-/**
- * Zod schema for height parameter
- */
-export const zHeight = z.number().multipleOf(8).min(64);
-/**
- * Type alias for height parameter, inferred from its zod schema
- */
-export type HeightParam = z.infer<typeof zHeight>;
-/**
- * Validates/type-guards a value as a height parameter
- */
-export const isValidHeight = (val: unknown): val is HeightParam =>
-  zHeight.safeParse(val).success;
+// #region Negative prompt
+export const [zParameterNegativePrompt, isParameterNegativePrompt] = buildParameter(z.string());
+export type ParameterNegativePrompt = z.infer<typeof zParameterNegativePrompt>;
+// #endregion
 
-/**
- * Zod schema for resolution parameter
- */
-export const zResolution = z.tuple([zWidth, zHeight]);
-/**
- * Type alias for resolution parameter, inferred from its zod schema
- */
-export type ResolutionParam = z.infer<typeof zResolution>;
+// #region Positive style prompt (SDXL)
+export const [zParameterPositiveStylePromptSDXL, isParameterPositiveStylePromptSDXL] = buildParameter(z.string());
+export type ParameterPositiveStylePromptSDXL = z.infer<typeof zParameterPositiveStylePromptSDXL>;
+// #endregion
 
-export const zBaseModel = z.enum([
-  'any',
-  'sd-1',
-  'sd-2',
-  'sdxl',
-  'sdxl-refiner',
-]);
+// #region Positive style prompt (SDXL)
+export const [zParameterNegativeStylePromptSDXL, isParameterNegativeStylePromptSDXL] = buildParameter(z.string());
+export type ParameterNegativeStylePromptSDXL = z.infer<typeof zParameterNegativeStylePromptSDXL>;
+// #endregion
 
-export type BaseModelParam = z.infer<typeof zBaseModel>;
+// #region Steps
+export const [zParameterSteps, isParameterSteps] = buildParameter(z.number().int().min(1));
+export type ParameterSteps = z.infer<typeof zParameterSteps>;
+// #endregion
 
-/**
- * Zod schema for main model parameter
- * TODO: Make this a dynamically generated enum?
- */
-export const zMainModel = z.object({
-  model_name: z.string().min(1),
-  base_model: zBaseModel,
-  model_type: z.literal('main'),
-});
-/**
- * Type alias for main model parameter, inferred from its zod schema
- */
-export type MainModelParam = z.infer<typeof zMainModel>;
-/**
- * Validates/type-guards a value as a main model parameter
- */
-export const isValidMainModel = (val: unknown): val is MainModelParam =>
-  zMainModel.safeParse(val).success;
+// #region CFG scale parameter
+export const [zParameterCFGScale, isParameterCFGScale] = buildParameter(z.number().min(1));
+export type ParameterCFGScale = z.infer<typeof zParameterCFGScale>;
+// #endregion
 
-/**
- * Zod schema for SDXL refiner model parameter
- * TODO: Make this a dynamically generated enum?
- */
-export const zSDXLRefinerModel = z.object({
-  model_name: z.string().min(1),
-  base_model: z.literal('sdxl-refiner'),
-  model_type: z.literal('main'),
-});
-/**
- * Type alias for SDXL refiner model parameter, inferred from its zod schema
- */
-export type SDXLRefinerModelParam = z.infer<typeof zSDXLRefinerModel>;
-/**
- * Validates/type-guards a value as a SDXL refiner model parameter
- */
-export const isValidSDXLRefinerModel = (
-  val: unknown
-): val is SDXLRefinerModelParam => zSDXLRefinerModel.safeParse(val).success;
+// #region Guidance parameter
+export const [zParameterGuidance, isParameterGuidance] = buildParameter(z.number().min(1));
+export type ParameterGuidance = z.infer<typeof zParameterGuidance>;
+// #endregion
 
-/**
- * Zod schema for Onnx model parameter
- * TODO: Make this a dynamically generated enum?
- */
-export const zOnnxModel = z.object({
-  model_name: z.string().min(1),
-  base_model: zBaseModel,
-  model_type: z.literal('onnx'),
-});
-/**
- * Type alias for Onnx model parameter, inferred from its zod schema
- */
-export type OnnxModelParam = z.infer<typeof zOnnxModel>;
-/**
- * Validates/type-guards a value as a Onnx model parameter
- */
-export const isValidOnnxModel = (val: unknown): val is OnnxModelParam =>
-  zOnnxModel.safeParse(val).success;
+// #region CFG Rescale Multiplier
+export const [zParameterCFGRescaleMultiplier, isParameterCFGRescaleMultiplier] = buildParameter(
+  z.number().gte(0).lt(1)
+);
+export type ParameterCFGRescaleMultiplier = z.infer<typeof zParameterCFGRescaleMultiplier>;
+// #endregion
 
-export const zMainOrOnnxModel = z.union([zMainModel, zOnnxModel]);
+// #region Scheduler
+export const [zParameterScheduler, isParameterScheduler] = buildParameter(zSchedulerField);
+export type ParameterScheduler = z.infer<typeof zParameterScheduler>;
+// #endregion
 
-/**
- * Zod schema for VAE parameter
- */
-export const zVaeModel = z.object({
-  model_name: z.string().min(1),
-  base_model: zBaseModel,
-});
-/**
- * Type alias for model parameter, inferred from its zod schema
- */
-export type VaeModelParam = z.infer<typeof zVaeModel>;
-/**
- * Validates/type-guards a value as a model parameter
- */
-export const isValidVaeModel = (val: unknown): val is VaeModelParam =>
-  zVaeModel.safeParse(val).success;
-/**
- * Zod schema for LoRA
- */
-export const zLoRAModel = z.object({
-  model_name: z.string().min(1),
-  base_model: zBaseModel,
-});
-/**
- * Type alias for model parameter, inferred from its zod schema
- */
-export type LoRAModelParam = z.infer<typeof zLoRAModel>;
-/**
- * Validates/type-guards a value as a model parameter
- */
-export const isValidLoRAModel = (val: unknown): val is LoRAModelParam =>
-  zLoRAModel.safeParse(val).success;
-/**
- * Zod schema for ControlNet models
- */
-export const zControlNetModel = z.object({
-  model_name: z.string().min(1),
-  base_model: zBaseModel,
-});
-/**
- * Type alias for model parameter, inferred from its zod schema
- */
-export type ControlNetModelParam = z.infer<typeof zLoRAModel>;
-/**
- * Validates/type-guards a value as a model parameter
- */
-export const isValidControlNetModel = (
-  val: unknown
-): val is ControlNetModelParam => zControlNetModel.safeParse(val).success;
-/**
- * Zod schema for IP-Adapter models
- */
-export const zIPAdapterModel = z.object({
-  model_name: z.string().min(1),
-  base_model: zBaseModel,
-});
-/**
- * Type alias for model parameter, inferred from its zod schema
- */
-export type IPAdapterModelParam = z.infer<typeof zIPAdapterModel>;
-/**
- * Zod schema for T2I-Adapter models
- */
-export const zT2IAdapterModel = z.object({
-  model_name: z.string().min(1),
-  base_model: zBaseModel,
-});
-export const isValidT2IAdapterModel = (
-  val: unknown
-): val is T2IAdapterModelParam => zT2IAdapterModel.safeParse(val).success;
+// #region seed
+export const [zParameterSeed, isParameterSeed] = buildParameter(z.number().int().min(0).max(NUMPY_RAND_MAX));
+export type ParameterSeed = z.infer<typeof zParameterSeed>;
+// #endregion
 
-/**
- * Type alias for model parameter, inferred from its zod schema
- */
-export type T2IAdapterModelParam = z.infer<typeof zT2IAdapterModel>;
-/**
- * Zod schema for l2l strength parameter
- */
-/**
- * Validates/type-guards a value as a model parameter
- */
-export const isValidIPAdapterModel = (
-  val: unknown
-): val is IPAdapterModelParam => zIPAdapterModel.safeParse(val).success;
-export const zStrength = z.number().min(0).max(1);
-/**
- * Type alias for l2l strength parameter, inferred from its zod schema
- */
-export type StrengthParam = z.infer<typeof zStrength>;
-/**
- * Validates/type-guards a value as a l2l strength parameter
- */
-export const isValidStrength = (val: unknown): val is StrengthParam =>
-  zStrength.safeParse(val).success;
+// #region Width
+export const [zParameterImageDimension, isParameterImageDimension] = buildParameter(
+  z
+    .number()
+    .min(64)
+    .transform((val) => roundToMultiple(val, 8))
+);
+export type ParameterWidth = z.infer<typeof zParameterImageDimension>;
+export const isParameterWidth = isParameterImageDimension;
 
-/**
- * Zod schema for a precision parameter
- */
-export const zPrecision = z.enum(['fp16', 'fp32']);
-/**
- * Type alias for precision parameter, inferred from its zod schema
- */
-export type PrecisionParam = z.infer<typeof zPrecision>;
-/**
- * Validates/type-guards a value as a precision parameter
- */
-export const isValidPrecision = (val: unknown): val is PrecisionParam =>
-  zPrecision.safeParse(val).success;
+// #region Height
+export type ParameterHeight = z.infer<typeof zParameterImageDimension>;
+export const isParameterHeight = isParameterImageDimension;
+// #endregion
 
-/**
- * Zod schema for SDXL refiner positive aesthetic score parameter
- */
-export const zSDXLRefinerPositiveAestheticScore = z.number().min(1).max(10);
-/**
- * Type alias for SDXL refiner aesthetic positive score parameter, inferred from its zod schema
- */
-export type SDXLRefinerPositiveAestheticScoreParam = z.infer<
-  typeof zSDXLRefinerPositiveAestheticScore
->;
-/**
- * Validates/type-guards a value as a SDXL refiner positive aesthetic score parameter
- */
-export const isValidSDXLRefinerPositiveAestheticScore = (
-  val: unknown
-): val is SDXLRefinerPositiveAestheticScoreParam =>
-  zSDXLRefinerPositiveAestheticScore.safeParse(val).success;
+// #region Model
+export const zParameterModel = zModelIdentifierField;
+export type ParameterModel = z.infer<typeof zParameterModel>;
+// #endregion
 
-/**
- * Zod schema for SDXL refiner negative aesthetic score parameter
- */
-export const zSDXLRefinerNegativeAestheticScore = z.number().min(1).max(10);
-/**
- * Type alias for SDXL refiner aesthetic negative score parameter, inferred from its zod schema
- */
-export type SDXLRefinerNegativeAestheticScoreParam = z.infer<
-  typeof zSDXLRefinerNegativeAestheticScore
->;
-/**
- * Validates/type-guards a value as a SDXL refiner negative aesthetic score parameter
- */
-export const isValidSDXLRefinerNegativeAestheticScore = (
-  val: unknown
-): val is SDXLRefinerNegativeAestheticScoreParam =>
-  zSDXLRefinerNegativeAestheticScore.safeParse(val).success;
+// #region SDXL Refiner Model
+const zParameterSDXLRefinerModel = zModelIdentifierField;
+export type ParameterSDXLRefinerModel = z.infer<typeof zParameterSDXLRefinerModel>;
+// #endregion
 
-/**
- * Zod schema for SDXL start parameter
- */
-export const zSDXLRefinerstart = z.number().min(0).max(1);
-/**
- * Type alias for SDXL start, inferred from its zod schema
- */
-export type SDXLRefinerStartParam = z.infer<typeof zSDXLRefinerstart>;
-/**
- * Validates/type-guards a value as a SDXL refiner aesthetic score parameter
- */
-export const isValidSDXLRefinerStart = (
-  val: unknown
-): val is SDXLRefinerStartParam => zSDXLRefinerstart.safeParse(val).success;
+// #region VAE Model
+export const zParameterVAEModel = zModelIdentifierField;
+export type ParameterVAEModel = z.infer<typeof zParameterVAEModel>;
+// #endregion
 
-/**
- * Zod schema for a mask blur method parameter
- */
-export const zMaskBlurMethod = z.enum(['box', 'gaussian']);
-/**
- * Type alias for mask blur method parameter, inferred from its zod schema
- */
-export type MaskBlurMethodParam = z.infer<typeof zMaskBlurMethod>;
-/**
- * Validates/type-guards a value as a mask blur method parameter
- */
-export const isValidMaskBlurMethod = (
-  val: unknown
-): val is MaskBlurMethodParam => zMaskBlurMethod.safeParse(val).success;
+// #region Control Lora Model
+export const zParameterControlLoRAModel = zModelIdentifierField;
+export type ParameterControlLoRAModel = z.infer<typeof zParameterControlLoRAModel>;
+// #endregion
 
-/**
- * Zod schema for a Canvas Coherence Mode method parameter
- */
-export const zCanvasCoherenceMode = z.enum(['unmasked', 'mask', 'edge']);
-/**
- * Type alias for Canvas Coherence Mode parameter, inferred from its zod schema
- */
-export type CanvasCoherenceModeParam = z.infer<typeof zCanvasCoherenceMode>;
-/**
- * Validates/type-guards a value as a mask blur method parameter
- */
-export const isValidCoherenceModeParam = (
-  val: unknown
-): val is CanvasCoherenceModeParam =>
-  zCanvasCoherenceMode.safeParse(val).success;
+// #region T5Encoder Model
+export const zParameterT5EncoderModel = zModelIdentifierField;
+export type ParameterT5EncoderModel = z.infer<typeof zParameterT5EncoderModel>;
+// #endregion
 
-// /**
-//  * Zod schema for BaseModelType
-//  */
-// export const zBaseModelType = z.enum(['sd-1', 'sd-2']);
-// /**
-//  * Type alias for base model type, inferred from its zod schema. Should be identical to the type alias from OpenAPI.
-//  */
-// export type BaseModelType = z.infer<typeof zBaseModelType>;
-// /**
-//  * Validates/type-guards a value as a base model type
-//  */
-// export const isValidBaseModelType = (val: unknown): val is BaseModelType =>
-//   zBaseModelType.safeParse(val).success;
+// #region CLIP embed Model
+export const zParameterCLIPEmbedModel = zModelIdentifierField;
+export type ParameterCLIPEmbedModel = z.infer<typeof zParameterCLIPEmbedModel>;
+// #endregion
+
+// #region CLIP embed Model
+export const zParameterCLIPLEmbedModel = zModelIdentifierField;
+export type ParameterCLIPLEmbedModel = z.infer<typeof zParameterCLIPLEmbedModel>;
+// #endregion
+
+// #region CLIP embed Model
+export const zParameterCLIPGEmbedModel = zModelIdentifierField;
+export type ParameterCLIPGEmbedModel = z.infer<typeof zParameterCLIPGEmbedModel>;
+// #endregion
+
+// #region LoRA Model
+const zParameterLoRAModel = zModelIdentifierField;
+export type ParameterLoRAModel = z.infer<typeof zParameterLoRAModel>;
+// #endregion
+
+// #region VAE Model
+export const zParameterSpandrelImageToImageModel = zModelIdentifierField;
+export type ParameterSpandrelImageToImageModel = z.infer<typeof zParameterSpandrelImageToImageModel>;
+// #endregion
+
+// #region Strength (l2l strength)
+export const [zParameterStrength, isParameterStrength] = buildParameter(z.number().min(0).max(1));
+export type ParameterStrength = z.infer<typeof zParameterStrength>;
+// #endregion
+
+// #region SeamlessX
+export const [zParameterSeamlessX, isParameterSeamlessX] = buildParameter(z.boolean());
+export type ParameterSeamlessX = z.infer<typeof zParameterSeamlessX>;
+// #endregion
+
+// #region SeamlessY
+export const [zParameterSeamlessY, isParameterSeamlessY] = buildParameter(z.boolean());
+export type ParameterSeamlessY = z.infer<typeof zParameterSeamlessY>;
+// #endregion
+
+// #region Precision
+export const [zParameterPrecision, isParameterPrecision] = buildParameter(z.enum(['fp16', 'fp32']));
+export type ParameterPrecision = z.infer<typeof zParameterPrecision>;
+// #endregion
+
+// #region HRF Method
+export const [zParameterHRFMethod, isParameterHRFMethod] = buildParameter(z.enum(['ESRGAN', 'bilinear']));
+export type ParameterHRFMethod = z.infer<typeof zParameterHRFMethod>;
+// #endregion
+
+// #region HRF Enabled
+export const [zParameterHRFEnabled, isParameterHRFEnabled] = buildParameter(z.boolean());
+export type ParameterHRFEnabled = z.infer<typeof zParameterHRFEnabled>;
+// #endregion
+
+// #region SDXL Refiner Positive Aesthetic Score
+export const [zParameterSDXLRefinerPositiveAestheticScore, isParameterSDXLRefinerPositiveAestheticScore] =
+  buildParameter(z.number().min(1).max(10));
+export type ParameterSDXLRefinerPositiveAestheticScore = z.infer<typeof zParameterSDXLRefinerPositiveAestheticScore>;
+// #endregion
+
+// #region SDXL Refiner Negative Aesthetic Score
+export const [zParameterSDXLRefinerNegativeAestheticScore, isParameterSDXLRefinerNegativeAestheticScore] =
+  buildParameter(zParameterSDXLRefinerPositiveAestheticScore);
+export type ParameterSDXLRefinerNegativeAestheticScore = z.infer<typeof zParameterSDXLRefinerNegativeAestheticScore>;
+// #endregion
+
+// #region SDXL Refiner Start
+export const [zParameterSDXLRefinerStart, isParameterSDXLRefinerStart] = buildParameter(z.number().min(0).max(1));
+export type ParameterSDXLRefinerStart = z.infer<typeof zParameterSDXLRefinerStart>;
+// #endregion
+
+// #region Mask Blur Method
+const zParameterMaskBlurMethod = z.enum(['box', 'gaussian']);
+export type ParameterMaskBlurMethod = z.infer<typeof zParameterMaskBlurMethod>;
+// #endregion
+
+// #region Canvas Coherence Mode
+export const [zParameterCanvasCoherenceMode, isParameterCanvasCoherenceMode] = buildParameter(
+  z.enum(['Gaussian Blur', 'Box Blur', 'Staged'])
+);
+export type ParameterCanvasCoherenceMode = z.infer<typeof zParameterCanvasCoherenceMode>;
+// #endregion
+
+// #region LoRA weight
+export const [zLoRAWeight, isParameterLoRAWeight] = buildParameter(z.number());
+export type ParameterLoRAWeight = z.infer<typeof zLoRAWeight>;
+// #endregion

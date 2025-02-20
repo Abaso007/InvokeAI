@@ -1,4 +1,4 @@
-import { ImageDTO } from 'services/api/types';
+import type { ImageDTO } from 'services/api/types';
 
 export type DeleteImageState = {
   imagesToDelete: ImageDTO[];
@@ -6,8 +6,11 @@ export type DeleteImageState = {
 };
 
 export type ImageUsage = {
-  isInitialImage: boolean;
-  isCanvasImage: boolean;
+  isUpscaleImage: boolean;
+  isRasterLayerImage: boolean;
+  isInpaintMaskImage: boolean;
+  isRegionalGuidanceImage: boolean;
   isNodesImage: boolean;
-  isControlImage: boolean;
+  isControlLayerImage: boolean;
+  isReferenceImage: boolean;
 };

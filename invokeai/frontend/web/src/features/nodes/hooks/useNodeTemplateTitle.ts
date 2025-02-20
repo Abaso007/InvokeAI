@@ -1,31 +1,25 @@
+import { useStore } from '@nanostores/react';
 import { createSelector } from '@reduxjs/toolkit';
-import { stateSelector } from 'app/store/store';
 import { useAppSelector } from 'app/store/storeHooks';
-import { defaultSelectorOptions } from 'app/store/util/defaultMemoizeOptions';
+import { $templates } from 'features/nodes/store/nodesSlice';
+import { selectNodesSlice } from 'features/nodes/store/selectors';
+import { isInvocationNode } from 'features/nodes/types/invocation';
 import { useMemo } from 'react';
-import { isInvocationNode } from '../types/types';
 
-export const useNodeTemplateTitle = (nodeId: string) => {
+export const useNodeTemplateTitle = (nodeId: string): string | null => {
+  const templates = useStore($templates);
   const selector = useMemo(
     () =>
-      createSelector(
-        stateSelector,
-        ({ nodes }) => {
-          const node = nodes.nodes.find((node) => node.id === nodeId);
-          if (!isInvocationNode(node)) {
-            return false;
-          }
-          const nodeTemplate = node
-            ? nodes.nodeTemplates[node.data.type]
-            : undefined;
-
-          return nodeTemplate?.title;
-        },
-        defaultSelectorOptions
-      ),
-    [nodeId]
+      createSelector(selectNodesSlice, (nodesSlice) => {
+        const node = nodesSlice.nodes.find((node) => node.id === nodeId);
+        if (!isInvocationNode(node)) {
+          return null;
+        }
+        const template = templates[node.data.type];
+        return template?.title ?? null;
+      }),
+    [nodeId, templates]
   );
-
   const title = useAppSelector(selector);
   return title;
 };

@@ -4,10 +4,11 @@
 import numpy as np
 from pydantic import ValidationInfo, field_validator
 
+from invokeai.app.invocations.baseinvocation import BaseInvocation, invocation
+from invokeai.app.invocations.fields import InputField
 from invokeai.app.invocations.primitives import IntegerCollectionOutput
-from invokeai.app.util.misc import SEED_MAX, get_random_seed
-
-from .baseinvocation import BaseInvocation, InputField, InvocationContext, invocation
+from invokeai.app.services.shared.invocation_context import InvocationContext
+from invokeai.app.util.misc import SEED_MAX
 
 
 @invocation(
@@ -55,7 +56,7 @@ class RangeOfSizeInvocation(BaseInvocation):
     title="Random Range",
     tags=["range", "integer", "random", "collection"],
     category="collections",
-    version="1.0.0",
+    version="1.0.1",
     use_cache=False,
 )
 class RandomRangeInvocation(BaseInvocation):
@@ -65,10 +66,10 @@ class RandomRangeInvocation(BaseInvocation):
     high: int = InputField(default=np.iinfo(np.int32).max, description="The exclusive high value")
     size: int = InputField(default=1, description="The number of values to generate")
     seed: int = InputField(
+        default=0,
         ge=0,
         le=SEED_MAX,
         description="The seed for the RNG (omit for random)",
-        default_factory=get_random_seed,
     )
 
     def invoke(self, context: InvocationContext) -> IntegerCollectionOutput:

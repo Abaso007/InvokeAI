@@ -1,11 +1,10 @@
+import json
 import sqlite3
 import threading
 from typing import Optional, Union, cast
 
-from fastapi_events.handlers.local import local_handler
-from fastapi_events.typing import Event as FastAPIEvent
+from pydantic_core import to_jsonable_python
 
-from invokeai.app.services.events.events_base import EventServiceBase
 from invokeai.app.services.invoker import Invoker
 from invokeai.app.services.session_queue.session_queue_base import SessionQueueBase
 from invokeai.app.services.session_queue.session_queue_common import (
@@ -13,22 +12,28 @@ from invokeai.app.services.session_queue.session_queue_common import (
     QUEUE_ITEM_STATUS,
     Batch,
     BatchStatus,
+    CancelAllExceptCurrentResult,
     CancelByBatchIDsResult,
+    CancelByDestinationResult,
     CancelByQueueIDResult,
     ClearResult,
     EnqueueBatchResult,
     IsEmptyResult,
     IsFullResult,
     PruneResult,
+    RetryItemsResult,
+    SessionQueueCountsByDestination,
     SessionQueueItem,
     SessionQueueItemDTO,
     SessionQueueItemNotFoundError,
     SessionQueueStatus,
+    SessionQueueValueToInsert,
     calc_session_count,
     prepare_values_to_insert,
 )
+from invokeai.app.services.shared.graph import GraphExecutionState
 from invokeai.app.services.shared.pagination import CursorPaginatedResults
-from invokeai.app.services.shared.sqlite import SqliteDatabase
+from invokeai.app.services.shared.sqlite.sqlite_database import SqliteDatabase
 
 
 class SqliteSessionQueue(SessionQueueBase):
@@ -40,170 +45,20 @@ class SqliteSessionQueue(SessionQueueBase):
     def start(self, invoker: Invoker) -> None:
         self.__invoker = invoker
         self._set_in_progress_to_canceled()
-        prune_result = self.prune(DEFAULT_QUEUE_ID)
-        local_handler.register(event_name=EventServiceBase.queue_event, _func=self._on_session_event)
-        self.__invoker.services.logger.info(f"Pruned {prune_result.deleted} finished queue items")
+        if self.__invoker.services.configuration.clear_queue_on_startup:
+            clear_result = self.clear(DEFAULT_QUEUE_ID)
+            if clear_result.deleted > 0:
+                self.__invoker.services.logger.info(f"Cleared all {clear_result.deleted} queue items")
+        else:
+            prune_result = self.prune(DEFAULT_QUEUE_ID)
+            if prune_result.deleted > 0:
+                self.__invoker.services.logger.info(f"Pruned {prune_result.deleted} finished queue items")
 
     def __init__(self, db: SqliteDatabase) -> None:
         super().__init__()
         self.__lock = db.lock
         self.__conn = db.conn
         self.__cursor = self.__conn.cursor()
-        self._create_tables()
-
-    def _match_event_name(self, event: FastAPIEvent, match_in: list[str]) -> bool:
-        return event[1]["event"] in match_in
-
-    async def _on_session_event(self, event: FastAPIEvent) -> FastAPIEvent:
-        event_name = event[1]["event"]
-
-        # This was a match statement, but match is not supported on python 3.9
-        if event_name == "graph_execution_state_complete":
-            await self._handle_complete_event(event)
-        elif event_name in ["invocation_error", "session_retrieval_error", "invocation_retrieval_error"]:
-            await self._handle_error_event(event)
-        elif event_name == "session_canceled":
-            await self._handle_cancel_event(event)
-        return event
-
-    async def _handle_complete_event(self, event: FastAPIEvent) -> None:
-        try:
-            item_id = event[1]["data"]["queue_item_id"]
-            # When a queue item has an error, we get an error event, then a completed event.
-            # Mark the queue item completed only if it isn't already marked completed, e.g.
-            # by a previously-handled error event.
-            queue_item = self.get_queue_item(item_id)
-            if queue_item.status not in ["completed", "failed", "canceled"]:
-                queue_item = self._set_queue_item_status(item_id=queue_item.item_id, status="completed")
-        except SessionQueueItemNotFoundError:
-            return
-
-    async def _handle_error_event(self, event: FastAPIEvent) -> None:
-        try:
-            item_id = event[1]["data"]["queue_item_id"]
-            error = event[1]["data"]["error"]
-            queue_item = self.get_queue_item(item_id)
-            # always set to failed if have an error, even if previously the item was marked completed or canceled
-            queue_item = self._set_queue_item_status(item_id=queue_item.item_id, status="failed", error=error)
-        except SessionQueueItemNotFoundError:
-            return
-
-    async def _handle_cancel_event(self, event: FastAPIEvent) -> None:
-        try:
-            item_id = event[1]["data"]["queue_item_id"]
-            queue_item = self.get_queue_item(item_id)
-            if queue_item.status not in ["completed", "failed", "canceled"]:
-                queue_item = self._set_queue_item_status(item_id=queue_item.item_id, status="canceled")
-        except SessionQueueItemNotFoundError:
-            return
-
-    def _create_tables(self) -> None:
-        """Creates the session queue tables, indicies, and triggers"""
-        try:
-            self.__lock.acquire()
-            self.__cursor.execute(
-                """--sql
-                CREATE TABLE IF NOT EXISTS session_queue (
-                    item_id INTEGER PRIMARY KEY AUTOINCREMENT, -- used for ordering, cursor pagination
-                    batch_id TEXT NOT NULL, -- identifier of the batch this queue item belongs to
-                    queue_id TEXT NOT NULL, -- identifier of the queue this queue item belongs to
-                    session_id TEXT NOT NULL UNIQUE, -- duplicated data from the session column, for ease of access
-                    field_values TEXT, -- NULL if no values are associated with this queue item
-                    session TEXT NOT NULL, -- the session to be executed
-                    status TEXT NOT NULL DEFAULT 'pending', -- the status of the queue item, one of 'pending', 'in_progress', 'completed', 'failed', 'canceled'
-                    priority INTEGER NOT NULL DEFAULT 0, -- the priority, higher is more important
-                    error TEXT, -- any errors associated with this queue item
-                    created_at DATETIME NOT NULL DEFAULT(STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')),
-                    updated_at DATETIME NOT NULL DEFAULT(STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')), -- updated via trigger
-                    started_at DATETIME, -- updated via trigger
-                    completed_at DATETIME -- updated via trigger, completed items are cleaned up on application startup
-                    -- Ideally this is a FK, but graph_executions uses INSERT OR REPLACE, and REPLACE triggers the ON DELETE CASCADE...
-                    -- FOREIGN KEY (session_id) REFERENCES graph_executions (id) ON DELETE CASCADE
-                );
-                """
-            )
-
-            self.__cursor.execute(
-                """--sql
-                CREATE UNIQUE INDEX IF NOT EXISTS idx_session_queue_item_id ON session_queue(item_id);
-                """
-            )
-
-            self.__cursor.execute(
-                """--sql
-                CREATE UNIQUE INDEX IF NOT EXISTS idx_session_queue_session_id ON session_queue(session_id);
-                """
-            )
-
-            self.__cursor.execute(
-                """--sql
-                CREATE INDEX IF NOT EXISTS idx_session_queue_batch_id ON session_queue(batch_id);
-                """
-            )
-
-            self.__cursor.execute(
-                """--sql
-                CREATE INDEX IF NOT EXISTS idx_session_queue_created_priority ON session_queue(priority);
-                """
-            )
-
-            self.__cursor.execute(
-                """--sql
-                CREATE INDEX IF NOT EXISTS idx_session_queue_created_status ON session_queue(status);
-                """
-            )
-
-            self.__cursor.execute(
-                """--sql
-                CREATE TRIGGER IF NOT EXISTS tg_session_queue_completed_at
-                AFTER UPDATE OF status ON session_queue
-                FOR EACH ROW
-                WHEN
-                  NEW.status = 'completed'
-                  OR NEW.status = 'failed'
-                  OR NEW.status = 'canceled'
-                BEGIN
-                  UPDATE session_queue
-                  SET completed_at = STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')
-                  WHERE item_id = NEW.item_id;
-                END;
-                """
-            )
-
-            self.__cursor.execute(
-                """--sql
-                CREATE TRIGGER IF NOT EXISTS tg_session_queue_started_at
-                AFTER UPDATE OF status ON session_queue
-                FOR EACH ROW
-                WHEN
-                  NEW.status = 'in_progress'
-                BEGIN
-                  UPDATE session_queue
-                  SET started_at = STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')
-                  WHERE item_id = NEW.item_id;
-                END;
-                """
-            )
-
-            self.__cursor.execute(
-                """--sql
-                CREATE TRIGGER IF NOT EXISTS tg_session_queue_updated_at
-                AFTER UPDATE
-                ON session_queue FOR EACH ROW
-                BEGIN
-                    UPDATE session_queue
-                    SET updated_at = STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')
-                    WHERE item_id = old.item_id;
-                END;
-                """
-            )
-
-            self.__conn.commit()
-        except Exception:
-            self.__conn.rollback()
-            raise
-        finally:
-            self.__lock.release()
 
     def _set_in_progress_to_canceled(self) -> None:
         """
@@ -259,7 +114,7 @@ class SqliteSessionQueue(SessionQueueBase):
 
             # TODO: how does this work in a multi-user scenario?
             current_queue_size = self._get_current_queue_size(queue_id)
-            max_queue_size = self.__invoker.services.configuration.get_config().max_queue_size
+            max_queue_size = self.__invoker.services.configuration.max_queue_size
             max_new_queue_items = max_queue_size - current_queue_size
 
             priority = 0
@@ -280,8 +135,8 @@ class SqliteSessionQueue(SessionQueueBase):
 
             self.__cursor.executemany(
                 """--sql
-                INSERT INTO session_queue (queue_id, session, session_id, batch_id, field_values, priority)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO session_queue (queue_id, session, session_id, batch_id, field_values, priority, workflow, origin, destination, retried_from_item_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 values_to_insert,
             )
@@ -379,17 +234,22 @@ class SqliteSessionQueue(SessionQueueBase):
         return SessionQueueItem.queue_item_from_dict(dict(result))
 
     def _set_queue_item_status(
-        self, item_id: int, status: QUEUE_ITEM_STATUS, error: Optional[str] = None
+        self,
+        item_id: int,
+        status: QUEUE_ITEM_STATUS,
+        error_type: Optional[str] = None,
+        error_message: Optional[str] = None,
+        error_traceback: Optional[str] = None,
     ) -> SessionQueueItem:
         try:
             self.__lock.acquire()
             self.__cursor.execute(
                 """--sql
                 UPDATE session_queue
-                SET status = ?, error = ?
+                SET status = ?, error_type = ?, error_message = ?, error_traceback = ?
                 WHERE item_id = ?
                 """,
-                (status, error, item_id),
+                (status, error_type, error_message, error_traceback, item_id),
             )
             self.__conn.commit()
         except Exception:
@@ -400,11 +260,7 @@ class SqliteSessionQueue(SessionQueueBase):
         queue_item = self.get_queue_item(item_id)
         batch_status = self.get_batch_status(queue_id=queue_item.queue_id, batch_id=queue_item.batch_id)
         queue_status = self.get_queue_status(queue_id=queue_item.queue_id)
-        self.__invoker.services.events.emit_queue_item_status_changed(
-            session_queue_item=queue_item,
-            batch_status=batch_status,
-            queue_status=queue_status,
-        )
+        self.__invoker.services.events.emit_queue_item_status_changed(queue_item, batch_status, queue_status)
         return queue_item
 
     def is_empty(self, queue_id: str) -> IsEmptyResult:
@@ -445,26 +301,6 @@ class SqliteSessionQueue(SessionQueueBase):
         finally:
             self.__lock.release()
         return IsFullResult(is_full=is_full)
-
-    def delete_queue_item(self, item_id: int) -> SessionQueueItem:
-        queue_item = self.get_queue_item(item_id=item_id)
-        try:
-            self.__lock.acquire()
-            self.__cursor.execute(
-                """--sql
-                DELETE FROM session_queue
-                WHERE
-                  item_id = ?
-                """,
-                (item_id,),
-            )
-            self.__conn.commit()
-        except Exception:
-            self.__conn.rollback()
-            raise
-        finally:
-            self.__lock.release()
-        return queue_item
 
     def clear(self, queue_id: str) -> ClearResult:
         try:
@@ -532,18 +368,28 @@ class SqliteSessionQueue(SessionQueueBase):
             self.__lock.release()
         return PruneResult(deleted=count)
 
-    def cancel_queue_item(self, item_id: int, error: Optional[str] = None) -> SessionQueueItem:
-        queue_item = self.get_queue_item(item_id)
-        if queue_item.status not in ["canceled", "failed", "completed"]:
-            status = "failed" if error is not None else "canceled"
-            queue_item = self._set_queue_item_status(item_id=item_id, status=status, error=error)  # type: ignore [arg-type] # mypy seems to not narrow the Literals here
-            self.__invoker.services.queue.cancel(queue_item.session_id)
-            self.__invoker.services.events.emit_session_canceled(
-                queue_item_id=queue_item.item_id,
-                queue_id=queue_item.queue_id,
-                queue_batch_id=queue_item.batch_id,
-                graph_execution_state_id=queue_item.session_id,
-            )
+    def cancel_queue_item(self, item_id: int) -> SessionQueueItem:
+        queue_item = self._set_queue_item_status(item_id=item_id, status="canceled")
+        return queue_item
+
+    def complete_queue_item(self, item_id: int) -> SessionQueueItem:
+        queue_item = self._set_queue_item_status(item_id=item_id, status="completed")
+        return queue_item
+
+    def fail_queue_item(
+        self,
+        item_id: int,
+        error_type: str,
+        error_message: str,
+        error_traceback: str,
+    ) -> SessionQueueItem:
+        queue_item = self._set_queue_item_status(
+            item_id=item_id,
+            status="failed",
+            error_type=error_type,
+            error_message=error_message,
+            error_traceback=error_traceback,
+        )
         return queue_item
 
     def cancel_by_batch_ids(self, queue_id: str, batch_ids: list[str]) -> CancelByBatchIDsResult:
@@ -579,26 +425,53 @@ class SqliteSessionQueue(SessionQueueBase):
             )
             self.__conn.commit()
             if current_queue_item is not None and current_queue_item.batch_id in batch_ids:
-                self.__invoker.services.queue.cancel(current_queue_item.session_id)
-                self.__invoker.services.events.emit_session_canceled(
-                    queue_item_id=current_queue_item.item_id,
-                    queue_id=current_queue_item.queue_id,
-                    queue_batch_id=current_queue_item.batch_id,
-                    graph_execution_state_id=current_queue_item.session_id,
-                )
-                batch_status = self.get_batch_status(queue_id=queue_id, batch_id=current_queue_item.batch_id)
-                queue_status = self.get_queue_status(queue_id=queue_id)
-                self.__invoker.services.events.emit_queue_item_status_changed(
-                    session_queue_item=current_queue_item,
-                    batch_status=batch_status,
-                    queue_status=queue_status,
-                )
+                self._set_queue_item_status(current_queue_item.item_id, "canceled")
         except Exception:
             self.__conn.rollback()
             raise
         finally:
             self.__lock.release()
         return CancelByBatchIDsResult(canceled=count)
+
+    def cancel_by_destination(self, queue_id: str, destination: str) -> CancelByDestinationResult:
+        try:
+            current_queue_item = self.get_current(queue_id)
+            self.__lock.acquire()
+            where = """--sql
+                WHERE
+                  queue_id == ?
+                  AND destination == ?
+                  AND status != 'canceled'
+                  AND status != 'completed'
+                  AND status != 'failed'
+                """
+            params = (queue_id, destination)
+            self.__cursor.execute(
+                f"""--sql
+                SELECT COUNT(*)
+                FROM session_queue
+                {where};
+                """,
+                params,
+            )
+            count = self.__cursor.fetchone()[0]
+            self.__cursor.execute(
+                f"""--sql
+                UPDATE session_queue
+                SET status = 'canceled'
+                {where};
+                """,
+                params,
+            )
+            self.__conn.commit()
+            if current_queue_item is not None and current_queue_item.destination == destination:
+                self._set_queue_item_status(current_queue_item.item_id, "canceled")
+        except Exception:
+            self.__conn.rollback()
+            raise
+        finally:
+            self.__lock.release()
+        return CancelByDestinationResult(canceled=count)
 
     def cancel_by_queue_id(self, queue_id: str) -> CancelByQueueIDResult:
         try:
@@ -631,19 +504,10 @@ class SqliteSessionQueue(SessionQueueBase):
             )
             self.__conn.commit()
             if current_queue_item is not None and current_queue_item.queue_id == queue_id:
-                self.__invoker.services.queue.cancel(current_queue_item.session_id)
-                self.__invoker.services.events.emit_session_canceled(
-                    queue_item_id=current_queue_item.item_id,
-                    queue_id=current_queue_item.queue_id,
-                    queue_batch_id=current_queue_item.batch_id,
-                    graph_execution_state_id=current_queue_item.session_id,
-                )
                 batch_status = self.get_batch_status(queue_id=queue_id, batch_id=current_queue_item.batch_id)
                 queue_status = self.get_queue_status(queue_id=queue_id)
                 self.__invoker.services.events.emit_queue_item_status_changed(
-                    session_queue_item=current_queue_item,
-                    batch_status=batch_status,
-                    queue_status=queue_status,
+                    current_queue_item, batch_status, queue_status
                 )
         except Exception:
             self.__conn.rollback()
@@ -651,6 +515,39 @@ class SqliteSessionQueue(SessionQueueBase):
         finally:
             self.__lock.release()
         return CancelByQueueIDResult(canceled=count)
+
+    def cancel_all_except_current(self, queue_id: str) -> CancelAllExceptCurrentResult:
+        try:
+            where = """--sql
+                WHERE
+                  queue_id == ?
+                  AND status == 'pending'
+                """
+            self.__lock.acquire()
+            self.__cursor.execute(
+                f"""--sql
+                SELECT COUNT(*)
+                FROM session_queue
+                {where};
+                """,
+                (queue_id,),
+            )
+            count = self.__cursor.fetchone()[0]
+            self.__cursor.execute(
+                f"""--sql
+                UPDATE session_queue
+                SET status = 'canceled'
+                {where};
+                """,
+                (queue_id,),
+            )
+            self.__conn.commit()
+        except Exception:
+            self.__conn.rollback()
+            raise
+        finally:
+            self.__lock.release()
+        return CancelAllExceptCurrentResult(canceled=count)
 
     def get_queue_item(self, item_id: int) -> SessionQueueItem:
         try:
@@ -673,6 +570,29 @@ class SqliteSessionQueue(SessionQueueBase):
             raise SessionQueueItemNotFoundError(f"No queue item with id {item_id}")
         return SessionQueueItem.queue_item_from_dict(dict(result))
 
+    def set_queue_item_session(self, item_id: int, session: GraphExecutionState) -> SessionQueueItem:
+        try:
+            # Use exclude_none so we don't end up with a bunch of nulls in the graph - this can cause validation errors
+            # when the graph is loaded. Graph execution occurs purely in memory - the session saved here is not referenced
+            # during execution.
+            session_json = session.model_dump_json(warnings=False, exclude_none=True)
+            self.__lock.acquire()
+            self.__cursor.execute(
+                """--sql
+                UPDATE session_queue
+                SET session = ?
+                WHERE item_id = ?
+                """,
+                (session_json, item_id),
+            )
+            self.__conn.commit()
+        except Exception:
+            self.__conn.rollback()
+            raise
+        finally:
+            self.__lock.release()
+        return self.get_queue_item(item_id)
+
     def list_queue_items(
         self,
         queue_id: str,
@@ -689,14 +609,18 @@ class SqliteSessionQueue(SessionQueueBase):
                     status,
                     priority,
                     field_values,
-                    error,
+                    error_type,
+                    error_message,
+                    error_traceback,
                     created_at,
                     updated_at,
                     completed_at,
                     started_at,
                     session_id,
                     batch_id,
-                    queue_id
+                    queue_id,
+                    origin,
+                    destination
                 FROM session_queue
                 WHERE queue_id = ?
             """
@@ -776,7 +700,7 @@ class SqliteSessionQueue(SessionQueueBase):
             self.__lock.acquire()
             self.__cursor.execute(
                 """--sql
-                SELECT status, count(*)
+                SELECT status, count(*), origin, destination
                 FROM session_queue
                 WHERE
                   queue_id = ?
@@ -788,6 +712,8 @@ class SqliteSessionQueue(SessionQueueBase):
             result = cast(list[sqlite3.Row], self.__cursor.fetchall())
             total = sum(row[1] for row in result)
             counts: dict[str, int] = {row[0]: row[1] for row in result}
+            origin = result[0]["origin"] if result else None
+            destination = result[0]["destination"] if result else None
         except Exception:
             self.__conn.rollback()
             raise
@@ -796,6 +722,8 @@ class SqliteSessionQueue(SessionQueueBase):
 
         return BatchStatus(
             batch_id=batch_id,
+            origin=origin,
+            destination=destination,
             queue_id=queue_id,
             pending=counts.get("pending", 0),
             in_progress=counts.get("in_progress", 0),
@@ -804,3 +732,105 @@ class SqliteSessionQueue(SessionQueueBase):
             canceled=counts.get("canceled", 0),
             total=total,
         )
+
+    def get_counts_by_destination(self, queue_id: str, destination: str) -> SessionQueueCountsByDestination:
+        try:
+            self.__lock.acquire()
+            self.__cursor.execute(
+                """--sql
+                SELECT status, count(*)
+                FROM session_queue
+                WHERE queue_id = ?
+                AND destination = ?
+                GROUP BY status
+                """,
+                (queue_id, destination),
+            )
+            counts_result = cast(list[sqlite3.Row], self.__cursor.fetchall())
+        except Exception:
+            self.__conn.rollback()
+            raise
+        finally:
+            self.__lock.release()
+
+        total = sum(row[1] for row in counts_result)
+        counts: dict[str, int] = {row[0]: row[1] for row in counts_result}
+
+        return SessionQueueCountsByDestination(
+            queue_id=queue_id,
+            destination=destination,
+            pending=counts.get("pending", 0),
+            in_progress=counts.get("in_progress", 0),
+            completed=counts.get("completed", 0),
+            failed=counts.get("failed", 0),
+            canceled=counts.get("canceled", 0),
+            total=total,
+        )
+
+    def retry_items_by_id(self, queue_id: str, item_ids: list[int]) -> RetryItemsResult:
+        """Retries the given queue items"""
+        try:
+            self.__lock.acquire()
+
+            values_to_insert: list[SessionQueueValueToInsert] = []
+            retried_item_ids: list[int] = []
+
+            for item_id in item_ids:
+                queue_item = self.get_queue_item(item_id)
+
+                if queue_item.status not in ("failed", "canceled"):
+                    continue
+
+                retried_item_ids.append(item_id)
+
+                field_values_json = (
+                    json.dumps(queue_item.field_values, default=to_jsonable_python) if queue_item.field_values else None
+                )
+                workflow_json = (
+                    json.dumps(queue_item.workflow, default=to_jsonable_python) if queue_item.workflow else None
+                )
+                cloned_session = GraphExecutionState(graph=queue_item.session.graph)
+                cloned_session_json = cloned_session.model_dump_json(warnings=False, exclude_none=True)
+
+                retried_from_item_id = (
+                    queue_item.retried_from_item_id
+                    if queue_item.retried_from_item_id is not None
+                    else queue_item.item_id
+                )
+
+                value_to_insert = SessionQueueValueToInsert(
+                    queue_id=queue_item.queue_id,
+                    batch_id=queue_item.batch_id,
+                    destination=queue_item.destination,
+                    field_values=field_values_json,
+                    origin=queue_item.origin,
+                    priority=queue_item.priority,
+                    workflow=workflow_json,
+                    session=cloned_session_json,
+                    session_id=cloned_session.id,
+                    retried_from_item_id=retried_from_item_id,
+                )
+                values_to_insert.append(value_to_insert)
+
+            # TODO(psyche): Handle max queue size?
+
+            self.__cursor.executemany(
+                """--sql
+                INSERT INTO session_queue (queue_id, session, session_id, batch_id, field_values, priority, workflow, origin, destination, retried_from_item_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                values_to_insert,
+            )
+
+            self.__conn.commit()
+        except Exception:
+            self.__conn.rollback()
+            raise
+        finally:
+            self.__lock.release()
+        retry_result = RetryItemsResult(
+            queue_id=queue_id,
+            retried_item_ids=retried_item_ids,
+        )
+        self.__invoker.services.events.emit_queue_items_retried(retry_result)
+        return retry_result

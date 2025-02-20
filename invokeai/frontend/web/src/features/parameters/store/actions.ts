@@ -1,10 +1,6 @@
 import { createAction } from '@reduxjs/toolkit';
-import { ImageDTO, MainModelField, OnnxModelField } from 'services/api/types';
+import type { ParameterModel } from 'features/parameters/types/parameterSchemas';
 
-export const initialImageSelected = createAction<ImageDTO | undefined>(
-  'generation/initialImageSelected'
-);
+export const modelSelected = createAction<ParameterModel>('generation/modelSelected');
 
-export const modelSelected = createAction<MainModelField | OnnxModelField>(
-  'generation/modelSelected'
-);
+export const setDefaultSettings = createAction('generation/setDefaultSettings');

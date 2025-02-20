@@ -1,15 +1,16 @@
-import { Box, Flex } from '@chakra-ui/react';
+import { Box, Flex, Textarea } from '@invoke-ai/ui-library';
+import type { Node, NodeProps } from '@xyflow/react';
 import { useAppDispatch } from 'app/store/storeHooks';
-import IAITextarea from 'common/components/IAITextarea';
+import NodeCollapseButton from 'features/nodes/components/flow/nodes/common/NodeCollapseButton';
+import NodeTitle from 'features/nodes/components/flow/nodes/common/NodeTitle';
+import NodeWrapper from 'features/nodes/components/flow/nodes/common/NodeWrapper';
 import { notesNodeValueChanged } from 'features/nodes/store/nodesSlice';
-import { NotesNodeData } from 'features/nodes/types/types';
-import { ChangeEvent, memo, useCallback } from 'react';
-import { NodeProps } from 'reactflow';
-import NodeWrapper from '../common/NodeWrapper';
-import NodeCollapseButton from '../common/NodeCollapseButton';
-import NodeTitle from '../common/NodeTitle';
+import { NO_DRAG_CLASS, NO_PAN_CLASS } from 'features/nodes/types/constants';
+import type { NotesNodeData } from 'features/nodes/types/invocation';
+import type { ChangeEvent } from 'react';
+import { memo, useCallback } from 'react';
 
-const NotesNode = (props: NodeProps<NotesNodeData>) => {
+const NotesNode = (props: NodeProps<Node<NotesNodeData>>) => {
   const { id: nodeId, data, selected } = props;
   const { notes, isOpen } = data;
   const dispatch = useAppDispatch();
@@ -24,13 +25,11 @@ const NotesNode = (props: NodeProps<NotesNodeData>) => {
     <NodeWrapper nodeId={nodeId} selected={selected}>
       <Flex
         layerStyle="nodeHeader"
-        sx={{
-          borderTopRadius: 'base',
-          borderBottomRadius: isOpen ? 0 : 'base',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          h: 8,
-        }}
+        borderTopRadius="base"
+        borderBottomRadius={isOpen ? 0 : 'base'}
+        alignItems="center"
+        justifyContent="space-between"
+        h={8}
       >
         <NodeCollapseButton nodeId={nodeId} isOpen={isOpen} />
         <NodeTitle nodeId={nodeId} title="Notes" />
@@ -40,27 +39,23 @@ const NotesNode = (props: NodeProps<NotesNodeData>) => {
         <>
           <Flex
             layerStyle="nodeBody"
-            className="nopan"
-            sx={{
-              cursor: 'auto',
-              flexDirection: 'column',
-              borderBottomRadius: 'base',
-              w: 'full',
-              h: 'full',
-              p: 2,
-              gap: 1,
-            }}
+            className={NO_PAN_CLASS}
+            cursor="auto"
+            flexDirection="column"
+            borderBottomRadius="base"
+            w="full"
+            h="full"
+            p={2}
+            gap={1}
           >
-            <Flex
-              className="nopan"
-              sx={{ flexDir: 'column', w: 'full', h: 'full' }}
-            >
-              <IAITextarea
+            <Flex className={NO_PAN_CLASS} w="full" h="full" flexDir="column">
+              <Textarea
+                className={NO_DRAG_CLASS}
                 value={notes}
                 onChange={handleChange}
                 rows={8}
                 resize="none"
-                sx={{ fontSize: 'xs' }}
+                fontSize="sm"
               />
             </Flex>
           </Flex>

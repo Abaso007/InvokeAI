@@ -1,54 +1,27 @@
-import { Flex } from '@chakra-ui/layout';
-import { Portal } from '@chakra-ui/portal';
-import IAIIconButton from 'common/components/IAIIconButton';
-import { RefObject, memo } from 'react';
+import { Flex, IconButton, Tooltip } from '@invoke-ai/ui-library';
+import type { UsePanelReturn } from 'features/ui/hooks/usePanel';
+import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MdPhotoLibrary } from 'react-icons/md';
-import { ImperativePanelHandle } from 'react-resizable-panels';
+import { PiImagesSquareBold } from 'react-icons/pi';
 
 type Props = {
-  isGalleryCollapsed: boolean;
-  galleryPanelRef: RefObject<ImperativePanelHandle>;
+  panelApi: UsePanelReturn;
 };
 
-const FloatingGalleryButton = ({
-  isGalleryCollapsed,
-  galleryPanelRef,
-}: Props) => {
+const FloatingGalleryButton = (props: Props) => {
   const { t } = useTranslation();
 
-  const handleShowGallery = () => {
-    galleryPanelRef.current?.expand();
-  };
-
-  if (!isGalleryCollapsed) {
-    return null;
-  }
-
   return (
-    <Portal>
-      <Flex
-        pos="absolute"
-        transform="translate(0, -50%)"
-        minW={8}
-        top="50%"
-        insetInlineEnd="1.63rem"
-      >
-        <IAIIconButton
-          tooltip="Show Gallery (G)"
-          tooltipProps={{ placement: 'top' }}
-          aria-label={t('accessibility.showGalleryPanel')}
-          onClick={handleShowGallery}
-          icon={<MdPhotoLibrary />}
-          sx={{
-            p: 0,
-            px: 3,
-            h: 48,
-            borderEndRadius: 0,
-          }}
+    <Flex pos="absolute" transform="translate(0, -50%)" minW={8} top="50%" insetInlineEnd={2}>
+      <Tooltip label={t('accessibility.toggleRightPanel')} placement="start">
+        <IconButton
+          aria-label={t('accessibility.toggleRightPanel')}
+          onClick={props.panelApi.toggle}
+          icon={<PiImagesSquareBold />}
+          h={48}
         />
-      </Flex>
-    </Portal>
+      </Tooltip>
+    </Flex>
   );
 };
 

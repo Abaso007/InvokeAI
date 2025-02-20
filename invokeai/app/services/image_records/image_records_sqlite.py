@@ -3,12 +3,9 @@ import threading
 from datetime import datetime
 from typing import Optional, Union, cast
 
-from invokeai.app.invocations.baseinvocation import MetadataField, MetadataFieldValidator
-from invokeai.app.services.shared.pagination import OffsetPaginatedResults
-from invokeai.app.services.shared.sqlite import SqliteDatabase
-
-from .image_records_base import ImageRecordStorageBase
-from .image_records_common import (
+from invokeai.app.invocations.fields import MetadataField, MetadataFieldValidator
+from invokeai.app.services.image_records.image_records_base import ImageRecordStorageBase
+from invokeai.app.services.image_records.image_records_common import (
     IMAGE_DTO_COLS,
     ImageCategory,
     ImageRecord,
@@ -19,6 +16,9 @@ from .image_records_common import (
     ResourceOrigin,
     deserialize_image_record,
 )
+from invokeai.app.services.shared.pagination import OffsetPaginatedResults
+from invokeai.app.services.shared.sqlite.sqlite_common import SQLiteDirection
+from invokeai.app.services.shared.sqlite.sqlite_database import SqliteDatabase
 
 
 class SqliteImageRecordStorage(ImageRecordStorageBase):
@@ -31,91 +31,6 @@ class SqliteImageRecordStorage(ImageRecordStorageBase):
         self._lock = db.lock
         self._conn = db.conn
         self._cursor = self._conn.cursor()
-
-        try:
-            self._lock.acquire()
-            self._create_tables()
-            self._conn.commit()
-        finally:
-            self._lock.release()
-
-    def _create_tables(self) -> None:
-        """Creates the `images` table."""
-
-        # Create the `images` table.
-        self._cursor.execute(
-            """--sql
-            CREATE TABLE IF NOT EXISTS images (
-                image_name TEXT NOT NULL PRIMARY KEY,
-                -- This is an enum in python, unrestricted string here for flexibility
-                image_origin TEXT NOT NULL,
-                -- This is an enum in python, unrestricted string here for flexibility
-                image_category TEXT NOT NULL,
-                width INTEGER NOT NULL,
-                height INTEGER NOT NULL,
-                session_id TEXT,
-                node_id TEXT,
-                metadata TEXT,
-                is_intermediate BOOLEAN DEFAULT FALSE,
-                created_at DATETIME NOT NULL DEFAULT(STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')),
-                -- Updated via trigger
-                updated_at DATETIME NOT NULL DEFAULT(STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')),
-                -- Soft delete, currently unused
-                deleted_at DATETIME
-            );
-            """
-        )
-
-        self._cursor.execute("PRAGMA table_info(images)")
-        columns = [column[1] for column in self._cursor.fetchall()]
-
-        if "starred" not in columns:
-            self._cursor.execute(
-                """--sql
-                ALTER TABLE images ADD COLUMN starred BOOLEAN DEFAULT FALSE;
-                """
-            )
-
-        # Create the `images` table indices.
-        self._cursor.execute(
-            """--sql
-            CREATE UNIQUE INDEX IF NOT EXISTS idx_images_image_name ON images(image_name);
-            """
-        )
-        self._cursor.execute(
-            """--sql
-            CREATE INDEX IF NOT EXISTS idx_images_image_origin ON images(image_origin);
-            """
-        )
-        self._cursor.execute(
-            """--sql
-            CREATE INDEX IF NOT EXISTS idx_images_image_category ON images(image_category);
-            """
-        )
-        self._cursor.execute(
-            """--sql
-            CREATE INDEX IF NOT EXISTS idx_images_created_at ON images(created_at);
-            """
-        )
-
-        self._cursor.execute(
-            """--sql
-            CREATE INDEX IF NOT EXISTS idx_images_starred ON images(starred);
-            """
-        )
-
-        # Add trigger for `updated_at`.
-        self._cursor.execute(
-            """--sql
-            CREATE TRIGGER IF NOT EXISTS tg_images_updated_at
-            AFTER UPDATE
-            ON images FOR EACH ROW
-            BEGIN
-                UPDATE images SET updated_at = STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')
-                    WHERE image_name = old.image_name;
-            END;
-            """
-        )
 
     def get(self, image_name: str) -> ImageRecord:
         try:
@@ -229,10 +144,13 @@ class SqliteImageRecordStorage(ImageRecordStorageBase):
         self,
         offset: int = 0,
         limit: int = 10,
+        starred_first: bool = True,
+        order_dir: SQLiteDirection = SQLiteDirection.Descending,
         image_origin: Optional[ResourceOrigin] = None,
         categories: Optional[list[ImageCategory]] = None,
         is_intermediate: Optional[bool] = None,
         board_id: Optional[str] = None,
+        search_term: Optional[str] = None,
     ) -> OffsetPaginatedResults[ImageRecord]:
         try:
             self._lock.acquire()
@@ -263,7 +181,7 @@ class SqliteImageRecordStorage(ImageRecordStorageBase):
 
             if categories is not None:
                 # Convert the enum values to unique list of strings
-                category_strings = list(map(lambda c: c.value, set(categories)))
+                category_strings = [c.value for c in set(categories)]
                 # Create the correct length of placeholders
                 placeholders = ",".join("?" * len(category_strings))
 
@@ -293,9 +211,21 @@ class SqliteImageRecordStorage(ImageRecordStorageBase):
                 """
                 query_params.append(board_id)
 
-            query_pagination = """--sql
-            ORDER BY images.starred DESC, images.created_at DESC LIMIT ? OFFSET ?
-            """
+            # Search term condition
+            if search_term:
+                query_conditions += """--sql
+                AND images.metadata LIKE ?
+                """
+                query_params.append(f"%{search_term.lower()}%")
+
+            if starred_first:
+                query_pagination = f"""--sql
+                ORDER BY images.starred DESC, images.created_at {order_dir.value} LIMIT ? OFFSET ?
+                """
+            else:
+                query_pagination = f"""--sql
+                ORDER BY images.created_at {order_dir.value} LIMIT ? OFFSET ?
+                """
 
             # Final images query with pagination
             images_query += query_conditions + query_pagination + ";"
@@ -307,7 +237,7 @@ class SqliteImageRecordStorage(ImageRecordStorageBase):
             # Build the list of images, deserializing each row
             self._cursor.execute(images_query, images_params)
             result = cast(list[sqlite3.Row], self._cursor.fetchall())
-            images = list(map(lambda r: deserialize_image_record(dict(r)), result))
+            images = [deserialize_image_record(dict(r)) for r in result]
 
             # Set up and execute the count query, without pagination
             count_query += query_conditions + ";"
@@ -386,7 +316,7 @@ class SqliteImageRecordStorage(ImageRecordStorageBase):
                 """
             )
             result = cast(list[sqlite3.Row], self._cursor.fetchall())
-            image_names = list(map(lambda r: r[0], result))
+            image_names = [r[0] for r in result]
             self._cursor.execute(
                 """--sql
                 DELETE FROM images
@@ -408,14 +338,14 @@ class SqliteImageRecordStorage(ImageRecordStorageBase):
         image_category: ImageCategory,
         width: int,
         height: int,
+        has_workflow: bool,
         is_intermediate: Optional[bool] = False,
         starred: Optional[bool] = False,
         session_id: Optional[str] = None,
         node_id: Optional[str] = None,
-        metadata: Optional[MetadataField] = None,
+        metadata: Optional[str] = None,
     ) -> datetime:
         try:
-            metadata_json = metadata.model_dump_json() if metadata is not None else None
             self._lock.acquire()
             self._cursor.execute(
                 """--sql
@@ -429,9 +359,10 @@ class SqliteImageRecordStorage(ImageRecordStorageBase):
                     session_id,
                     metadata,
                     is_intermediate,
-                    starred
+                    starred,
+                    has_workflow
                     )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
                 """,
                 (
                     image_name,
@@ -441,9 +372,10 @@ class SqliteImageRecordStorage(ImageRecordStorageBase):
                     height,
                     node_id,
                     session_id,
-                    metadata_json,
+                    metadata,
                     is_intermediate,
                     starred,
+                    has_workflow,
                 ),
             )
             self._conn.commit()
@@ -475,6 +407,7 @@ class SqliteImageRecordStorage(ImageRecordStorageBase):
                 FROM images
                 JOIN board_images ON images.image_name = board_images.image_name
                 WHERE board_images.board_id = ?
+                AND images.is_intermediate = FALSE
                 ORDER BY images.starred DESC, images.created_at DESC
                 LIMIT 1;
                 """,

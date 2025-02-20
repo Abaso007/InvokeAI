@@ -2,18 +2,22 @@ import io
 import traceback
 from typing import Optional
 
-from fastapi import Body, HTTPException, Path, Query, Request, Response, UploadFile
+from fastapi import BackgroundTasks, Body, HTTPException, Path, Query, Request, Response, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.routing import APIRouter
 from PIL import Image
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, JsonValue
 
-from invokeai.app.invocations.baseinvocation import MetadataField, MetadataFieldValidator, WorkflowFieldValidator
-from invokeai.app.services.image_records.image_records_common import ImageCategory, ImageRecordChanges, ResourceOrigin
+from invokeai.app.api.dependencies import ApiDependencies
+from invokeai.app.invocations.fields import MetadataField
+from invokeai.app.services.image_records.image_records_common import (
+    ImageCategory,
+    ImageRecordChanges,
+    ResourceOrigin,
+)
 from invokeai.app.services.images.images_common import ImageDTO, ImageUrlsDTO
 from invokeai.app.services.shared.pagination import OffsetPaginatedResults
-
-from ..dependencies import ApiDependencies
+from invokeai.app.services.shared.sqlite.sqlite_common import SQLiteDirection
 
 images_router = APIRouter(prefix="/v1/images", tags=["images"])
 
@@ -41,13 +45,17 @@ async def upload_image(
     board_id: Optional[str] = Query(default=None, description="The board to add this image to, if any"),
     session_id: Optional[str] = Query(default=None, description="The session ID associated with this upload, if any"),
     crop_visible: Optional[bool] = Query(default=False, description="Whether to crop the image"),
+    metadata: Optional[JsonValue] = Body(
+        default=None, description="The metadata to associate with the image", embed=True
+    ),
 ) -> ImageDTO:
     """Uploads an image"""
     if not file.content_type or not file.content_type.startswith("image"):
         raise HTTPException(status_code=415, detail="Not an image")
 
-    metadata = None
-    workflow = None
+    _metadata = None
+    _workflow = None
+    _graph = None
 
     contents = await file.read()
     try:
@@ -61,22 +69,28 @@ async def upload_image(
 
     # TODO: retain non-invokeai metadata on upload?
     # attempt to parse metadata from image
-    metadata_raw = pil_image.info.get("invokeai_metadata", None)
-    if metadata_raw:
-        try:
-            metadata = MetadataFieldValidator.validate_json(metadata_raw)
-        except ValidationError:
-            ApiDependencies.invoker.services.logger.warn("Failed to parse metadata for uploaded image")
-            pass
+    metadata_raw = metadata if isinstance(metadata, str) else pil_image.info.get("invokeai_metadata", None)
+    if isinstance(metadata_raw, str):
+        _metadata = metadata_raw
+    else:
+        ApiDependencies.invoker.services.logger.debug("Failed to parse metadata for uploaded image")
+        pass
 
     # attempt to parse workflow from image
     workflow_raw = pil_image.info.get("invokeai_workflow", None)
-    if workflow_raw is not None:
-        try:
-            workflow = WorkflowFieldValidator.validate_json(workflow_raw)
-        except ValidationError:
-            ApiDependencies.invoker.services.logger.warn("Failed to parse metadata for uploaded image")
-            pass
+    if isinstance(workflow_raw, str):
+        _workflow = workflow_raw
+    else:
+        ApiDependencies.invoker.services.logger.debug("Failed to parse workflow for uploaded image")
+        pass
+
+    # attempt to extract graph from image
+    graph_raw = pil_image.info.get("invokeai_graph", None)
+    if isinstance(graph_raw, str):
+        _graph = graph_raw
+    else:
+        ApiDependencies.invoker.services.logger.debug("Failed to parse graph for uploaded image")
+        pass
 
     try:
         image_dto = ApiDependencies.invoker.services.images.create(
@@ -85,8 +99,9 @@ async def upload_image(
             image_category=image_category,
             session_id=session_id,
             board_id=board_id,
-            metadata=metadata,
-            workflow=workflow,
+            metadata=_metadata,
+            workflow=_workflow,
+            graph=_graph,
             is_intermediate=is_intermediate,
         )
 
@@ -184,10 +199,40 @@ async def get_image_metadata(
         raise HTTPException(status_code=404)
 
 
-@images_router.api_route(
+class WorkflowAndGraphResponse(BaseModel):
+    workflow: Optional[str] = Field(description="The workflow used to generate the image, as stringified JSON")
+    graph: Optional[str] = Field(description="The graph used to generate the image, as stringified JSON")
+
+
+@images_router.get(
+    "/i/{image_name}/workflow", operation_id="get_image_workflow", response_model=WorkflowAndGraphResponse
+)
+async def get_image_workflow(
+    image_name: str = Path(description="The name of image whose workflow to get"),
+) -> WorkflowAndGraphResponse:
+    try:
+        workflow = ApiDependencies.invoker.services.images.get_workflow(image_name)
+        graph = ApiDependencies.invoker.services.images.get_graph(image_name)
+        return WorkflowAndGraphResponse(workflow=workflow, graph=graph)
+    except Exception:
+        raise HTTPException(status_code=404)
+
+
+@images_router.get(
     "/i/{image_name}/full",
-    methods=["GET", "HEAD"],
     operation_id="get_image_full",
+    response_class=Response,
+    responses={
+        200: {
+            "description": "Return the full-resolution image",
+            "content": {"image/png": {}},
+        },
+        404: {"description": "Image not found"},
+    },
+)
+@images_router.head(
+    "/i/{image_name}/full",
+    operation_id="get_image_full_head",
     response_class=Response,
     responses={
         200: {
@@ -199,22 +244,16 @@ async def get_image_metadata(
 )
 async def get_image_full(
     image_name: str = Path(description="The name of full-resolution image file to get"),
-) -> FileResponse:
+) -> Response:
     """Gets a full-resolution image file"""
 
     try:
         path = ApiDependencies.invoker.services.images.get_path(image_name)
-
-        if not ApiDependencies.invoker.services.images.validate_path(path):
-            raise HTTPException(status_code=404)
-
-        response = FileResponse(
-            path,
-            media_type="image/png",
-            filename=image_name,
-            content_disposition_type="inline",
-        )
+        with open(path, "rb") as f:
+            content = f.read()
+        response = Response(content, media_type="image/png")
         response.headers["Cache-Control"] = f"max-age={IMAGE_MAX_AGE}"
+        response.headers["Content-Disposition"] = f'inline; filename="{image_name}"'
         return response
     except Exception:
         raise HTTPException(status_code=404)
@@ -234,15 +273,14 @@ async def get_image_full(
 )
 async def get_image_thumbnail(
     image_name: str = Path(description="The name of thumbnail image file to get"),
-) -> FileResponse:
+) -> Response:
     """Gets a thumbnail image file"""
 
     try:
         path = ApiDependencies.invoker.services.images.get_path(image_name, thumbnail=True)
-        if not ApiDependencies.invoker.services.images.validate_path(path):
-            raise HTTPException(status_code=404)
-
-        response = FileResponse(path, media_type="image/webp", content_disposition_type="inline")
+        with open(path, "rb") as f:
+            content = f.read()
+        response = Response(content, media_type="image/webp")
         response.headers["Cache-Control"] = f"max-age={IMAGE_MAX_AGE}"
         return response
     except Exception:
@@ -286,16 +324,14 @@ async def list_image_dtos(
     ),
     offset: int = Query(default=0, description="The page offset"),
     limit: int = Query(default=10, description="The number of images per page"),
+    order_dir: SQLiteDirection = Query(default=SQLiteDirection.Descending, description="The order of sort"),
+    starred_first: bool = Query(default=True, description="Whether to sort by starred images first"),
+    search_term: Optional[str] = Query(default=None, description="The term to search for"),
 ) -> OffsetPaginatedResults[ImageDTO]:
     """Gets a list of image DTOs"""
 
     image_dtos = ApiDependencies.invoker.services.images.get_many(
-        offset,
-        limit,
-        image_origin,
-        categories,
-        is_intermediate,
-        board_id,
+        offset, limit, starred_first, order_dir, image_origin, categories, is_intermediate, board_id, search_term
     )
 
     return image_dtos
@@ -362,16 +398,67 @@ async def unstar_images_in_list(
 
 class ImagesDownloaded(BaseModel):
     response: Optional[str] = Field(
-        description="If defined, the message to display to the user when images begin downloading"
+        default=None, description="The message to display to the user when images begin downloading"
+    )
+    bulk_download_item_name: Optional[str] = Field(
+        default=None, description="The name of the bulk download item for which events will be emitted"
     )
 
 
-@images_router.post("/download", operation_id="download_images_from_list", response_model=ImagesDownloaded)
+@images_router.post(
+    "/download", operation_id="download_images_from_list", response_model=ImagesDownloaded, status_code=202
+)
 async def download_images_from_list(
-    image_names: list[str] = Body(description="The list of names of images to download", embed=True),
+    background_tasks: BackgroundTasks,
+    image_names: Optional[list[str]] = Body(
+        default=None, description="The list of names of images to download", embed=True
+    ),
     board_id: Optional[str] = Body(
-        default=None, description="The board from which image should be downloaded from", embed=True
+        default=None, description="The board from which image should be downloaded", embed=True
     ),
 ) -> ImagesDownloaded:
-    # return ImagesDownloaded(response="Your images are downloading")
-    raise HTTPException(status_code=501, detail="Endpoint is not yet implemented")
+    if (image_names is None or len(image_names) == 0) and board_id is None:
+        raise HTTPException(status_code=400, detail="No images or board id specified.")
+    bulk_download_item_id: str = ApiDependencies.invoker.services.bulk_download.generate_item_id(board_id)
+
+    background_tasks.add_task(
+        ApiDependencies.invoker.services.bulk_download.handler,
+        image_names,
+        board_id,
+        bulk_download_item_id,
+    )
+    return ImagesDownloaded(bulk_download_item_name=bulk_download_item_id + ".zip")
+
+
+@images_router.api_route(
+    "/download/{bulk_download_item_name}",
+    methods=["GET"],
+    operation_id="get_bulk_download_item",
+    response_class=Response,
+    responses={
+        200: {
+            "description": "Return the complete bulk download item",
+            "content": {"application/zip": {}},
+        },
+        404: {"description": "Image not found"},
+    },
+)
+async def get_bulk_download_item(
+    background_tasks: BackgroundTasks,
+    bulk_download_item_name: str = Path(description="The bulk_download_item_name of the bulk download item to get"),
+) -> FileResponse:
+    """Gets a bulk download zip file"""
+    try:
+        path = ApiDependencies.invoker.services.bulk_download.get_path(bulk_download_item_name)
+
+        response = FileResponse(
+            path,
+            media_type="application/zip",
+            filename=bulk_download_item_name,
+            content_disposition_type="inline",
+        )
+        response.headers["Cache-Control"] = f"max-age={IMAGE_MAX_AGE}"
+        background_tasks.add_task(ApiDependencies.invoker.services.bulk_download.delete, bulk_download_item_name)
+        return response
+    except Exception:
+        raise HTTPException(status_code=404)

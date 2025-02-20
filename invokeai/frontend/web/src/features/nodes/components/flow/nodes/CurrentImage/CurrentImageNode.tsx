@@ -1,40 +1,28 @@
-import { useState, PropsWithChildren, memo } from 'react';
-import { useSelector } from 'react-redux';
-import { createSelector } from '@reduxjs/toolkit';
-import { Flex, Image, Text } from '@chakra-ui/react';
-import { motion } from 'framer-motion';
-import { NodeProps } from 'reactflow';
-import NodeWrapper from '../common/NodeWrapper';
-import NextPrevImageButtons from 'features/gallery/components/NextPrevImageButtons';
-import IAIDndImage from 'common/components/IAIDndImage';
+import { Flex, Image, Text } from '@invoke-ai/ui-library';
+import { useStore } from '@nanostores/react';
+import type { NodeProps } from '@xyflow/react';
+import { useAppSelector } from 'app/store/storeHooks';
 import { IAINoContentFallback } from 'common/components/IAIImageFallback';
+import { DndImage } from 'features/dnd/DndImage';
+import NextPrevImageButtons from 'features/gallery/components/NextPrevImageButtons';
+import { selectLastSelectedImage } from 'features/gallery/store/gallerySelectors';
+import NodeWrapper from 'features/nodes/components/flow/nodes/common/NodeWrapper';
 import { DRAG_HANDLE_CLASSNAME } from 'features/nodes/types/constants';
-import { stateSelector } from 'app/store/store';
-
-const selector = createSelector(stateSelector, ({ system, gallery }) => {
-  const imageDTO = gallery.selection[gallery.selection.length - 1];
-
-  return {
-    imageDTO,
-    progressImage: system.denoiseProgress?.progress_image,
-  };
-});
+import type { AnimationProps } from 'framer-motion';
+import { motion } from 'framer-motion';
+import type { CSSProperties, PropsWithChildren } from 'react';
+import { memo, useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { $lastProgressEvent } from 'services/events/stores';
 
 const CurrentImageNode = (props: NodeProps) => {
-  const { progressImage, imageDTO } = useSelector(selector);
+  const imageDTO = useAppSelector(selectLastSelectedImage);
+  const lastProgressEvent = useStore($lastProgressEvent);
 
-  if (progressImage) {
+  if (lastProgressEvent?.image) {
     return (
       <Wrapper nodeProps={props}>
-        <Image
-          src={progressImage.dataURL}
-          sx={{
-            w: 'full',
-            h: 'full',
-            objectFit: 'contain',
-            borderRadius: 'base',
-          }}
-        />
+        <Image src={lastProgressEvent?.image.dataURL} w="full" h="full" objectFit="contain" borderRadius="base" />
       </Wrapper>
     );
   }
@@ -42,7 +30,7 @@ const CurrentImageNode = (props: NodeProps) => {
   if (imageDTO) {
     return (
       <Wrapper nodeProps={props}>
-        <IAIDndImage imageDTO={imageDTO} isDragDisabled useThumbailFallback />
+        <DndImage imageDTO={imageDTO} />
       </Wrapper>
     );
   }
@@ -59,87 +47,57 @@ export default memo(CurrentImageNode);
 const Wrapper = (props: PropsWithChildren<{ nodeProps: NodeProps }>) => {
   const [isHovering, setIsHovering] = useState(false);
 
-  const handleMouseEnter = () => {
+  const handleMouseEnter = useCallback(() => {
     setIsHovering(true);
-  };
+  }, []);
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = useCallback(() => {
     setIsHovering(false);
-  };
-
+  }, []);
+  const { t } = useTranslation();
   return (
-    <NodeWrapper
-      nodeId={props.nodeProps.id}
-      selected={props.nodeProps.selected}
-      width={384}
-    >
+    <NodeWrapper nodeId={props.nodeProps.id} selected={props.nodeProps.selected} width={384}>
       <Flex
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         className={DRAG_HANDLE_CLASSNAME}
-        sx={{
-          position: 'relative',
-          flexDirection: 'column',
-        }}
+        position="relative"
+        flexDirection="column"
       >
-        <Flex
-          layerStyle="nodeHeader"
-          sx={{
-            borderTopRadius: 'base',
-            alignItems: 'center',
-            justifyContent: 'center',
-            h: 8,
-          }}
-        >
-          <Text
-            sx={{
-              fontSize: 'sm',
-              fontWeight: 600,
-              color: 'base.700',
-              _dark: { color: 'base.200' },
-            }}
-          >
-            Current Image
+        <Flex layerStyle="nodeHeader" borderTopRadius="base" alignItems="center" justifyContent="center" h={8}>
+          <Text fontSize="sm" fontWeight="semibold" color="base.200">
+            {t('nodes.currentImage')}
           </Text>
         </Flex>
-        <Flex
-          layerStyle="nodeBody"
-          sx={{
-            w: 'full',
-            h: 'full',
-            borderBottomRadius: 'base',
-            p: 2,
-          }}
-        >
+        <Flex layerStyle="nodeBody" w="full" h="full" borderBottomRadius="base" p={2}>
           {props.children}
           {isHovering && (
-            <motion.div
-              key="nextPrevButtons"
-              initial={{
-                opacity: 0,
-              }}
-              animate={{
-                opacity: 1,
-                transition: { duration: 0.1 },
-              }}
-              exit={{
-                opacity: 0,
-                transition: { duration: 0.1 },
-              }}
-              style={{
-                position: 'absolute',
-                top: 40,
-                left: -2,
-                right: -2,
-                bottom: 0,
-                pointerEvents: 'none',
-              }}
-            >
-              <NextPrevImageButtons />
+            <motion.div key="nextPrevButtons" initial={initial} animate={animate} exit={exit} style={styles}>
+              <NextPrevImageButtons inset={2} />
             </motion.div>
           )}
         </Flex>
       </Flex>
     </NodeWrapper>
   );
+};
+
+const initial: AnimationProps['initial'] = {
+  opacity: 0,
+};
+const animate: AnimationProps['animate'] = {
+  opacity: 1,
+  transition: { duration: 0.1 },
+};
+const exit: AnimationProps['exit'] = {
+  opacity: 0,
+  transition: { duration: 0.1 },
+};
+const styles: CSSProperties = {
+  position: 'absolute',
+  top: 40,
+  left: -2,
+  right: -2,
+  bottom: 0,
+  pointerEvents: 'none',
 };

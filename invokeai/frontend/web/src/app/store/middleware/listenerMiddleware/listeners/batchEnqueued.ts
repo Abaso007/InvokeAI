@@ -1,101 +1,74 @@
-import { createStandaloneToast } from '@chakra-ui/react';
 import { logger } from 'app/logging/logger';
-import { parseify } from 'common/util/serialize';
+import type { AppStartListening } from 'app/store/middleware/listenerMiddleware';
 import { zPydanticValidationError } from 'features/system/store/zodSchemas';
+import { toast } from 'features/toast/toast';
 import { t } from 'i18next';
-import { get, truncate, upperFirst } from 'lodash-es';
+import { truncate } from 'lodash-es';
+import { serializeError } from 'serialize-error';
 import { queueApi } from 'services/api/endpoints/queue';
-import { TOAST_OPTIONS, theme } from 'theme/theme';
-import { startAppListening } from '..';
+import type { JsonObject } from 'type-fest';
 
-const { toast } = createStandaloneToast({
-  theme: theme,
-  defaultOptions: TOAST_OPTIONS.defaultOptions,
-});
+const log = logger('queue');
 
-export const addBatchEnqueuedListener = () => {
+export const addBatchEnqueuedListener = (startAppListening: AppStartListening) => {
   // success
   startAppListening({
     matcher: queueApi.endpoints.enqueueBatch.matchFulfilled,
-    effect: async (action) => {
-      const response = action.payload;
+    effect: (action) => {
+      const enqueueResult = action.payload;
       const arg = action.meta.arg.originalArgs;
-      logger('queue').debug(
-        { enqueueResult: parseify(response) },
-        'Batch enqueued'
-      );
+      log.debug({ enqueueResult } as JsonObject, 'Batch enqueued');
 
-      if (!toast.isActive('batch-queued')) {
-        toast({
-          id: 'batch-queued',
-          title: t('queue.batchQueued'),
-          description: t('queue.batchQueuedDesc', {
-            count: response.enqueued,
-            direction: arg.prepend ? t('queue.front') : t('queue.back'),
-          }),
-          duration: 1000,
-          status: 'success',
-        });
-      }
+      toast({
+        id: 'QUEUE_BATCH_SUCCEEDED',
+        title: t('queue.batchQueued'),
+        status: 'success',
+        description: t('queue.batchQueuedDesc', {
+          count: enqueueResult.enqueued,
+          direction: arg.prepend ? t('queue.front') : t('queue.back'),
+        }),
+      });
     },
   });
 
   // error
   startAppListening({
     matcher: queueApi.endpoints.enqueueBatch.matchRejected,
-    effect: async (action) => {
+    effect: (action) => {
       const response = action.payload;
-      const arg = action.meta.arg.originalArgs;
+      const batchConfig = action.meta.arg.originalArgs;
 
       if (!response) {
         toast({
+          id: 'QUEUE_BATCH_FAILED',
           title: t('queue.batchFailedToQueue'),
           status: 'error',
-          description: 'Unknown Error',
+          description: t('common.unknownError'),
         });
-        logger('queue').error(
-          { batchConfig: parseify(arg), error: parseify(response) },
-          t('queue.batchFailedToQueue')
-        );
+        log.error({ batchConfig } as JsonObject, t('queue.batchFailedToQueue'));
         return;
       }
 
       const result = zPydanticValidationError.safeParse(response);
       if (result.success) {
         result.data.data.detail.map((e) => {
+          const description = truncate(e.msg.replace(/^(Value|Index|Key) error, /i, ''), { length: 256 });
           toast({
-            id: 'batch-failed-to-queue',
-            title: truncate(upperFirst(e.msg), { length: 128 }),
+            id: 'QUEUE_BATCH_FAILED',
+            title: t('queue.batchFailedToQueue'),
             status: 'error',
-            description: truncate(
-              `Path:
-              ${e.loc.join('.')}`,
-              { length: 128 }
-            ),
+            description,
           });
         });
-      } else {
-        let detail = 'Unknown Error';
-        let duration = undefined;
-        if (response.status === 403 && 'body' in response) {
-          detail = get(response, 'body.detail', 'Unknown Error');
-        } else if (response.status === 403 && 'error' in response) {
-          detail = get(response, 'error.detail', 'Unknown Error');
-        } else if (response.status === 403 && 'data' in response) {
-          detail = get(response, 'data.detail', 'Unknown Error');
-          duration = 15000;
-        }
+      } else if (response.status !== 403) {
         toast({
+          id: 'QUEUE_BATCH_FAILED',
           title: t('queue.batchFailedToQueue'),
           status: 'error',
-          description: detail,
-          ...(duration ? { duration } : {}),
+          description: t('common.unknownError'),
         });
       }
-      logger('queue').error(
-        { batchConfig: parseify(arg), error: parseify(response) },
-        t('queue.batchFailedToQueue')
-      );
+      log.error({ batchConfig, error: serializeError(response) } as JsonObject, t('queue.batchFailedToQueue'));
     },
   });
 };

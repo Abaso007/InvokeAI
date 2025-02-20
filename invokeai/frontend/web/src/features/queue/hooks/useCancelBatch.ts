@@ -1,14 +1,12 @@
-import { useAppDispatch, useAppSelector } from 'app/store/storeHooks';
-import { addToast } from 'features/system/store/systemSlice';
+import { useStore } from '@nanostores/react';
+import { toast } from 'features/toast/toast';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  useCancelByBatchIdsMutation,
-  useGetBatchStatusQuery,
-} from 'services/api/endpoints/queue';
+import { useCancelByBatchIdsMutation, useGetBatchStatusQuery } from 'services/api/endpoints/queue';
+import { $isConnected } from 'services/events/stores';
 
 export const useCancelBatch = (batch_id: string) => {
-  const isConnected = useAppSelector((state) => state.system.isConnected);
+  const isConnected = useStore($isConnected);
   const { isCanceled } = useGetBatchStatusQuery(
     { batch_id },
     {
@@ -26,7 +24,6 @@ export const useCancelBatch = (batch_id: string) => {
   const [trigger, { isLoading }] = useCancelByBatchIdsMutation({
     fixedCacheKey: 'cancelByBatchIds',
   });
-  const dispatch = useAppDispatch();
   const { t } = useTranslation();
   const cancelBatch = useCallback(async () => {
     if (isCanceled) {
@@ -34,21 +31,19 @@ export const useCancelBatch = (batch_id: string) => {
     }
     try {
       await trigger({ batch_ids: [batch_id] }).unwrap();
-      dispatch(
-        addToast({
-          title: t('queue.cancelBatchSucceeded'),
-          status: 'success',
-        })
-      );
+      toast({
+        id: 'CANCEL_BATCH_SUCCEEDED',
+        title: t('queue.cancelBatchSucceeded'),
+        status: 'success',
+      });
     } catch {
-      dispatch(
-        addToast({
-          title: t('queue.cancelBatchFailed'),
-          status: 'error',
-        })
-      );
+      toast({
+        id: 'CANCEL_BATCH_FAILED',
+        title: t('queue.cancelBatchFailed'),
+        status: 'error',
+      });
     }
-  }, [batch_id, dispatch, isCanceled, t, trigger]);
+  }, [batch_id, isCanceled, t, trigger]);
 
   return { cancelBatch, isLoading, isCanceled, isDisabled: !isConnected };
 };

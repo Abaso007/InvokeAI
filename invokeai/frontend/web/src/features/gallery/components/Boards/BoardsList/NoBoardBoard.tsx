@@ -1,41 +1,41 @@
-import { Box, Flex, Image, Text, Tooltip } from '@chakra-ui/react';
-import { createSelector } from '@reduxjs/toolkit';
-import { stateSelector } from 'app/store/store';
+import type { SystemStyleObject } from '@invoke-ai/ui-library';
+import { Box, Flex, Icon, Text, Tooltip } from '@invoke-ai/ui-library';
 import { useAppDispatch, useAppSelector } from 'app/store/storeHooks';
-import { defaultSelectorOptions } from 'app/store/util/defaultMemoizeOptions';
-import InvokeAILogoImage from 'assets/images/logo.png';
-import IAIDroppable from 'common/components/IAIDroppable';
-import SelectionOverlay from 'common/components/SelectionOverlay';
-import { RemoveFromBoardDropData } from 'features/dnd/types';
+import type { RemoveImageFromBoardDndTargetData } from 'features/dnd/dnd';
+import { removeImageFromBoardDndTarget } from 'features/dnd/dnd';
+import { DndDropTarget } from 'features/dnd/DndDropTarget';
+import { AutoAddBadge } from 'features/gallery/components/Boards/AutoAddBadge';
+import { BoardTooltip } from 'features/gallery/components/Boards/BoardsList/BoardTooltip';
+import NoBoardBoardContextMenu from 'features/gallery/components/Boards/NoBoardBoardContextMenu';
 import {
-  autoAddBoardIdChanged,
-  boardIdSelected,
-} from 'features/gallery/store/gallerySlice';
-import { memo, useCallback, useMemo, useState } from 'react';
+  selectAutoAddBoardId,
+  selectAutoAssignBoardOnClick,
+  selectBoardSearchText,
+} from 'features/gallery/store/gallerySelectors';
+import { autoAddBoardIdChanged, boardIdSelected } from 'features/gallery/store/gallerySlice';
+import { memo, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useGetBoardImagesTotalQuery } from 'services/api/endpoints/boards';
 import { useBoardName } from 'services/api/hooks/useBoardName';
-import AutoAddIcon from '../AutoAddIcon';
-import BoardContextMenu from '../BoardContextMenu';
-import {
-  useGetBoardAssetsTotalQuery,
-  useGetBoardImagesTotalQuery,
-} from 'services/api/endpoints/boards';
 
 interface Props {
   isSelected: boolean;
 }
 
-const selector = createSelector(
-  stateSelector,
-  ({ gallery }) => {
-    const { autoAddBoardId, autoAssignBoardOnClick } = gallery;
-    return { autoAddBoardId, autoAssignBoardOnClick };
-  },
-  defaultSelectorOptions
-);
+const _hover: SystemStyleObject = {
+  bg: 'base.850',
+};
 
 const NoBoardBoard = memo(({ isSelected }: Props) => {
   const dispatch = useAppDispatch();
-  const { autoAddBoardId, autoAssignBoardOnClick } = useAppSelector(selector);
+  const { imagesTotal } = useGetBoardImagesTotalQuery('none', {
+    selectFromResult: ({ data }) => {
+      return { imagesTotal: data?.total ?? 0 };
+    },
+  });
+  const autoAddBoardId = useAppSelector(selectAutoAddBoardId);
+  const autoAssignBoardOnClick = useAppSelector(selectAutoAssignBoardOnClick);
+  const boardSearchText = useAppSelector(selectBoardSearchText);
   const boardName = useBoardName('none');
   const handleSelectBoard = useCallback(() => {
     dispatch(boardIdSelected({ boardId: 'none' }));
@@ -43,131 +43,65 @@ const NoBoardBoard = memo(({ isSelected }: Props) => {
       dispatch(autoAddBoardIdChanged('none'));
     }
   }, [dispatch, autoAssignBoardOnClick]);
-  const [isHovered, setIsHovered] = useState(false);
 
-  const { data: imagesTotal } = useGetBoardImagesTotalQuery('none');
-  const { data: assetsTotal } = useGetBoardAssetsTotalQuery('none');
-  const tooltip = useMemo(() => {
-    if (imagesTotal?.total === undefined || assetsTotal?.total === undefined) {
-      return undefined;
-    }
-    return `${imagesTotal.total} image${imagesTotal.total === 1 ? '' : 's'}, ${
-      assetsTotal.total
-    } asset${assetsTotal.total === 1 ? '' : 's'}`;
-  }, [assetsTotal, imagesTotal]);
+  const dndTargetData = useMemo<RemoveImageFromBoardDndTargetData>(() => removeImageFromBoardDndTarget.getData(), []);
 
-  const handleMouseOver = useCallback(() => {
-    setIsHovered(true);
-  }, []);
+  const { t } = useTranslation();
 
-  const handleMouseOut = useCallback(() => {
-    setIsHovered(false);
-  }, []);
-
-  const droppableData: RemoveFromBoardDropData = useMemo(
-    () => ({
-      id: 'no_board',
-      actionType: 'REMOVE_FROM_BOARD',
-    }),
-    []
-  );
+  if (boardSearchText.length) {
+    return null;
+  }
 
   return (
-    <Box sx={{ w: 'full', h: 'full', touchAction: 'none', userSelect: 'none' }}>
-      <Flex
-        onMouseOver={handleMouseOver}
-        onMouseOut={handleMouseOut}
-        sx={{
-          position: 'relative',
-          justifyContent: 'center',
-          alignItems: 'center',
-          aspectRatio: '1/1',
-          borderRadius: 'base',
-          w: 'full',
-          h: 'full',
-        }}
-      >
-        <BoardContextMenu board_id="none">
-          {(ref) => (
-            <Tooltip label={tooltip} openDelay={1000} hasArrow>
-              <Flex
-                ref={ref}
-                onClick={handleSelectBoard}
-                sx={{
-                  w: 'full',
-                  h: 'full',
-                  position: 'relative',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  borderRadius: 'base',
-                  cursor: 'pointer',
-                  bg: 'base.200',
-                  _dark: {
-                    bg: 'base.800',
-                  },
-                }}
-              >
-                <Flex
-                  sx={{
-                    w: 'full',
-                    h: 'full',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}
-                >
-                  <Image
-                    src={InvokeAILogoImage}
-                    alt="invoke-ai-logo"
-                    sx={{
-                      opacity: 0.4,
-                      filter: 'grayscale(1)',
-                      mt: -6,
-                      w: 16,
-                      h: 16,
-                      minW: 16,
-                      minH: 16,
-                      userSelect: 'none',
-                    }}
+    <Box position="relative" w="full" h={12}>
+      <NoBoardBoardContextMenu>
+        {(ref) => (
+          <Tooltip label={<BoardTooltip board={null} />} openDelay={1000} placement="left" closeOnScroll>
+            <Flex
+              ref={ref}
+              onClick={handleSelectBoard}
+              w="full"
+              h="full"
+              alignItems="center"
+              borderRadius="base"
+              cursor="pointer"
+              py={1}
+              ps={1}
+              pe={4}
+              gap={4}
+              bg={isSelected ? 'base.850' : undefined}
+              _hover={_hover}
+            >
+              <Flex w="10" justifyContent="space-around">
+                {/* iconified from public/assets/images/invoke-symbol-wht-lrg.svg */}
+                <Icon boxSize={8} opacity={1} stroke="base.500" viewBox="0 0 66 66" fill="none">
+                  <path
+                    d="M43.9137 16H63.1211V3H3.12109V16H22.3285L43.9137 50H63.1211V63H3.12109V50H22.3285"
+                    strokeWidth="5"
                   />
-                </Flex>
-                {autoAddBoardId === 'none' && <AutoAddIcon />}
-                <Flex
-                  sx={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    p: 1,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    w: 'full',
-                    maxW: 'full',
-                    borderBottomRadius: 'base',
-                    bg: isSelected ? 'accent.400' : 'base.500',
-                    color: isSelected ? 'base.50' : 'base.100',
-                    _dark: {
-                      bg: isSelected ? 'accent.500' : 'base.600',
-                      color: isSelected ? 'base.50' : 'base.100',
-                    },
-                    lineHeight: 'short',
-                    fontSize: 'xs',
-                    fontWeight: isSelected ? 700 : 500,
-                  }}
-                >
-                  {boardName}
-                </Flex>
-                <SelectionOverlay
-                  isSelected={isSelected}
-                  isHovered={isHovered}
-                />
-                <IAIDroppable
-                  data={droppableData}
-                  dropLabel={<Text fontSize="md">Move</Text>}
-                />
+                </Icon>
               </Flex>
-            </Tooltip>
-          )}
-        </BoardContextMenu>
-      </Flex>
+
+              <Text
+                fontSize="sm"
+                color={isSelected ? 'base.100' : 'base.300'}
+                fontWeight="semibold"
+                noOfLines={1}
+                flexGrow={1}
+              >
+                {boardName}
+              </Text>
+              {autoAddBoardId === 'none' && <AutoAddBadge />}
+              <Text variant="subtext">{imagesTotal}</Text>
+            </Flex>
+          </Tooltip>
+        )}
+      </NoBoardBoardContextMenu>
+      <DndDropTarget
+        dndTarget={removeImageFromBoardDndTarget}
+        dndTargetData={dndTargetData}
+        label={t('gallery.move')}
+      />
     </Box>
   );
 });

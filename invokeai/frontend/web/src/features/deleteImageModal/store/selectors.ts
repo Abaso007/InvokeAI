@@ -1,58 +1,73 @@
-import { createSelector } from '@reduxjs/toolkit';
-import { RootState } from 'app/store/store';
-import { defaultSelectorOptions } from 'app/store/util/defaultMemoizeOptions';
-import { isInvocationNode } from 'features/nodes/types/types';
+import { createMemoizedSelector } from 'app/store/createMemoizedSelector';
+import { selectCanvasSlice } from 'features/controlLayers/store/selectors';
+import type { CanvasState } from 'features/controlLayers/store/types';
+import { selectDeleteImageModalSlice } from 'features/deleteImageModal/store/slice';
+import { selectNodesSlice } from 'features/nodes/store/selectors';
+import type { NodesState } from 'features/nodes/store/types';
+import { isImageFieldInputInstance } from 'features/nodes/types/field';
+import { isInvocationNode } from 'features/nodes/types/invocation';
+import type { UpscaleState } from 'features/parameters/store/upscaleSlice';
+import { selectUpscaleSlice } from 'features/parameters/store/upscaleSlice';
 import { some } from 'lodash-es';
-import { ImageUsage } from './types';
-import { selectControlAdapterAll } from 'features/controlAdapters/store/controlAdaptersSlice';
-import { isControlNetOrT2IAdapter } from 'features/controlAdapters/store/types';
 
-export const getImageUsage = (state: RootState, image_name: string) => {
-  const { generation, canvas, nodes, controlAdapters } = state;
-  const isInitialImage = generation.initialImage?.imageName === image_name;
+import type { ImageUsage } from './types';
+// TODO(psyche): handle image deletion (canvas staging area?)
+export const getImageUsage = (nodes: NodesState, canvas: CanvasState, upscale: UpscaleState, image_name: string) => {
+  const isNodesImage = nodes.nodes
+    .filter(isInvocationNode)
+    .some((node) =>
+      some(node.data.inputs, (input) => isImageFieldInputInstance(input) && input.value?.image_name === image_name)
+    );
 
-  const isCanvasImage = canvas.layerState.objects.some(
-    (obj) => obj.kind === 'image' && obj.imageName === image_name
+  const isUpscaleImage = upscale.upscaleInitialImage?.image_name === image_name;
+
+  const isReferenceImage = canvas.referenceImages.entities.some(
+    ({ ipAdapter }) => ipAdapter.image?.image_name === image_name
   );
 
-  const isNodesImage = nodes.nodes.filter(isInvocationNode).some((node) => {
-    return some(
-      node.data.inputs,
-      (input) =>
-        input.type === 'ImageField' && input.value?.image_name === image_name
-    );
-  });
+  const isRasterLayerImage = canvas.rasterLayers.entities.some(({ objects }) =>
+    objects.some((obj) => obj.type === 'image' && obj.image.image_name === image_name)
+  );
 
-  const isControlImage = selectControlAdapterAll(controlAdapters).some(
-    (ca) =>
-      ca.controlImage === image_name ||
-      (isControlNetOrT2IAdapter(ca) && ca.processedControlImage === image_name)
+  const isControlLayerImage = canvas.controlLayers.entities.some(({ objects }) =>
+    objects.some((obj) => obj.type === 'image' && obj.image.image_name === image_name)
+  );
+
+  const isInpaintMaskImage = canvas.inpaintMasks.entities.some(({ objects }) =>
+    objects.some((obj) => obj.type === 'image' && obj.image.image_name === image_name)
+  );
+
+  const isRegionalGuidanceImage = canvas.regionalGuidance.entities.some(({ referenceImages }) =>
+    referenceImages.some(({ ipAdapter }) => ipAdapter.image?.image_name === image_name)
   );
 
   const imageUsage: ImageUsage = {
-    isInitialImage,
-    isCanvasImage,
+    isUpscaleImage,
+    isRasterLayerImage,
+    isInpaintMaskImage,
+    isRegionalGuidanceImage,
     isNodesImage,
-    isControlImage,
+    isControlLayerImage,
+    isReferenceImage,
   };
 
   return imageUsage;
 };
 
-export const selectImageUsage = createSelector(
-  [(state: RootState) => state],
-  (state) => {
-    const { imagesToDelete } = state.deleteImageModal;
+export const selectImageUsage = createMemoizedSelector(
+  selectDeleteImageModalSlice,
+  selectNodesSlice,
+  selectCanvasSlice,
+  selectUpscaleSlice,
+  (deleteImageModal, nodes, canvas, upscale) => {
+    const { imagesToDelete } = deleteImageModal;
 
     if (!imagesToDelete.length) {
       return [];
     }
 
-    const imagesUsage = imagesToDelete.map((i) =>
-      getImageUsage(state, i.image_name)
-    );
+    const imagesUsage = imagesToDelete.map((i) => getImageUsage(nodes, canvas, upscale, i.image_name));
 
     return imagesUsage;
-  },
-  defaultSelectorOptions
+  }
 );

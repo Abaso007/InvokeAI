@@ -1,18 +1,17 @@
-import { useAppDispatch, useAppSelector } from 'app/store/storeHooks';
-import { addToast } from 'features/system/store/systemSlice';
+import { useStore } from '@nanostores/react';
+import { useAppDispatch } from 'app/store/storeHooks';
+import { listCursorChanged, listPriorityChanged } from 'features/queue/store/queueSlice';
+import { toast } from 'features/toast/toast';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  useClearQueueMutation,
-  useGetQueueStatusQuery,
-} from 'services/api/endpoints/queue';
-import { listCursorChanged, listPriorityChanged } from '../store/queueSlice';
+import { useClearQueueMutation, useGetQueueStatusQuery } from 'services/api/endpoints/queue';
+import { $isConnected } from 'services/events/stores';
 
 export const useClearQueue = () => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const { data: queueStatus } = useGetQueueStatusQuery();
-  const isConnected = useAppSelector((state) => state.system.isConnected);
+  const isConnected = useStore($isConnected);
   const [trigger, { isLoading }] = useClearQueueMutation({
     fixedCacheKey: 'clearQueue',
   });
@@ -24,28 +23,28 @@ export const useClearQueue = () => {
 
     try {
       await trigger().unwrap();
-      dispatch(
-        addToast({
-          title: t('queue.clearSucceeded'),
-          status: 'success',
-        })
-      );
+      toast({
+        id: 'QUEUE_CLEAR_SUCCEEDED',
+        title: t('queue.clearSucceeded'),
+        status: 'success',
+      });
       dispatch(listCursorChanged(undefined));
       dispatch(listPriorityChanged(undefined));
     } catch {
-      dispatch(
-        addToast({
-          title: t('queue.clearFailed'),
-          status: 'error',
-        })
-      );
+      toast({
+        id: 'QUEUE_CLEAR_FAILED',
+        title: t('queue.clearFailed'),
+        status: 'error',
+      });
     }
   }, [queueStatus?.queue.total, trigger, dispatch, t]);
 
-  const isDisabled = useMemo(
-    () => !isConnected || !queueStatus?.queue.total,
-    [isConnected, queueStatus?.queue.total]
-  );
+  const isDisabled = useMemo(() => !isConnected || !queueStatus?.queue.total, [isConnected, queueStatus?.queue.total]);
 
-  return { clearQueue, isLoading, queueStatus, isDisabled };
+  return {
+    clearQueue,
+    isLoading,
+    queueStatus,
+    isDisabled,
+  };
 };

@@ -4,20 +4,12 @@
 import torch
 from pydantic import field_validator
 
-from invokeai.app.invocations.latent import LatentsField
-from invokeai.app.util.misc import SEED_MAX, get_random_seed
-
-from ...backend.util.devices import choose_torch_device, torch_dtype
-from .baseinvocation import (
-    BaseInvocation,
-    BaseInvocationOutput,
-    FieldDescriptions,
-    InputField,
-    InvocationContext,
-    OutputField,
-    invocation,
-    invocation_output,
-)
+from invokeai.app.invocations.baseinvocation import BaseInvocation, BaseInvocationOutput, invocation, invocation_output
+from invokeai.app.invocations.constants import LATENT_SCALE_FACTOR
+from invokeai.app.invocations.fields import FieldDescriptions, InputField, LatentsField, OutputField
+from invokeai.app.services.shared.invocation_context import InvocationContext
+from invokeai.app.util.misc import SEED_MAX
+from invokeai.backend.util.devices import TorchDevice
 
 """
 Utilities
@@ -48,7 +40,7 @@ def get_noise(
             height // downsampling_factor,
             width // downsampling_factor,
         ],
-        dtype=torch_dtype(device),
+        dtype=TorchDevice.choose_torch_dtype(device=device),
         device=noise_device_type,
         generator=generator,
     ).to("cpu")
@@ -69,13 +61,13 @@ class NoiseOutput(BaseInvocationOutput):
     width: int = OutputField(description=FieldDescriptions.width)
     height: int = OutputField(description=FieldDescriptions.height)
 
-
-def build_noise_output(latents_name: str, latents: torch.Tensor, seed: int):
-    return NoiseOutput(
-        noise=LatentsField(latents_name=latents_name, seed=seed),
-        width=latents.size()[3] * 8,
-        height=latents.size()[2] * 8,
-    )
+    @classmethod
+    def build(cls, latents_name: str, latents: torch.Tensor, seed: int) -> "NoiseOutput":
+        return cls(
+            noise=LatentsField(latents_name=latents_name, seed=seed),
+            width=latents.size()[3] * LATENT_SCALE_FACTOR,
+            height=latents.size()[2] * LATENT_SCALE_FACTOR,
+        )
 
 
 @invocation(
@@ -83,26 +75,26 @@ def build_noise_output(latents_name: str, latents: torch.Tensor, seed: int):
     title="Noise",
     tags=["latents", "noise"],
     category="latents",
-    version="1.0.0",
+    version="1.0.2",
 )
 class NoiseInvocation(BaseInvocation):
     """Generates latent noise."""
 
     seed: int = InputField(
+        default=0,
         ge=0,
         le=SEED_MAX,
         description=FieldDescriptions.seed,
-        default_factory=get_random_seed,
     )
     width: int = InputField(
         default=512,
-        multiple_of=8,
+        multiple_of=LATENT_SCALE_FACTOR,
         gt=0,
         description=FieldDescriptions.width,
     )
     height: int = InputField(
         default=512,
-        multiple_of=8,
+        multiple_of=LATENT_SCALE_FACTOR,
         gt=0,
         description=FieldDescriptions.height,
     )
@@ -113,17 +105,16 @@ class NoiseInvocation(BaseInvocation):
 
     @field_validator("seed", mode="before")
     def modulo_seed(cls, v):
-        """Returns the seed modulo (SEED_MAX + 1) to ensure it is within the valid range."""
+        """Return the seed modulo (SEED_MAX + 1) to ensure it is within the valid range."""
         return v % (SEED_MAX + 1)
 
     def invoke(self, context: InvocationContext) -> NoiseOutput:
         noise = get_noise(
             width=self.width,
             height=self.height,
-            device=choose_torch_device(),
+            device=TorchDevice.choose_torch_device(),
             seed=self.seed,
             use_cpu=self.use_cpu,
         )
-        name = f"{context.graph_execution_state_id}__{self.id}"
-        context.services.latents.save(name, noise)
-        return build_noise_output(latents_name=name, latents=noise, seed=self.seed)
+        name = context.tensors.save(tensor=noise)
+        return NoiseOutput.build(latents_name=name, latents=noise, seed=self.seed)

@@ -1,39 +1,43 @@
 # Copyright (c) 2022 Kyle Schouviller (https://github.com/kyle0654)
 
-from pathlib import Path
 from typing import Literal, Optional
 
 import cv2
 import numpy
 from PIL import Image, ImageChops, ImageFilter, ImageOps
 
-from invokeai.app.invocations.primitives import BoardField, ColorField, ImageField, ImageOutput
-from invokeai.app.services.image_records.image_records_common import ImageCategory, ResourceOrigin
+from invokeai.app.invocations.baseinvocation import (
+    BaseInvocation,
+    Classification,
+    invocation,
+)
+from invokeai.app.invocations.constants import IMAGE_MODES
+from invokeai.app.invocations.fields import (
+    BoundingBoxField,
+    ColorField,
+    FieldDescriptions,
+    ImageField,
+    InputField,
+    WithBoard,
+    WithMetadata,
+)
+from invokeai.app.invocations.primitives import ImageOutput
+from invokeai.app.services.image_records.image_records_common import ImageCategory
+from invokeai.app.services.shared.invocation_context import InvocationContext
+from invokeai.app.util.misc import SEED_MAX
 from invokeai.backend.image_util.invisible_watermark import InvisibleWatermark
 from invokeai.backend.image_util.safety_checker import SafetyChecker
 
-from .baseinvocation import (
-    BaseInvocation,
-    FieldDescriptions,
-    Input,
-    InputField,
-    InvocationContext,
-    WithMetadata,
-    WithWorkflow,
-    invocation,
-)
 
-
-@invocation("show_image", title="Show Image", tags=["image"], category="image", version="1.0.0")
+@invocation("show_image", title="Show Image", tags=["image"], category="image", version="1.0.1")
 class ShowImageInvocation(BaseInvocation):
     """Displays a provided image using the OS image viewer, and passes it forward in the pipeline."""
 
     image: ImageField = InputField(description="The image to show")
 
     def invoke(self, context: InvocationContext) -> ImageOutput:
-        image = context.services.images.get_pil_image(self.image.image_name)
-        if image:
-            image.show()
+        image = context.images.get_pil(self.image.image_name)
+        image.show()
 
         # TODO: how to handle failure?
 
@@ -44,8 +48,14 @@ class ShowImageInvocation(BaseInvocation):
         )
 
 
-@invocation("blank_image", title="Blank Image", tags=["image"], category="image", version="1.0.0")
-class BlankImageInvocation(BaseInvocation, WithMetadata, WithWorkflow):
+@invocation(
+    "blank_image",
+    title="Blank Image",
+    tags=["image"],
+    category="image",
+    version="1.2.2",
+)
+class BlankImageInvocation(BaseInvocation, WithMetadata, WithBoard):
     """Creates a blank image and forwards it to the pipeline"""
 
     width: int = InputField(default=512, description="The width of the image")
@@ -56,26 +66,19 @@ class BlankImageInvocation(BaseInvocation, WithMetadata, WithWorkflow):
     def invoke(self, context: InvocationContext) -> ImageOutput:
         image = Image.new(mode=self.mode, size=(self.width, self.height), color=self.color.tuple())
 
-        image_dto = context.services.images.create(
-            image=image,
-            image_origin=ResourceOrigin.INTERNAL,
-            image_category=ImageCategory.GENERAL,
-            node_id=self.id,
-            session_id=context.graph_execution_state_id,
-            is_intermediate=self.is_intermediate,
-            metadata=self.metadata,
-            workflow=self.workflow,
-        )
+        image_dto = context.images.save(image=image)
 
-        return ImageOutput(
-            image=ImageField(image_name=image_dto.image_name),
-            width=image_dto.width,
-            height=image_dto.height,
-        )
+        return ImageOutput.build(image_dto)
 
 
-@invocation("img_crop", title="Crop Image", tags=["image", "crop"], category="image", version="1.0.0")
-class ImageCropInvocation(BaseInvocation, WithWorkflow, WithMetadata):
+@invocation(
+    "img_crop",
+    title="Crop Image",
+    tags=["image", "crop"],
+    category="image",
+    version="1.2.2",
+)
+class ImageCropInvocation(BaseInvocation, WithMetadata, WithBoard):
     """Crops an image to a specified box. The box can be outside of the image."""
 
     image: ImageField = InputField(description="The image to crop")
@@ -85,31 +88,68 @@ class ImageCropInvocation(BaseInvocation, WithWorkflow, WithMetadata):
     height: int = InputField(default=512, gt=0, description="The height of the crop rectangle")
 
     def invoke(self, context: InvocationContext) -> ImageOutput:
-        image = context.services.images.get_pil_image(self.image.image_name)
+        image = context.images.get_pil(self.image.image_name)
 
         image_crop = Image.new(mode="RGBA", size=(self.width, self.height), color=(0, 0, 0, 0))
         image_crop.paste(image, (-self.x, -self.y))
 
-        image_dto = context.services.images.create(
-            image=image_crop,
-            image_origin=ResourceOrigin.INTERNAL,
-            image_category=ImageCategory.GENERAL,
-            node_id=self.id,
-            session_id=context.graph_execution_state_id,
-            is_intermediate=self.is_intermediate,
-            metadata=self.metadata,
-            workflow=self.workflow,
-        )
+        image_dto = context.images.save(image=image_crop)
 
-        return ImageOutput(
-            image=ImageField(image_name=image_dto.image_name),
-            width=image_dto.width,
-            height=image_dto.height,
-        )
+        return ImageOutput.build(image_dto)
 
 
-@invocation("img_paste", title="Paste Image", tags=["image", "paste"], category="image", version="1.0.1")
-class ImagePasteInvocation(BaseInvocation, WithWorkflow, WithMetadata):
+@invocation(
+    invocation_type="img_pad_crop",
+    title="Center Pad or Crop Image",
+    category="image",
+    tags=["image", "pad", "crop"],
+    version="1.0.0",
+)
+class CenterPadCropInvocation(BaseInvocation):
+    """Pad or crop an image's sides from the center by specified pixels. Positive values are outside of the image."""
+
+    image: ImageField = InputField(description="The image to crop")
+    left: int = InputField(
+        default=0,
+        description="Number of pixels to pad/crop from the left (negative values crop inwards, positive values pad outwards)",
+    )
+    right: int = InputField(
+        default=0,
+        description="Number of pixels to pad/crop from the right (negative values crop inwards, positive values pad outwards)",
+    )
+    top: int = InputField(
+        default=0,
+        description="Number of pixels to pad/crop from the top (negative values crop inwards, positive values pad outwards)",
+    )
+    bottom: int = InputField(
+        default=0,
+        description="Number of pixels to pad/crop from the bottom (negative values crop inwards, positive values pad outwards)",
+    )
+
+    def invoke(self, context: InvocationContext) -> ImageOutput:
+        image = context.images.get_pil(self.image.image_name)
+
+        # Calculate and create new image dimensions
+        new_width = image.width + self.right + self.left
+        new_height = image.height + self.top + self.bottom
+        image_crop = Image.new(mode="RGBA", size=(new_width, new_height), color=(0, 0, 0, 0))
+
+        # Paste new image onto input
+        image_crop.paste(image, (self.left, self.top))
+
+        image_dto = context.images.save(image=image_crop)
+
+        return ImageOutput.build(image_dto)
+
+
+@invocation(
+    "img_paste",
+    title="Paste Image",
+    tags=["image", "paste"],
+    category="image",
+    version="1.2.2",
+)
+class ImagePasteInvocation(BaseInvocation, WithMetadata, WithBoard):
     """Pastes an image into another image."""
 
     base_image: ImageField = InputField(description="The base image")
@@ -123,12 +163,12 @@ class ImagePasteInvocation(BaseInvocation, WithWorkflow, WithMetadata):
     crop: bool = InputField(default=False, description="Crop to base image dimensions")
 
     def invoke(self, context: InvocationContext) -> ImageOutput:
-        base_image = context.services.images.get_pil_image(self.base_image.image_name)
-        image = context.services.images.get_pil_image(self.image.image_name)
+        base_image = context.images.get_pil(self.base_image.image_name, mode="RGBA")
+        image = context.images.get_pil(self.image.image_name, mode="RGBA")
         mask = None
         if self.mask is not None:
-            mask = context.services.images.get_pil_image(self.mask.image_name)
-            mask = ImageOps.invert(mask.convert("L"))
+            mask = context.images.get_pil(self.mask.image_name, mode="L")
+            mask = ImageOps.invert(mask)
         # TODO: probably shouldn't invert mask here... should user be required to do it?
 
         min_x = min(0, self.x)
@@ -138,161 +178,127 @@ class ImagePasteInvocation(BaseInvocation, WithWorkflow, WithMetadata):
 
         new_image = Image.new(mode="RGBA", size=(max_x - min_x, max_y - min_y), color=(0, 0, 0, 0))
         new_image.paste(base_image, (abs(min_x), abs(min_y)))
-        new_image.paste(image, (max(0, self.x), max(0, self.y)), mask=mask)
+
+        # Create a temporary image to paste the image with transparency
+        temp_image = Image.new("RGBA", new_image.size)
+        temp_image.paste(image, (max(0, self.x), max(0, self.y)), mask=mask)
+        new_image = Image.alpha_composite(new_image, temp_image)
 
         if self.crop:
             base_w, base_h = base_image.size
             new_image = new_image.crop((abs(min_x), abs(min_y), abs(min_x) + base_w, abs(min_y) + base_h))
 
-        image_dto = context.services.images.create(
-            image=new_image,
-            image_origin=ResourceOrigin.INTERNAL,
-            image_category=ImageCategory.GENERAL,
-            node_id=self.id,
-            session_id=context.graph_execution_state_id,
-            is_intermediate=self.is_intermediate,
-            metadata=self.metadata,
-            workflow=self.workflow,
-        )
+        image_dto = context.images.save(image=new_image)
 
-        return ImageOutput(
-            image=ImageField(image_name=image_dto.image_name),
-            width=image_dto.width,
-            height=image_dto.height,
-        )
+        return ImageOutput.build(image_dto)
 
 
-@invocation("tomask", title="Mask from Alpha", tags=["image", "mask"], category="image", version="1.0.0")
-class MaskFromAlphaInvocation(BaseInvocation, WithWorkflow, WithMetadata):
+@invocation(
+    "tomask",
+    title="Mask from Alpha",
+    tags=["image", "mask"],
+    category="image",
+    version="1.2.2",
+)
+class MaskFromAlphaInvocation(BaseInvocation, WithMetadata, WithBoard):
     """Extracts the alpha channel of an image as a mask."""
 
     image: ImageField = InputField(description="The image to create the mask from")
     invert: bool = InputField(default=False, description="Whether or not to invert the mask")
 
     def invoke(self, context: InvocationContext) -> ImageOutput:
-        image = context.services.images.get_pil_image(self.image.image_name)
+        image = context.images.get_pil(self.image.image_name)
 
         image_mask = image.split()[-1]
         if self.invert:
             image_mask = ImageOps.invert(image_mask)
 
-        image_dto = context.services.images.create(
-            image=image_mask,
-            image_origin=ResourceOrigin.INTERNAL,
-            image_category=ImageCategory.MASK,
-            node_id=self.id,
-            session_id=context.graph_execution_state_id,
-            is_intermediate=self.is_intermediate,
-            metadata=self.metadata,
-            workflow=self.workflow,
-        )
+        image_dto = context.images.save(image=image_mask, image_category=ImageCategory.MASK)
 
-        return ImageOutput(
-            image=ImageField(image_name=image_dto.image_name),
-            width=image_dto.width,
-            height=image_dto.height,
-        )
+        return ImageOutput.build(image_dto)
 
 
-@invocation("img_mul", title="Multiply Images", tags=["image", "multiply"], category="image", version="1.0.0")
-class ImageMultiplyInvocation(BaseInvocation, WithWorkflow, WithMetadata):
+@invocation(
+    "img_mul",
+    title="Multiply Images",
+    tags=["image", "multiply"],
+    category="image",
+    version="1.2.2",
+)
+class ImageMultiplyInvocation(BaseInvocation, WithMetadata, WithBoard):
     """Multiplies two images together using `PIL.ImageChops.multiply()`."""
 
     image1: ImageField = InputField(description="The first image to multiply")
     image2: ImageField = InputField(description="The second image to multiply")
 
     def invoke(self, context: InvocationContext) -> ImageOutput:
-        image1 = context.services.images.get_pil_image(self.image1.image_name)
-        image2 = context.services.images.get_pil_image(self.image2.image_name)
+        image1 = context.images.get_pil(self.image1.image_name)
+        image2 = context.images.get_pil(self.image2.image_name)
 
         multiply_image = ImageChops.multiply(image1, image2)
 
-        image_dto = context.services.images.create(
-            image=multiply_image,
-            image_origin=ResourceOrigin.INTERNAL,
-            image_category=ImageCategory.GENERAL,
-            node_id=self.id,
-            session_id=context.graph_execution_state_id,
-            is_intermediate=self.is_intermediate,
-            metadata=self.metadata,
-            workflow=self.workflow,
-        )
+        image_dto = context.images.save(image=multiply_image)
 
-        return ImageOutput(
-            image=ImageField(image_name=image_dto.image_name),
-            width=image_dto.width,
-            height=image_dto.height,
-        )
+        return ImageOutput.build(image_dto)
 
 
 IMAGE_CHANNELS = Literal["A", "R", "G", "B"]
 
 
-@invocation("img_chan", title="Extract Image Channel", tags=["image", "channel"], category="image", version="1.0.0")
-class ImageChannelInvocation(BaseInvocation, WithWorkflow, WithMetadata):
+@invocation(
+    "img_chan",
+    title="Extract Image Channel",
+    tags=["image", "channel"],
+    category="image",
+    version="1.2.2",
+)
+class ImageChannelInvocation(BaseInvocation, WithMetadata, WithBoard):
     """Gets a channel from an image."""
 
     image: ImageField = InputField(description="The image to get the channel from")
     channel: IMAGE_CHANNELS = InputField(default="A", description="The channel to get")
 
     def invoke(self, context: InvocationContext) -> ImageOutput:
-        image = context.services.images.get_pil_image(self.image.image_name)
+        image = context.images.get_pil(self.image.image_name)
 
         channel_image = image.getchannel(self.channel)
 
-        image_dto = context.services.images.create(
-            image=channel_image,
-            image_origin=ResourceOrigin.INTERNAL,
-            image_category=ImageCategory.GENERAL,
-            node_id=self.id,
-            session_id=context.graph_execution_state_id,
-            is_intermediate=self.is_intermediate,
-            metadata=self.metadata,
-            workflow=self.workflow,
-        )
+        image_dto = context.images.save(image=channel_image)
 
-        return ImageOutput(
-            image=ImageField(image_name=image_dto.image_name),
-            width=image_dto.width,
-            height=image_dto.height,
-        )
+        return ImageOutput.build(image_dto)
 
 
-IMAGE_MODES = Literal["L", "RGB", "RGBA", "CMYK", "YCbCr", "LAB", "HSV", "I", "F"]
-
-
-@invocation("img_conv", title="Convert Image Mode", tags=["image", "convert"], category="image", version="1.0.0")
-class ImageConvertInvocation(BaseInvocation, WithWorkflow, WithMetadata):
+@invocation(
+    "img_conv",
+    title="Convert Image Mode",
+    tags=["image", "convert"],
+    category="image",
+    version="1.2.2",
+)
+class ImageConvertInvocation(BaseInvocation, WithMetadata, WithBoard):
     """Converts an image to a different mode."""
 
     image: ImageField = InputField(description="The image to convert")
     mode: IMAGE_MODES = InputField(default="L", description="The mode to convert to")
 
     def invoke(self, context: InvocationContext) -> ImageOutput:
-        image = context.services.images.get_pil_image(self.image.image_name)
+        image = context.images.get_pil(self.image.image_name)
 
         converted_image = image.convert(self.mode)
 
-        image_dto = context.services.images.create(
-            image=converted_image,
-            image_origin=ResourceOrigin.INTERNAL,
-            image_category=ImageCategory.GENERAL,
-            node_id=self.id,
-            session_id=context.graph_execution_state_id,
-            is_intermediate=self.is_intermediate,
-            metadata=self.metadata,
-            workflow=self.workflow,
-        )
+        image_dto = context.images.save(image=converted_image)
 
-        return ImageOutput(
-            image=ImageField(image_name=image_dto.image_name),
-            width=image_dto.width,
-            height=image_dto.height,
-        )
+        return ImageOutput.build(image_dto)
 
 
-@invocation("img_blur", title="Blur Image", tags=["image", "blur"], category="image", version="1.0.0")
-class ImageBlurInvocation(BaseInvocation, WithWorkflow, WithMetadata):
+@invocation(
+    "img_blur",
+    title="Blur Image",
+    tags=["image", "blur"],
+    category="image",
+    version="1.2.2",
+)
+class ImageBlurInvocation(BaseInvocation, WithMetadata, WithBoard):
     """Blurs an image"""
 
     image: ImageField = InputField(description="The image to blur")
@@ -301,28 +307,94 @@ class ImageBlurInvocation(BaseInvocation, WithWorkflow, WithMetadata):
     blur_type: Literal["gaussian", "box"] = InputField(default="gaussian", description="The type of blur")
 
     def invoke(self, context: InvocationContext) -> ImageOutput:
-        image = context.services.images.get_pil_image(self.image.image_name)
+        image = context.images.get_pil(self.image.image_name, mode="RGBA")
 
+        # Split the image into RGBA channels
+        r, g, b, a = image.split()
+
+        # Premultiply RGB channels by alpha
+        premultiplied_image = ImageChops.multiply(image, a.convert("RGBA"))
+        premultiplied_image.putalpha(a)
+
+        # Apply the blur
         blur = (
             ImageFilter.GaussianBlur(self.radius) if self.blur_type == "gaussian" else ImageFilter.BoxBlur(self.radius)
         )
-        blur_image = image.filter(blur)
+        blurred_image = premultiplied_image.filter(blur)
 
-        image_dto = context.services.images.create(
-            image=blur_image,
-            image_origin=ResourceOrigin.INTERNAL,
-            image_category=ImageCategory.GENERAL,
-            node_id=self.id,
-            session_id=context.graph_execution_state_id,
-            is_intermediate=self.is_intermediate,
-            metadata=self.metadata,
-            workflow=self.workflow,
-        )
+        # Split the blurred image into RGBA channels
+        r, g, b, a_orig = blurred_image.split()
+
+        # Convert to float using NumPy. float 32/64 division are much faster than float 16
+        r = numpy.array(r, dtype=numpy.float32)
+        g = numpy.array(g, dtype=numpy.float32)
+        b = numpy.array(b, dtype=numpy.float32)
+        a = numpy.array(a_orig, dtype=numpy.float32) / 255.0  # Normalize alpha to [0, 1]
+
+        # Unpremultiply RGB channels by alpha
+        r /= a + 1e-6  # Add a small epsilon to avoid division by zero
+        g /= a + 1e-6
+        b /= a + 1e-6
+
+        # Convert back to PIL images
+        r = Image.fromarray(numpy.uint8(numpy.clip(r, 0, 255)))
+        g = Image.fromarray(numpy.uint8(numpy.clip(g, 0, 255)))
+        b = Image.fromarray(numpy.uint8(numpy.clip(b, 0, 255)))
+
+        # Merge back into a single image
+        result_image = Image.merge("RGBA", (r, g, b, a_orig))
+
+        image_dto = context.images.save(image=result_image)
+
+        return ImageOutput.build(image_dto)
+
+
+@invocation(
+    "unsharp_mask",
+    title="Unsharp Mask",
+    tags=["image", "unsharp_mask"],
+    category="image",
+    version="1.2.2",
+    classification=Classification.Beta,
+)
+class UnsharpMaskInvocation(BaseInvocation, WithMetadata, WithBoard):
+    """Applies an unsharp mask filter to an image"""
+
+    image: ImageField = InputField(description="The image to use")
+    radius: float = InputField(gt=0, description="Unsharp mask radius", default=2)
+    strength: float = InputField(ge=0, description="Unsharp mask strength", default=50)
+
+    def pil_from_array(self, arr):
+        return Image.fromarray((arr * 255).astype("uint8"))
+
+    def array_from_pil(self, img):
+        return numpy.array(img) / 255
+
+    def invoke(self, context: InvocationContext) -> ImageOutput:
+        image = context.images.get_pil(self.image.image_name)
+        mode = image.mode
+
+        alpha_channel = image.getchannel("A") if mode == "RGBA" else None
+        image = image.convert("RGB")
+        image_blurred = self.array_from_pil(image.filter(ImageFilter.GaussianBlur(radius=self.radius)))
+
+        image = self.array_from_pil(image)
+        image += (image - image_blurred) * (self.strength / 100.0)
+        image = numpy.clip(image, 0, 1)
+        image = self.pil_from_array(image)
+
+        image = image.convert(mode)
+
+        # Make the image RGBA if we had a source alpha channel
+        if alpha_channel is not None:
+            image.putalpha(alpha_channel)
+
+        image_dto = context.images.save(image=image)
 
         return ImageOutput(
             image=ImageField(image_name=image_dto.image_name),
-            width=image_dto.width,
-            height=image_dto.height,
+            width=image.width,
+            height=image.height,
         )
 
 
@@ -346,8 +418,14 @@ PIL_RESAMPLING_MAP = {
 }
 
 
-@invocation("img_resize", title="Resize Image", tags=["image", "resize"], category="image", version="1.0.0")
-class ImageResizeInvocation(BaseInvocation, WithMetadata, WithWorkflow):
+@invocation(
+    "img_resize",
+    title="Resize Image",
+    tags=["image", "resize"],
+    category="image",
+    version="1.2.2",
+)
+class ImageResizeInvocation(BaseInvocation, WithMetadata, WithBoard):
     """Resizes an image to specific dimensions"""
 
     image: ImageField = InputField(description="The image to resize")
@@ -356,7 +434,7 @@ class ImageResizeInvocation(BaseInvocation, WithMetadata, WithWorkflow):
     resample_mode: PIL_RESAMPLING_MODES = InputField(default="bicubic", description="The resampling mode")
 
     def invoke(self, context: InvocationContext) -> ImageOutput:
-        image = context.services.images.get_pil_image(self.image.image_name)
+        image = context.images.get_pil(self.image.image_name)
 
         resample_mode = PIL_RESAMPLING_MAP[self.resample_mode]
 
@@ -365,26 +443,19 @@ class ImageResizeInvocation(BaseInvocation, WithMetadata, WithWorkflow):
             resample=resample_mode,
         )
 
-        image_dto = context.services.images.create(
-            image=resize_image,
-            image_origin=ResourceOrigin.INTERNAL,
-            image_category=ImageCategory.GENERAL,
-            node_id=self.id,
-            session_id=context.graph_execution_state_id,
-            is_intermediate=self.is_intermediate,
-            metadata=self.metadata,
-            workflow=self.workflow,
-        )
+        image_dto = context.images.save(image=resize_image)
 
-        return ImageOutput(
-            image=ImageField(image_name=image_dto.image_name),
-            width=image_dto.width,
-            height=image_dto.height,
-        )
+        return ImageOutput.build(image_dto)
 
 
-@invocation("img_scale", title="Scale Image", tags=["image", "scale"], category="image", version="1.0.0")
-class ImageScaleInvocation(BaseInvocation, WithMetadata, WithWorkflow):
+@invocation(
+    "img_scale",
+    title="Scale Image",
+    tags=["image", "scale"],
+    category="image",
+    version="1.2.2",
+)
+class ImageScaleInvocation(BaseInvocation, WithMetadata, WithBoard):
     """Scales an image by a factor"""
 
     image: ImageField = InputField(description="The image to scale")
@@ -396,7 +467,7 @@ class ImageScaleInvocation(BaseInvocation, WithMetadata, WithWorkflow):
     resample_mode: PIL_RESAMPLING_MODES = InputField(default="bicubic", description="The resampling mode")
 
     def invoke(self, context: InvocationContext) -> ImageOutput:
-        image = context.services.images.get_pil_image(self.image.image_name)
+        image = context.images.get_pil(self.image.image_name)
 
         resample_mode = PIL_RESAMPLING_MAP[self.resample_mode]
         width = int(image.width * self.scale_factor)
@@ -407,26 +478,19 @@ class ImageScaleInvocation(BaseInvocation, WithMetadata, WithWorkflow):
             resample=resample_mode,
         )
 
-        image_dto = context.services.images.create(
-            image=resize_image,
-            image_origin=ResourceOrigin.INTERNAL,
-            image_category=ImageCategory.GENERAL,
-            node_id=self.id,
-            session_id=context.graph_execution_state_id,
-            is_intermediate=self.is_intermediate,
-            metadata=self.metadata,
-            workflow=self.workflow,
-        )
+        image_dto = context.images.save(image=resize_image)
 
-        return ImageOutput(
-            image=ImageField(image_name=image_dto.image_name),
-            width=image_dto.width,
-            height=image_dto.height,
-        )
+        return ImageOutput.build(image_dto)
 
 
-@invocation("img_lerp", title="Lerp Image", tags=["image", "lerp"], category="image", version="1.0.0")
-class ImageLerpInvocation(BaseInvocation, WithWorkflow, WithMetadata):
+@invocation(
+    "img_lerp",
+    title="Lerp Image",
+    tags=["image", "lerp"],
+    category="image",
+    version="1.2.2",
+)
+class ImageLerpInvocation(BaseInvocation, WithMetadata, WithBoard):
     """Linear interpolation of all pixels of an image"""
 
     image: ImageField = InputField(description="The image to lerp")
@@ -434,33 +498,26 @@ class ImageLerpInvocation(BaseInvocation, WithWorkflow, WithMetadata):
     max: int = InputField(default=255, ge=0, le=255, description="The maximum output value")
 
     def invoke(self, context: InvocationContext) -> ImageOutput:
-        image = context.services.images.get_pil_image(self.image.image_name)
+        image = context.images.get_pil(self.image.image_name)
 
         image_arr = numpy.asarray(image, dtype=numpy.float32) / 255
         image_arr = image_arr * (self.max - self.min) + self.min
 
         lerp_image = Image.fromarray(numpy.uint8(image_arr))
 
-        image_dto = context.services.images.create(
-            image=lerp_image,
-            image_origin=ResourceOrigin.INTERNAL,
-            image_category=ImageCategory.GENERAL,
-            node_id=self.id,
-            session_id=context.graph_execution_state_id,
-            is_intermediate=self.is_intermediate,
-            metadata=self.metadata,
-            workflow=self.workflow,
-        )
+        image_dto = context.images.save(image=lerp_image)
 
-        return ImageOutput(
-            image=ImageField(image_name=image_dto.image_name),
-            width=image_dto.width,
-            height=image_dto.height,
-        )
+        return ImageOutput.build(image_dto)
 
 
-@invocation("img_ilerp", title="Inverse Lerp Image", tags=["image", "ilerp"], category="image", version="1.0.0")
-class ImageInverseLerpInvocation(BaseInvocation, WithWorkflow, WithMetadata):
+@invocation(
+    "img_ilerp",
+    title="Inverse Lerp Image",
+    tags=["image", "ilerp"],
+    category="image",
+    version="1.2.2",
+)
+class ImageInverseLerpInvocation(BaseInvocation, WithMetadata, WithBoard):
     """Inverse linear interpolation of all pixels of an image"""
 
     image: ImageField = InputField(description="The image to lerp")
@@ -468,71 +525,40 @@ class ImageInverseLerpInvocation(BaseInvocation, WithWorkflow, WithMetadata):
     max: int = InputField(default=255, ge=0, le=255, description="The maximum input value")
 
     def invoke(self, context: InvocationContext) -> ImageOutput:
-        image = context.services.images.get_pil_image(self.image.image_name)
+        image = context.images.get_pil(self.image.image_name)
 
         image_arr = numpy.asarray(image, dtype=numpy.float32)
         image_arr = numpy.minimum(numpy.maximum(image_arr - self.min, 0) / float(self.max - self.min), 1) * 255  # type: ignore [assignment]
 
         ilerp_image = Image.fromarray(numpy.uint8(image_arr))
 
-        image_dto = context.services.images.create(
-            image=ilerp_image,
-            image_origin=ResourceOrigin.INTERNAL,
-            image_category=ImageCategory.GENERAL,
-            node_id=self.id,
-            session_id=context.graph_execution_state_id,
-            is_intermediate=self.is_intermediate,
-            metadata=self.metadata,
-            workflow=self.workflow,
-        )
+        image_dto = context.images.save(image=ilerp_image)
 
-        return ImageOutput(
-            image=ImageField(image_name=image_dto.image_name),
-            width=image_dto.width,
-            height=image_dto.height,
-        )
+        return ImageOutput.build(image_dto)
 
 
-@invocation("img_nsfw", title="Blur NSFW Image", tags=["image", "nsfw"], category="image", version="1.0.0")
-class ImageNSFWBlurInvocation(BaseInvocation, WithMetadata, WithWorkflow):
+@invocation(
+    "img_nsfw",
+    title="Blur NSFW Image",
+    tags=["image", "nsfw"],
+    category="image",
+    version="1.2.3",
+)
+class ImageNSFWBlurInvocation(BaseInvocation, WithMetadata, WithBoard):
     """Add blur to NSFW-flagged images"""
 
     image: ImageField = InputField(description="The image to check")
 
     def invoke(self, context: InvocationContext) -> ImageOutput:
-        image = context.services.images.get_pil_image(self.image.image_name)
+        image = context.images.get_pil(self.image.image_name)
 
-        logger = context.services.logger
+        logger = context.logger
         logger.debug("Running NSFW checker")
-        if SafetyChecker.has_nsfw_concept(image):
-            logger.info("A potentially NSFW image has been detected. Image will be blurred.")
-            blurry_image = image.filter(filter=ImageFilter.GaussianBlur(radius=32))
-            caution = self._get_caution_img()
-            blurry_image.paste(caution, (0, 0), caution)
-            image = blurry_image
+        image = SafetyChecker.blur_if_nsfw(image)
 
-        image_dto = context.services.images.create(
-            image=image,
-            image_origin=ResourceOrigin.INTERNAL,
-            image_category=ImageCategory.GENERAL,
-            node_id=self.id,
-            session_id=context.graph_execution_state_id,
-            is_intermediate=self.is_intermediate,
-            metadata=self.metadata,
-            workflow=self.workflow,
-        )
+        image_dto = context.images.save(image=image)
 
-        return ImageOutput(
-            image=ImageField(image_name=image_dto.image_name),
-            width=image_dto.width,
-            height=image_dto.height,
-        )
-
-    def _get_caution_img(self) -> Image.Image:
-        import invokeai.app.assets.images as image_assets
-
-        caution = Image.open(Path(image_assets.__path__[0]) / "caution.png")
-        return caution.resize((caution.width // 2, caution.height // 2))
+        return ImageOutput.build(image_dto)
 
 
 @invocation(
@@ -540,37 +566,30 @@ class ImageNSFWBlurInvocation(BaseInvocation, WithMetadata, WithWorkflow):
     title="Add Invisible Watermark",
     tags=["image", "watermark"],
     category="image",
-    version="1.0.0",
+    version="1.2.2",
 )
-class ImageWatermarkInvocation(BaseInvocation, WithMetadata, WithWorkflow):
+class ImageWatermarkInvocation(BaseInvocation, WithMetadata, WithBoard):
     """Add an invisible watermark to an image"""
 
     image: ImageField = InputField(description="The image to check")
     text: str = InputField(default="InvokeAI", description="Watermark text")
 
     def invoke(self, context: InvocationContext) -> ImageOutput:
-        image = context.services.images.get_pil_image(self.image.image_name)
+        image = context.images.get_pil(self.image.image_name)
         new_image = InvisibleWatermark.add_watermark(image, self.text)
-        image_dto = context.services.images.create(
-            image=new_image,
-            image_origin=ResourceOrigin.INTERNAL,
-            image_category=ImageCategory.GENERAL,
-            node_id=self.id,
-            session_id=context.graph_execution_state_id,
-            is_intermediate=self.is_intermediate,
-            metadata=self.metadata,
-            workflow=self.workflow,
-        )
+        image_dto = context.images.save(image=new_image)
 
-        return ImageOutput(
-            image=ImageField(image_name=image_dto.image_name),
-            width=image_dto.width,
-            height=image_dto.height,
-        )
+        return ImageOutput.build(image_dto)
 
 
-@invocation("mask_edge", title="Mask Edge", tags=["image", "mask", "inpaint"], category="image", version="1.0.0")
-class MaskEdgeInvocation(BaseInvocation, WithWorkflow, WithMetadata):
+@invocation(
+    "mask_edge",
+    title="Mask Edge",
+    tags=["image", "mask", "inpaint"],
+    category="image",
+    version="1.2.2",
+)
+class MaskEdgeInvocation(BaseInvocation, WithMetadata, WithBoard):
     """Applies an edge mask to an image"""
 
     image: ImageField = InputField(description="The image to apply the mask to")
@@ -582,7 +601,7 @@ class MaskEdgeInvocation(BaseInvocation, WithWorkflow, WithMetadata):
     )
 
     def invoke(self, context: InvocationContext) -> ImageOutput:
-        mask = context.services.images.get_pil_image(self.image.image_name).convert("L")
+        mask = context.images.get_pil(self.image.image_name).convert("L")
 
         npimg = numpy.asarray(mask, dtype=numpy.uint8)
         npgradient = numpy.uint8(255 * (1.0 - numpy.floor(numpy.abs(0.5 - numpy.float32(npimg) / 255.0) * 2.0)))
@@ -597,22 +616,9 @@ class MaskEdgeInvocation(BaseInvocation, WithWorkflow, WithMetadata):
 
         new_mask = ImageOps.invert(new_mask)
 
-        image_dto = context.services.images.create(
-            image=new_mask,
-            image_origin=ResourceOrigin.INTERNAL,
-            image_category=ImageCategory.MASK,
-            node_id=self.id,
-            session_id=context.graph_execution_state_id,
-            is_intermediate=self.is_intermediate,
-            metadata=self.metadata,
-            workflow=self.workflow,
-        )
+        image_dto = context.images.save(image=new_mask, image_category=ImageCategory.MASK)
 
-        return ImageOutput(
-            image=ImageField(image_name=image_dto.image_name),
-            width=image_dto.width,
-            height=image_dto.height,
-        )
+        return ImageOutput.build(image_dto)
 
 
 @invocation(
@@ -620,40 +626,33 @@ class MaskEdgeInvocation(BaseInvocation, WithWorkflow, WithMetadata):
     title="Combine Masks",
     tags=["image", "mask", "multiply"],
     category="image",
-    version="1.0.0",
+    version="1.2.2",
 )
-class MaskCombineInvocation(BaseInvocation, WithWorkflow, WithMetadata):
+class MaskCombineInvocation(BaseInvocation, WithMetadata, WithBoard):
     """Combine two masks together by multiplying them using `PIL.ImageChops.multiply()`."""
 
     mask1: ImageField = InputField(description="The first mask to combine")
     mask2: ImageField = InputField(description="The second image to combine")
 
     def invoke(self, context: InvocationContext) -> ImageOutput:
-        mask1 = context.services.images.get_pil_image(self.mask1.image_name).convert("L")
-        mask2 = context.services.images.get_pil_image(self.mask2.image_name).convert("L")
+        mask1 = context.images.get_pil(self.mask1.image_name).convert("L")
+        mask2 = context.images.get_pil(self.mask2.image_name).convert("L")
 
         combined_mask = ImageChops.multiply(mask1, mask2)
 
-        image_dto = context.services.images.create(
-            image=combined_mask,
-            image_origin=ResourceOrigin.INTERNAL,
-            image_category=ImageCategory.GENERAL,
-            node_id=self.id,
-            session_id=context.graph_execution_state_id,
-            is_intermediate=self.is_intermediate,
-            metadata=self.metadata,
-            workflow=self.workflow,
-        )
+        image_dto = context.images.save(image=combined_mask, image_category=ImageCategory.MASK)
 
-        return ImageOutput(
-            image=ImageField(image_name=image_dto.image_name),
-            width=image_dto.width,
-            height=image_dto.height,
-        )
+        return ImageOutput.build(image_dto)
 
 
-@invocation("color_correct", title="Color Correct", tags=["image", "color"], category="image", version="1.0.0")
-class ColorCorrectInvocation(BaseInvocation, WithWorkflow, WithMetadata):
+@invocation(
+    "color_correct",
+    title="Color Correct",
+    tags=["image", "color"],
+    category="image",
+    version="1.2.2",
+)
+class ColorCorrectInvocation(BaseInvocation, WithMetadata, WithBoard):
     """
     Shifts the colors of a target image to match the reference image, optionally
     using a mask to only color-correct certain regions of the target image.
@@ -667,11 +666,11 @@ class ColorCorrectInvocation(BaseInvocation, WithWorkflow, WithMetadata):
     def invoke(self, context: InvocationContext) -> ImageOutput:
         pil_init_mask = None
         if self.mask is not None:
-            pil_init_mask = context.services.images.get_pil_image(self.mask.image_name).convert("L")
+            pil_init_mask = context.images.get_pil(self.mask.image_name).convert("L")
 
-        init_image = context.services.images.get_pil_image(self.reference.image_name)
+        init_image = context.images.get_pil(self.reference.image_name)
 
-        result = context.services.images.get_pil_image(self.image.image_name).convert("RGBA")
+        result = context.images.get_pil(self.image.image_name).convert("RGBA")
 
         # if init_image is None or init_mask is None:
         #    return result
@@ -745,33 +744,26 @@ class ColorCorrectInvocation(BaseInvocation, WithWorkflow, WithMetadata):
         # Paste original on color-corrected generation (using blurred mask)
         matched_result.paste(init_image, (0, 0), mask=multiplied_blurred_init_mask)
 
-        image_dto = context.services.images.create(
-            image=matched_result,
-            image_origin=ResourceOrigin.INTERNAL,
-            image_category=ImageCategory.GENERAL,
-            node_id=self.id,
-            session_id=context.graph_execution_state_id,
-            is_intermediate=self.is_intermediate,
-            metadata=self.metadata,
-            workflow=self.workflow,
-        )
+        image_dto = context.images.save(image=matched_result)
 
-        return ImageOutput(
-            image=ImageField(image_name=image_dto.image_name),
-            width=image_dto.width,
-            height=image_dto.height,
-        )
+        return ImageOutput.build(image_dto)
 
 
-@invocation("img_hue_adjust", title="Adjust Image Hue", tags=["image", "hue"], category="image", version="1.0.0")
-class ImageHueAdjustmentInvocation(BaseInvocation, WithWorkflow, WithMetadata):
+@invocation(
+    "img_hue_adjust",
+    title="Adjust Image Hue",
+    tags=["image", "hue"],
+    category="image",
+    version="1.2.2",
+)
+class ImageHueAdjustmentInvocation(BaseInvocation, WithMetadata, WithBoard):
     """Adjusts the Hue of an image."""
 
     image: ImageField = InputField(description="The image to adjust")
     hue: int = InputField(default=0, description="The degrees by which to rotate the hue, 0-360")
 
     def invoke(self, context: InvocationContext) -> ImageOutput:
-        pil_image = context.services.images.get_pil_image(self.image.image_name)
+        pil_image = context.images.get_pil(self.image.image_name)
 
         # Convert image to HSV color space
         hsv_image = numpy.array(pil_image.convert("HSV"))
@@ -785,24 +777,9 @@ class ImageHueAdjustmentInvocation(BaseInvocation, WithWorkflow, WithMetadata):
         # Convert back to PIL format and to original color mode
         pil_image = Image.fromarray(hsv_image, mode="HSV").convert("RGBA")
 
-        image_dto = context.services.images.create(
-            image=pil_image,
-            image_origin=ResourceOrigin.INTERNAL,
-            image_category=ImageCategory.GENERAL,
-            node_id=self.id,
-            is_intermediate=self.is_intermediate,
-            session_id=context.graph_execution_state_id,
-            metadata=self.metadata,
-            workflow=self.workflow,
-        )
+        image_dto = context.images.save(image=pil_image)
 
-        return ImageOutput(
-            image=ImageField(
-                image_name=image_dto.image_name,
-            ),
-            width=image_dto.width,
-            height=image_dto.height,
-        )
+        return ImageOutput.build(image_dto)
 
 
 COLOR_CHANNELS = Literal[
@@ -866,9 +843,9 @@ CHANNEL_FORMATS = {
         "value",
     ],
     category="image",
-    version="1.0.0",
+    version="1.2.3",
 )
-class ImageChannelOffsetInvocation(BaseInvocation, WithWorkflow, WithMetadata):
+class ImageChannelOffsetInvocation(BaseInvocation, WithMetadata, WithBoard):
     """Add or subtract a value from a specific color channel of an image."""
 
     image: ImageField = InputField(description="The image to adjust")
@@ -876,18 +853,22 @@ class ImageChannelOffsetInvocation(BaseInvocation, WithWorkflow, WithMetadata):
     offset: int = InputField(default=0, ge=-255, le=255, description="The amount to adjust the channel by")
 
     def invoke(self, context: InvocationContext) -> ImageOutput:
-        pil_image = context.services.images.get_pil_image(self.image.image_name)
+        image = context.images.get_pil(self.image.image_name, "RGBA")
 
         # extract the channel and mode from the input and reference tuple
         mode = CHANNEL_FORMATS[self.channel][0]
         channel_number = CHANNEL_FORMATS[self.channel][1]
 
         # Convert PIL image to new format
-        converted_image = numpy.array(pil_image.convert(mode)).astype(int)
+        converted_image = numpy.array(image.convert(mode)).astype(int)
         image_channel = converted_image[:, :, channel_number]
 
-        # Adjust the value, clipping to 0..255
-        image_channel = numpy.clip(image_channel + self.offset, 0, 255)
+        if self.channel == "Hue (HSV)":
+            # loop around the values because hue is special
+            image_channel = (image_channel + self.offset) % 256
+        else:
+            # Adjust the value, clipping to 0..255
+            image_channel = numpy.clip(image_channel + self.offset, 0, 255)
 
         # Put the channel back into the image
         converted_image[:, :, channel_number] = image_channel
@@ -895,24 +876,13 @@ class ImageChannelOffsetInvocation(BaseInvocation, WithWorkflow, WithMetadata):
         # Convert back to RGBA format and output
         pil_image = Image.fromarray(converted_image.astype(numpy.uint8), mode=mode).convert("RGBA")
 
-        image_dto = context.services.images.create(
-            image=pil_image,
-            image_origin=ResourceOrigin.INTERNAL,
-            image_category=ImageCategory.GENERAL,
-            node_id=self.id,
-            is_intermediate=self.is_intermediate,
-            session_id=context.graph_execution_state_id,
-            metadata=self.metadata,
-            workflow=self.workflow,
-        )
+        # restore the alpha channel
+        if self.channel != "Alpha (RGBA)":
+            pil_image.putalpha(image.getchannel("A"))
 
-        return ImageOutput(
-            image=ImageField(
-                image_name=image_dto.image_name,
-            ),
-            width=image_dto.width,
-            height=image_dto.height,
-        )
+        image_dto = context.images.save(image=pil_image)
+
+        return ImageOutput.build(image_dto)
 
 
 @invocation(
@@ -937,9 +907,9 @@ class ImageChannelOffsetInvocation(BaseInvocation, WithWorkflow, WithMetadata):
         "value",
     ],
     category="image",
-    version="1.0.0",
+    version="1.2.3",
 )
-class ImageChannelMultiplyInvocation(BaseInvocation, WithWorkflow, WithMetadata):
+class ImageChannelMultiplyInvocation(BaseInvocation, WithMetadata, WithBoard):
     """Scale a specific color channel of an image."""
 
     image: ImageField = InputField(description="The image to adjust")
@@ -948,14 +918,14 @@ class ImageChannelMultiplyInvocation(BaseInvocation, WithWorkflow, WithMetadata)
     invert_channel: bool = InputField(default=False, description="Invert the channel after scaling")
 
     def invoke(self, context: InvocationContext) -> ImageOutput:
-        pil_image = context.services.images.get_pil_image(self.image.image_name)
+        image = context.images.get_pil(self.image.image_name, "RGBA")
 
         # extract the channel and mode from the input and reference tuple
         mode = CHANNEL_FORMATS[self.channel][0]
         channel_number = CHANNEL_FORMATS[self.channel][1]
 
         # Convert PIL image to new format
-        converted_image = numpy.array(pil_image.convert(mode)).astype(float)
+        converted_image = numpy.array(image.convert(mode)).astype(float)
         image_channel = converted_image[:, :, channel_number]
 
         # Adjust the value, clipping to 0..255
@@ -971,24 +941,13 @@ class ImageChannelMultiplyInvocation(BaseInvocation, WithWorkflow, WithMetadata)
         # Convert back to RGBA format and output
         pil_image = Image.fromarray(converted_image.astype(numpy.uint8), mode=mode).convert("RGBA")
 
-        image_dto = context.services.images.create(
-            image=pil_image,
-            image_origin=ResourceOrigin.INTERNAL,
-            image_category=ImageCategory.GENERAL,
-            node_id=self.id,
-            is_intermediate=self.is_intermediate,
-            session_id=context.graph_execution_state_id,
-            workflow=self.workflow,
-            metadata=self.metadata,
-        )
+        # restore the alpha channel
+        if self.channel != "Alpha (RGBA)":
+            pil_image.putalpha(image.getchannel("A"))
 
-        return ImageOutput(
-            image=ImageField(
-                image_name=image_dto.image_name,
-            ),
-            width=image_dto.width,
-            height=image_dto.height,
-        )
+        image_dto = context.images.save(image=pil_image)
+
+        return ImageOutput.build(image_dto)
 
 
 @invocation(
@@ -996,32 +955,255 @@ class ImageChannelMultiplyInvocation(BaseInvocation, WithWorkflow, WithMetadata)
     title="Save Image",
     tags=["primitives", "image"],
     category="primitives",
-    version="1.0.1",
+    version="1.2.2",
     use_cache=False,
 )
-class SaveImageInvocation(BaseInvocation, WithWorkflow, WithMetadata):
+class SaveImageInvocation(BaseInvocation, WithMetadata, WithBoard):
     """Saves an image. Unlike an image primitive, this invocation stores a copy of the image."""
 
     image: ImageField = InputField(description=FieldDescriptions.image)
-    board: BoardField = InputField(default=None, description=FieldDescriptions.board, input=Input.Direct)
 
     def invoke(self, context: InvocationContext) -> ImageOutput:
-        image = context.services.images.get_pil_image(self.image.image_name)
+        image = context.images.get_pil(self.image.image_name)
 
-        image_dto = context.services.images.create(
-            image=image,
-            image_origin=ResourceOrigin.INTERNAL,
-            image_category=ImageCategory.GENERAL,
-            board_id=self.board.board_id if self.board else None,
-            node_id=self.id,
-            session_id=context.graph_execution_state_id,
-            is_intermediate=self.is_intermediate,
-            metadata=self.metadata,
-            workflow=self.workflow,
-        )
+        image_dto = context.images.save(image=image)
 
-        return ImageOutput(
-            image=ImageField(image_name=image_dto.image_name),
-            width=image_dto.width,
-            height=image_dto.height,
+        return ImageOutput.build(image_dto)
+
+
+@invocation(
+    "canvas_paste_back",
+    title="Canvas Paste Back",
+    tags=["image", "combine"],
+    category="image",
+    version="1.0.0",
+)
+class CanvasPasteBackInvocation(BaseInvocation, WithMetadata, WithBoard):
+    """Combines two images by using the mask provided. Intended for use on the Unified Canvas."""
+
+    source_image: ImageField = InputField(description="The source image")
+    target_image: ImageField = InputField(default=None, description="The target image")
+    mask: ImageField = InputField(
+        description="The mask to use when pasting",
+    )
+    mask_blur: int = InputField(default=0, ge=0, description="The amount to blur the mask by")
+
+    def _prepare_mask(self, mask: Image.Image) -> Image.Image:
+        mask_array = numpy.array(mask)
+        kernel = numpy.ones((self.mask_blur, self.mask_blur), numpy.uint8)
+        dilated_mask_array = cv2.erode(mask_array, kernel, iterations=3)
+        dilated_mask = Image.fromarray(dilated_mask_array)
+        if self.mask_blur > 0:
+            mask = dilated_mask.filter(ImageFilter.GaussianBlur(self.mask_blur))
+        return ImageOps.invert(mask.convert("L"))
+
+    def invoke(self, context: InvocationContext) -> ImageOutput:
+        source_image = context.images.get_pil(self.source_image.image_name)
+        target_image = context.images.get_pil(self.target_image.image_name)
+        mask = self._prepare_mask(context.images.get_pil(self.mask.image_name))
+
+        source_image.paste(target_image, (0, 0), mask)
+
+        image_dto = context.images.save(image=source_image)
+        return ImageOutput.build(image_dto)
+
+
+@invocation(
+    "mask_from_id",
+    title="Mask from Segmented Image",
+    tags=["image", "mask", "id"],
+    category="image",
+    version="1.0.1",
+)
+class MaskFromIDInvocation(BaseInvocation, WithMetadata, WithBoard):
+    """Generate a mask for a particular color in an ID Map"""
+
+    image: ImageField = InputField(description="The image to create the mask from")
+    color: ColorField = InputField(description="ID color to mask")
+    threshold: int = InputField(default=100, description="Threshold for color detection")
+    invert: bool = InputField(default=False, description="Whether or not to invert the mask")
+
+    def invoke(self, context: InvocationContext) -> ImageOutput:
+        image = context.images.get_pil(self.image.image_name, mode="RGBA")
+
+        np_color = numpy.array(self.color.tuple())
+
+        # Maybe there's a faster way to calculate this distance but I can't think of any right now.
+        color_distance = numpy.linalg.norm(image - np_color, axis=-1)
+
+        # Create a mask based on the threshold and the distance calculated above
+        binary_mask = (color_distance < self.threshold).astype(numpy.uint8) * 255
+
+        # Convert the mask back to PIL
+        binary_mask_pil = Image.fromarray(binary_mask)
+
+        if self.invert:
+            binary_mask_pil = ImageOps.invert(binary_mask_pil)
+
+        image_dto = context.images.save(image=binary_mask_pil, image_category=ImageCategory.MASK)
+
+        return ImageOutput.build(image_dto)
+
+
+@invocation(
+    "canvas_v2_mask_and_crop",
+    title="Canvas V2 Mask and Crop",
+    tags=["image", "mask", "id"],
+    category="image",
+    version="1.0.0",
+    classification=Classification.Internal,
+)
+class CanvasV2MaskAndCropInvocation(BaseInvocation, WithMetadata, WithBoard):
+    """Handles Canvas V2 image output masking and cropping"""
+
+    source_image: ImageField | None = InputField(
+        default=None,
+        description="The source image onto which the masked generated image is pasted. If omitted, the masked generated image is returned with transparency.",
+    )
+    generated_image: ImageField = InputField(description="The image to apply the mask to")
+    mask: ImageField = InputField(description="The mask to apply")
+    mask_blur: int = InputField(default=0, ge=0, description="The amount to blur the mask by")
+
+    def _prepare_mask(self, mask: Image.Image) -> Image.Image:
+        mask_array = numpy.array(mask)
+        kernel = numpy.ones((self.mask_blur, self.mask_blur), numpy.uint8)
+        dilated_mask_array = cv2.erode(mask_array, kernel, iterations=3)
+        dilated_mask = Image.fromarray(dilated_mask_array)
+        if self.mask_blur > 0:
+            mask = dilated_mask.filter(ImageFilter.GaussianBlur(self.mask_blur))
+        return ImageOps.invert(mask.convert("L"))
+
+    def invoke(self, context: InvocationContext) -> ImageOutput:
+        mask = self._prepare_mask(context.images.get_pil(self.mask.image_name))
+
+        if self.source_image:
+            generated_image = context.images.get_pil(self.generated_image.image_name)
+            source_image = context.images.get_pil(self.source_image.image_name)
+            source_image.paste(generated_image, (0, 0), mask)
+            image_dto = context.images.save(image=source_image)
+        else:
+            generated_image = context.images.get_pil(self.generated_image.image_name)
+            generated_image.putalpha(mask)
+            image_dto = context.images.save(image=generated_image)
+
+        return ImageOutput.build(image_dto)
+
+
+@invocation(
+    "img_noise",
+    title="Add Image Noise",
+    tags=["image", "noise"],
+    category="image",
+    version="1.0.1",
+)
+class ImageNoiseInvocation(BaseInvocation, WithMetadata, WithBoard):
+    """Add noise to an image"""
+
+    image: ImageField = InputField(description="The image to add noise to")
+    seed: int = InputField(
+        default=0,
+        ge=0,
+        le=SEED_MAX,
+        description=FieldDescriptions.seed,
+    )
+    noise_type: Literal["gaussian", "salt_and_pepper"] = InputField(
+        default="gaussian",
+        description="The type of noise to add",
+    )
+    amount: float = InputField(default=0.1, ge=0, le=1, description="The amount of noise to add")
+    noise_color: bool = InputField(default=True, description="Whether to add colored noise")
+    size: int = InputField(default=1, ge=1, description="The size of the noise points")
+
+    def invoke(self, context: InvocationContext) -> ImageOutput:
+        image = context.images.get_pil(self.image.image_name, mode="RGBA")
+
+        # Save out the alpha channel
+        alpha = image.getchannel("A")
+
+        # Set the seed for numpy random
+        rs = numpy.random.RandomState(numpy.random.MT19937(numpy.random.SeedSequence(self.seed)))
+
+        if self.noise_type == "gaussian":
+            if self.noise_color:
+                noise = rs.normal(0, 1, (image.height // self.size, image.width // self.size, 3)) * 255
+            else:
+                noise = rs.normal(0, 1, (image.height // self.size, image.width // self.size)) * 255
+                noise = numpy.stack([noise] * 3, axis=-1)
+        elif self.noise_type == "salt_and_pepper":
+            if self.noise_color:
+                noise = rs.choice(
+                    [0, 255], (image.height // self.size, image.width // self.size, 3), p=[1 - self.amount, self.amount]
+                )
+            else:
+                noise = rs.choice(
+                    [0, 255], (image.height // self.size, image.width // self.size), p=[1 - self.amount, self.amount]
+                )
+                noise = numpy.stack([noise] * 3, axis=-1)
+
+        noise = Image.fromarray(noise.astype(numpy.uint8), mode="RGB").resize(
+            (image.width, image.height), Image.Resampling.NEAREST
         )
+        noisy_image = Image.blend(image.convert("RGB"), noise, self.amount).convert("RGBA")
+
+        # Paste back the alpha channel
+        noisy_image.putalpha(alpha)
+
+        image_dto = context.images.save(image=noisy_image)
+
+        return ImageOutput.build(image_dto)
+
+
+@invocation(
+    "crop_image_to_bounding_box",
+    title="Crop Image to Bounding Box",
+    category="image",
+    version="1.0.0",
+    tags=["image", "crop"],
+    classification=Classification.Beta,
+)
+class CropImageToBoundingBoxInvocation(BaseInvocation, WithMetadata, WithBoard):
+    """Crop an image to the given bounding box. If the bounding box is omitted, the image is cropped to the non-transparent pixels."""
+
+    image: ImageField = InputField(description="The image to crop")
+    bounding_box: BoundingBoxField | None = InputField(
+        default=None, description="The bounding box to crop the image to"
+    )
+
+    def invoke(self, context: InvocationContext) -> ImageOutput:
+        image = context.images.get_pil(self.image.image_name)
+
+        bounding_box = self.bounding_box.tuple() if self.bounding_box is not None else image.getbbox()
+
+        cropped_image = image.crop(bounding_box)
+
+        image_dto = context.images.save(image=cropped_image)
+        return ImageOutput.build(image_dto)
+
+
+@invocation(
+    "paste_image_into_bounding_box",
+    title="Paste Image into Bounding Box",
+    category="image",
+    version="1.0.0",
+    tags=["image", "crop"],
+    classification=Classification.Beta,
+)
+class PasteImageIntoBoundingBoxInvocation(BaseInvocation, WithMetadata, WithBoard):
+    """Paste the source image into the target image at the given bounding box.
+
+    The source image must be the same size as the bounding box, and the bounding box must fit within the target image."""
+
+    source_image: ImageField = InputField(description="The image to paste")
+    target_image: ImageField = InputField(description="The image to paste into")
+    bounding_box: BoundingBoxField = InputField(description="The bounding box to paste the image into")
+
+    def invoke(self, context: InvocationContext) -> ImageOutput:
+        source_image = context.images.get_pil(self.source_image.image_name, mode="RGBA")
+        target_image = context.images.get_pil(self.target_image.image_name, mode="RGBA")
+
+        bounding_box = self.bounding_box.tuple()
+
+        target_image.paste(source_image, bounding_box, source_image)
+
+        image_dto = context.images.save(image=target_image)
+        return ImageOutput.build(image_dto)

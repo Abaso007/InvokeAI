@@ -3,9 +3,10 @@
     "target": "ESNext",
     "useDefineForClassFields": true,
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "types": ["vite/client"],
     "allowJs": false,
     "skipLibCheck": true,
-    "esModuleInterop": false,
+    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
@@ -15,6 +16,7 @@
     // "resolveJsonModule": true,
     "noUncheckedIndexedAccess": true,
     "strictNullChecks": true,
+    "strictPropertyInitialization": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
@@ -23,12 +25,13 @@
       "*": ["./src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "*.d.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "*.d.ts", ".storybook/**/*"],
   "exclude": ["src/services/fixtures/*", "node_modules", "dist"],
   "references": [{ "path": "./tsconfig.node.json" }],
   "ts-node": {
     "compilerOptions": {
-      "jsx": "preserve"
+      "jsx": "preserve",
+      "types": ["vite/client"]
     },
     "esm": true
   }
